@@ -9,7 +9,6 @@ import javax.jms.QueueSession;
 
 import com.crm.kernel.message.Constants;
 import com.crm.kernel.queue.QueueFactory;
-import com.crm.kernel.sql.Database;
 import com.crm.provisioning.message.CommandMessage;
 
 public class DBQueueInstance extends DispatcherInstance
@@ -26,38 +25,6 @@ public class DBQueueInstance extends DispatcherInstance
 	public DBQueueThread getDispatcher()
 	{
 		return (DBQueueThread) super.getDispatcher();
-	}
-
-	public void beforeProcessSession() throws Exception
-	{
-		super.beforeProcessSession();
-
-		try
-		{
-			String SQL = "Delete CommandRequest Where RequestID = ?";
-
-			stmtRemove = getDispatcher().getConnection().prepareStatement(SQL);
-		}
-		catch (Exception e)
-		{
-			throw e;
-		}
-	}
-
-	public void afterProcessSession() throws Exception
-	{
-		try
-		{
-			Database.closeObject(stmtRemove);
-		}
-		catch (Exception e)
-		{
-			throw e;
-		}
-		finally
-		{
-			super.afterProcessSession();
-		}
 	}
 
 	public int processMessage(QueueSession session, MessageProducer producer, Object request) throws Exception
@@ -96,10 +63,7 @@ public class DBQueueInstance extends DispatcherInstance
 
 			if (requestId != Constants.DEFAULT_ID)
 			{
-				stmtRemove.setLong(1, requestId);
-				stmtRemove.execute();
-
-				getDispatcher().getConnection().commit();
+				getDispatcher().removeRequest(requestId);
 			}
 
 			if (dispatcher.displayDebug)
@@ -150,23 +114,6 @@ public class DBQueueInstance extends DispatcherInstance
 				if (request != null)
 				{
 					processMessage(session, producer, request);
-				}
-				else
-				{
-					long now = System.currentTimeMillis();
-					if (now - lastRunTime > getDispatcher().enquireInterval)
-					{
-						try
-						{
-							Database.closeObject(stmtRemove);
-						}
-						finally
-						{
-							String SQL = "Delete CommandRequest Where RequestID = ?";
-
-							stmtRemove = getDispatcher().getConnection().prepareStatement(SQL);
-						}
-					}
 				}
 
 				Thread.sleep(1);

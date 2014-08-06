@@ -27,6 +27,7 @@ public class CommandLogThread extends DispatcherThread
 		vtReturn.add(ThreadUtil.createBooleanParameter("useShortLog",
 		"Use short or long log(long log includes request and response value), default value is false."));
 		
+		vtReturn.add(ThreadUtil.createTextParameter("queueLocalName", 100, "jndi queue name"));
 		vtReturn.addAll(ThreadUtil.createInstanceParameter(this));
 		vtReturn.addAll(ThreadUtil.createLogParameter(this));
 

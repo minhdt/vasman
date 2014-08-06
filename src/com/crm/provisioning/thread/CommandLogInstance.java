@@ -49,6 +49,7 @@ public class CommandLogInstance extends DispatcherInstance
 		return (CommandLogThread) dispatcher;
 	}
 
+	@Override
 	public Object detachMessage() throws Exception
 	{
 		long now = System.currentTimeMillis();
@@ -58,7 +59,6 @@ public class CommandLogInstance extends DispatcherInstance
 		{
 			updateLog();
 		}
-
 		return QueueFactory.detachLocal(QueueFactory.COMMAND_LOG_QUEUE);
 	}
 

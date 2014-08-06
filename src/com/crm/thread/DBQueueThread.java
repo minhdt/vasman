@@ -33,12 +33,14 @@ import com.fss.util.AppException;
 public class DBQueueThread extends DispatcherThread
 {
 	protected PreparedStatement	stmtQueue			= null;
+	protected PreparedStatement	stmtSubscription	= null;
 	protected ResultSet			rsQueue				= null;
 	protected Connection		connection			= null;
 	
 	public String				selectSQL			= "";
 	
 	protected int				batchSize			= 100;
+	private int					batchCounter		= 0;
 	protected int				orderTimeOut		= 60000;
 	
 	public int					pendingMaxSize		= 0;
@@ -192,14 +194,18 @@ public class DBQueueThread extends DispatcherThread
 	{
 		try
 		{
-			QueueFactory.getLocalQueue(queueLocalName).empty();
+			if (connection != null && !connection.isClosed())
+			{
+				updateToDB();
+				Database.closeObject(stmtQueue);
+				Database.closeObject(stmtSubscription);
+				Database.closeObject(connection);
+			}
+			
 		}
 		finally
 		{
-			Database.closeObject(stmtQueue);
-			Database.closeObject(rsQueue);
-			Database.closeObject(connection);
-			
+			QueueFactory.getLocalQueue(queueLocalName).empty();
 			super.afterProcessSession();
 		}
 	}
@@ -210,37 +216,109 @@ public class DBQueueThread extends DispatcherThread
 		totalServerPending = QueueFactory.getSnapshotSize(pendingQueueList);
 	}
 	
-	public Connection getConnection()
+	public void loadDataBase() throws Exception
 	{
 		try
 		{
-			if (connection == null || connection.isClosed())
+			String strSQL = selectSQL;
+			
+			if (batchSize > 0)
 			{
-				connection = Database.getConnection();
+				strSQL = strSQL + " and rownum <= "	+ batchSize;
+			}
+			
+			if (!pushFreeRequest)
+			{
+				strSQL = strSQL + " and keyword not like 'FREE_%'";
+			}
+			
+			connection = Database.getConnection();
+			stmtQueue = connection.prepareStatement(strSQL);
+			
+			strSQL = "Delete CommandRequest Where RequestID = ?";
+			stmtSubscription = connection.prepareStatement(strSQL);
+			
+			rsQueue = stmtQueue.executeQuery();
+			
+			while (rsQueue.next())
+			{
+				CommandMessage request = new CommandMessage();
+	
+				request.setRequestTime(new Date());
+				request.setRequestId(rsQueue.getLong("requestId"));
+				request.setChannel(rsQueue.getString("channel"));
+				request.setServiceAddress(rsQueue.getString("serviceAddress"));
+				request.setIsdn(rsQueue.getString("isdn"));
+				request.setKeyword(rsQueue.getString("keyword"));
+				request.setSubProductId(rsQueue.getLong("subProductId"));
+				request.setTimeout(orderTimeOut);
+				
+				addCounter(queueLocalName, request);
 			}
 		}
 		catch (Exception e)
 		{
+			throw e;
 		}
-		
-		return connection;
+		finally
+		{
+			Database.closeObject(rsQueue);
+			Database.closeObject(stmtQueue);
+		}
 	}
 	
-	public void loadDataBase() throws Exception
+	public synchronized void removeRequest(long requestId)
 	{
-		String strSQL = selectSQL;
-		
-		if (batchSize > 0)
+		try
 		{
-			strSQL = strSQL + " and rownum <= "	+ batchSize;
+			stmtSubscription.setLong(1, requestId);
+			stmtSubscription.addBatch();
+			batchCounter++;
+			if (batchCounter >= 50)
+			{
+				batchCounter = 0;
+				updateToDB();
+			}
 		}
-		
-		if (!pushFreeRequest)
+		catch (Exception e)
 		{
-			strSQL = strSQL + " and keyword not like 'FREE_%'";
+			debugMonitor(e);
 		}
-		
-		stmtQueue = getConnection().prepareStatement(strSQL);
+	}
+	
+	public void updateToDB() throws Exception
+	{
+		if (stmtSubscription != null)
+		{
+			stmtSubscription.executeBatch();
+			connection.commit();
+		}
+	}
+
+	public void closeDatabase() throws Exception
+	{
+		try
+		{
+			try
+			{
+				updateToDB();
+			}
+			finally
+			{
+				Database.closeObject(stmtSubscription);
+				Database.closeObject(connection);
+			}
+		}
+		catch (Exception e)
+		{
+			throw e;
+		}
+		finally
+		{
+			stmtSubscription = null;
+			connection = null;
+			QueueFactory.getLocalQueue(queueLocalName).empty();
+		}
 	}
 	
 	public void addCounter(String queueLocalName, CommandMessage message) throws Exception
@@ -288,30 +366,7 @@ public class DBQueueThread extends DispatcherThread
 			}
 			else
 			{
-				try
-				{
-					rsQueue = stmtQueue.executeQuery();
-					
-					while (rsQueue.next())
-					{
-						CommandMessage request = new CommandMessage();
-
-						request.setRequestTime(new Date());
-						request.setRequestId(rsQueue.getLong("requestId"));
-						request.setChannel(rsQueue.getString("channel"));
-						request.setServiceAddress(rsQueue.getString("serviceAddress"));
-						request.setIsdn(rsQueue.getString("isdn"));
-						request.setKeyword(rsQueue.getString("keyword"));
-						request.setSubProductId(rsQueue.getLong("subProductId"));
-						request.setTimeout(orderTimeOut);
-						
-						addCounter(queueLocalName, request);
-					}
-				}
-				finally
-				{
-					Database.closeObject(rsQueue);
-				}
+				loadDataBase();
 				
 				while (isAvailable() && !EOF)
 				{
@@ -332,21 +387,8 @@ public class DBQueueThread extends DispatcherThread
 						EOF = true;
 					}
 				}
-			}
-			
-			long now = System.currentTimeMillis();
-			if (now - lastRunTime > enquireInterval)
-			{
-				try
-				{
-					Database.closeObject(stmtQueue);
-					Database.closeObject(rsQueue);
-					Database.closeObject(connection);
-				}
-				finally
-				{
-					loadDataBase();
-				}
+				
+				closeDatabase();
 			}
 		}
 		catch (Exception e)
