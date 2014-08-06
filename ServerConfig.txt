@@ -1,0 +1,28 @@
+PortID=3324
+MaxConnectionAllowed=10
+LoadingMethod=1
+
+queueServerEnable=true
+connectionFactory=30
+
+c3p0-config=c3p0-config.xml
+
+queue.factory=jms/VAS
+queue.connection=dedicated
+# queue.connection=sharing
+
+queue.factory.imqAddressList=localhost:7676
+queue.factory.imqAckTimeout=60000
+queue.factory.imqConsumerFlowLimitPrefetch=true
+queue.factory.imqConsumerFlowLimit=100
+queue.factory.imqSocketConnectTimeout=60000
+queue.factory.imqOverrideJMSDeliveryMode=true
+#imqJMSDeliveryMode: 2 persistent, 1 non-persistent
+queue.factory.imqJMSDeliveryMode=1
+
+queue.orderRoute=vas/OrderRoute
+queue.orderResponse=vas/OrderResponse
+queue.commandRoute=vas/CommandRoute
+queue.commandLog=vas/CommandLog
+queue.commandCallback=vas/CommandCallback
+queue.commandStatistic=vas/CommandStatistic
