@@ -175,6 +175,7 @@ public class DBQueueThread extends DispatcherThread
 			QueueFactory.getLocalQueue(queueLocalName).setCheckPending(false);
 			
 			loadDataBase();
+			
 		}
 		catch (Exception e)
 		{
