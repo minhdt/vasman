@@ -1,14 +1,22 @@
 package com.crm.provisioning.impl.smpp;
 
 import java.io.IOException;
+import java.util.Date;
 
 import com.crm.kernel.queue.QueueFactory;
 import com.crm.provisioning.message.CommandMessage;
 import com.crm.provisioning.thread.SMPPThread;
 import com.crm.thread.DispatcherThread;
-
-import com.logica.smpp.*;
-import com.logica.smpp.pdu.*;
+import com.logica.smpp.ServerPDUEvent;
+import com.logica.smpp.ServerPDUEventListener;
+import com.logica.smpp.Session;
+import com.logica.smpp.SmppObject;
+import com.logica.smpp.pdu.DeliverSM;
+import com.logica.smpp.pdu.EnquireLinkResp;
+import com.logica.smpp.pdu.PDU;
+import com.logica.smpp.pdu.Request;
+import com.logica.smpp.pdu.Response;
+import com.logica.smpp.util.Queue;
 
 /**
  * <p>Title: </p>
@@ -184,7 +192,23 @@ public class PDUEventListener extends SmppObject implements ServerPDUEventListen
 				// }
 			}
 			else
+			{
 				debugMonitor("Reponse: async response received " + pdu.debugString());
+				try
+				{
+					TransmitterMessage message = new TransmitterMessage();
+					message.setSequenceNumber(pdu.getSequenceNumber());
+					message = ((SMPPThread)getDispatcher()).detachTransmitter(message);
+					message.getMessage().setResponseTime(new Date());
+					message.getMessage().setResponse(pdu.debugString());
+					((SMPPThread)getDispatcher()).sendTransmitterLog(message.getMessage());
+				}
+				catch (Exception e)
+				{
+					logMonitor(e.getMessage());
+				}
+				
+			}
 		}
 		else
 		{

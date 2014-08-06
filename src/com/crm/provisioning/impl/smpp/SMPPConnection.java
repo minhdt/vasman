@@ -14,21 +14,41 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
 
+import com.crm.kernel.message.Constants;
 import com.crm.provisioning.cache.ProvisioningConnection;
-import com.crm.provisioning.message.CommandMessage;
-import com.crm.provisioning.impl.smpp.PDUEventListener;
 import com.crm.provisioning.impl.smpp.util.PushMessage;
+import com.crm.provisioning.message.CommandMessage;
 import com.crm.provisioning.thread.ProvisioningThread;
+import com.crm.provisioning.thread.SMPPThread;
 import com.crm.provisioning.util.ResponseUtil;
 import com.crm.util.AppProperties;
 import com.crm.util.GeneratorSeq;
 import com.crm.util.StringUtil;
-
-import com.logica.smpp.*;
-import com.logica.smpp.pdu.*;
+import com.logica.smpp.Data;
+import com.logica.smpp.ServerPDUEvent;
+import com.logica.smpp.ServerPDUEventListener;
+import com.logica.smpp.Session;
+import com.logica.smpp.TCPIPConnection;
+import com.logica.smpp.pdu.Address;
+import com.logica.smpp.pdu.AddressRange;
+import com.logica.smpp.pdu.BindReceiver;
+import com.logica.smpp.pdu.BindRequest;
+import com.logica.smpp.pdu.BindResponse;
+import com.logica.smpp.pdu.BindTransciever;
+import com.logica.smpp.pdu.BindTransmitter;
+import com.logica.smpp.pdu.DeliverSM;
+import com.logica.smpp.pdu.EnquireLink;
+import com.logica.smpp.pdu.EnquireLinkResp;
+import com.logica.smpp.pdu.PDU;
+import com.logica.smpp.pdu.Request;
+import com.logica.smpp.pdu.Response;
+import com.logica.smpp.pdu.SubmitSM;
+import com.logica.smpp.pdu.SubmitSMResp;
+import com.logica.smpp.pdu.Unbind;
+import com.logica.smpp.pdu.UnbindResp;
+import com.logica.smpp.pdu.WrongDateFormatException;
+import com.logica.smpp.pdu.WrongLengthOfStringException;
 import com.logica.smpp.util.ByteBuffer;
-import com.logica.smpp.util.NotEnoughDataInByteBufferException;
-import com.logica.smpp.util.TerminatingZeroNotFoundException;
 
 public class SMPPConnection extends ProvisioningConnection
 {
@@ -792,6 +812,8 @@ public class SMPPConnection extends ProvisioningConnection
 				getDispatcher().debugMonitor("Submit concatenated request " +
 						submitRequest.debugString());
 				submit(submitRequest);
+				
+				prepaidSendLogTransmitter(request, submitRequest, 6);
 			}
 		}
 		else
@@ -800,7 +822,10 @@ public class SMPPConnection extends ProvisioningConnection
 			SubmitSM submitRequest = createSubmitSM(request, headerBuffer, contentBuffer, dataCoding);
 			getDispatcher().debugMonitor("Submit request " +
 					submitRequest.debugString());
+			request.setRequestTime(new Date());
 			submit(submitRequest);
+			
+			prepaidSendLogTransmitter(request, submitRequest, 0);
 		}
 	}
 
@@ -984,16 +1009,48 @@ public class SMPPConnection extends ProvisioningConnection
 						DeliverSM deliverSM = (DeliverSM) pdu;
 
 						debugMonitor("Enqueue: " + deliverSM.debugString());
+						byte dataCoding = deliverSM.getDataCoding();
+						String message = "";
+						
+						try
+						{
+							switch(dataCoding)
+							{
+							case 8:
+								message = deliverSM.getShortMessage(Data.ENC_UTF16);
+								break;
+							case 3:
+								message = deliverSM.getShortMessage(Data.ENC_ISO8859_1);
+								break;
+							case 2:
+								message = deliverSM.getShortMessage(Data.ENC_UTF8);
+								break;
+							case 0:
+								message = deliverSM.getShortMessage(ENC_GSM7BIT);
+								break;
+							default:
+								message = deliverSM.getShortMessage();
+								break;
+							}
+						}
+						catch (UnsupportedEncodingException e)
+						{
+							message = deliverSM.getShortMessage();
+						}
 
 						CommandMessage sms = new CommandMessage();
 
+						sms.setResponseTime(new Date());
+						
 						sms.setChannel("SMS");
+						sms.setProvisioningType(Constants.PROVISIONING_SMSC);
 						sms.setIsdn(deliverSM.getSourceAddr().getAddress());
 						sms.setServiceAddress(deliverSM.getDestAddr().getAddress());
 						// sms.setShipTo(deliverSM.getSourceAddr().getAddress());
 
-						sms.setRequest(deliverSM.getShortMessage().toUpperCase());
-						sms.setKeyword(deliverSM.getShortMessage().toUpperCase());
+						sms.setRequest(message.toUpperCase().trim());
+						sms.setResponse(deliverSM.getResponse().debugString());
+						sms.setKeyword(message.toUpperCase().trim());
 
 						sms.setRequestId(deliverSM.getSequenceNumber());
 
@@ -1068,17 +1125,48 @@ public class SMPPConnection extends ProvisioningConnection
 		{
 			DeliverSM deliverSM = (DeliverSM) pdu;
 
-			// debugMonitor("Enqueue: " + deliverSM.debugString());
+			byte dataCoding = deliverSM.getDataCoding();
+			String message = "";
+			
+			try
+			{
+				switch(dataCoding)
+				{
+				case 8:
+					message = deliverSM.getShortMessage(Data.ENC_UTF16);
+					break;
+				case 3:
+					message = deliverSM.getShortMessage(Data.ENC_ISO8859_1);
+					break;
+				case 2:
+					message = deliverSM.getShortMessage(Data.ENC_UTF8);
+					break;
+				case 0:
+					message = deliverSM.getShortMessage(ENC_GSM7BIT);
+					break;
+				default:
+					message = deliverSM.getShortMessage();
+					break;
+				}
+			}
+			catch (UnsupportedEncodingException e)
+			{
+				message = deliverSM.getShortMessage();
+			}
 
 			CommandMessage sms = new CommandMessage();
 
+			sms.setResponseTime(new Date());
+			
 			sms.setChannel("SMS");
+			sms.setProvisioningType(Constants.PROVISIONING_SMSC);
 			sms.setIsdn(deliverSM.getSourceAddr().getAddress());
 			sms.setServiceAddress(deliverSM.getDestAddr().getAddress());
 			// sms.setShipTo(deliverSM.getSourceAddr().getAddress());
 
-			sms.setRequest(deliverSM.getShortMessage().toUpperCase());
-			sms.setKeyword(deliverSM.getShortMessage().toUpperCase());
+			sms.setRequest(message.toUpperCase().trim());
+			sms.setResponse(deliverSM.getResponse().debugString());
+			sms.setKeyword(message.toUpperCase().trim());
 
 			sms.setRequestId(deliverSM.getSequenceNumber());
 
@@ -1086,5 +1174,22 @@ public class SMPPConnection extends ProvisioningConnection
 		}
 		else
 			return null;
+	}
+	
+	public void prepaidSendLogTransmitter(CommandMessage request, SubmitSM submitRequest, int byteIndex)
+	{
+		try
+		{
+			TransmitterMessage transMessage = new TransmitterMessage();
+			transMessage.setSequenceNumber(submitRequest.getSequenceNumber());
+			CommandMessage transRequest = new CommandMessage();
+			transRequest = request.clone();
+			transRequest.setRequest(submitRequest.getSourceAddr().getAddress() + " - " + submitRequest.getShortMessage().substring(byteIndex));
+			transMessage.setMessage(transRequest);
+			((SMPPThread) getDispatcher()).attachTransmitter(transMessage);
+		}
+		catch (Exception e)
+		{
+		}
 	}
 }

@@ -107,6 +107,8 @@ public class OrderRoutingInstance extends ProvisioningInstance
 		CommandEntry command = null;
 
 		Exception error = null;
+		
+		boolean createOrder = false;
 
 		long costTotal = 0;
 		long costCreateOrder = 0;
@@ -211,7 +213,7 @@ public class OrderRoutingInstance extends ProvisioningInstance
 
 					order.setOrderDate(subscriberOrder.getOrderDate());
 					order.setOrderId(subscriberOrder.getOrderId());
-					order.getParameters().setBoolean("CreatedOrder", true);
+					createOrder = true;
 					
 					costCreateOrder = (System.currentTimeMillis() - startTime);
 				}
@@ -245,13 +247,16 @@ public class OrderRoutingInstance extends ProvisioningInstance
 
 			if (order.getStatus() != Constants.ORDER_STATUS_DENIED)
 			{
-				if (order.getChannel().equals(Constants.CHANNEL_SMS) && order.getParameters().getBoolean("CreatedOrder", false) == true)
+				if (order.getChannel().equals(Constants.CHANNEL_SMS) && createOrder)
 				{
 					CommandMessage logReceiver = new CommandMessage();
 					logReceiver = order.clone();
 					logReceiver.setRequest(order.getServiceAddress() + " - " + order.getKeyword());
 					logReceiver.setResponse(order.getResponse());
 					sendCommandLog(logReceiver);
+					
+					order.setRequest("");
+					order.setResponse("");
 				}
 				
 				if (orderRoute.getExecuteMethod() != null)
@@ -408,6 +413,8 @@ public class OrderRoutingInstance extends ProvisioningInstance
 		}
 		finally
 		{
+			order.getParameters().setBoolean("CreatedOrder", createOrder);
+			
 			costTotal = System.currentTimeMillis() - firstTime;
 
 			StringBuilder sbLog = new StringBuilder();

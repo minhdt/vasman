@@ -3,7 +3,6 @@ package com.crm.provisioning.thread;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.Time;
-import java.util.Calendar;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -38,7 +37,7 @@ public class CommandLogInstance extends DispatcherInstance
 {
 	protected PreparedStatement			stmtLog		= null;
 	protected Vector<Vector<Object>>	batchData	= null;
-	protected Calendar					startTime	= null;
+	protected long						startTime	= System.currentTimeMillis();
 
 	public CommandLogInstance() throws Exception
 	{
@@ -52,9 +51,9 @@ public class CommandLogInstance extends DispatcherInstance
 
 	public Object detachMessage() throws Exception
 	{
-		Calendar now = Calendar.getInstance();
+		long now = System.currentTimeMillis();
 
-		if ((now.getTimeInMillis() - startTime.getTimeInMillis() > 1000 * getDispatcher().updateDatabaseInterval)
+		if (((now - startTime) > (1000 * getDispatcher().updateDatabaseInterval))
 				|| (batchData.size() >= getDispatcher().maxBatchSize))
 		{
 			updateLog();
@@ -113,7 +112,7 @@ public class CommandLogInstance extends DispatcherInstance
 	public void beforeProcessSession() throws Exception
 	{
 		batchData = new Vector<Vector<Object>>();
-		startTime = Calendar.getInstance();
+		startTime = System.currentTimeMillis();
 		super.beforeProcessSession();
 	}
 
@@ -189,7 +188,7 @@ public class CommandLogInstance extends DispatcherInstance
 
 			debugMonitor(batchData.size() + " records were writen to database.");
 
-			startTime = Calendar.getInstance();
+			startTime = System.currentTimeMillis();
 			batchData.clear();
 		}
 		catch (Exception e)
