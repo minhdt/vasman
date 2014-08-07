@@ -39,14 +39,14 @@ public class QueueFactory
 {
 	public static String									QUEUE_FACTORY			= "jms/VAS";
 
-	public static String									ORDER_REQUEST_QUEUE		= "queue/OrderRoute";
-	public static String									ORDER_RESPONSE_QUEUE	= "queue/OrderResponse";
-	public static String									TCP_RESPONSE_QUEUE		= "queue/TCPResponse";
-	public static String									COMMAND_STATISTIC_QUEUE	= "queue/CommandStatistic";
-	public static String									COMMAND_ROUTE_QUEUE		= "queue/CommandRoute";
+	public static String									ORDER_REQUEST_QUEUE		= "vas/OrderRoute";
+	public static String									ORDER_RESPONSE_QUEUE	= "vas/OrderResponse";
+	public static String									TCP_RESPONSE_QUEUE		= "vas/TCPResponse";
+	public static String									COMMAND_STATISTIC_QUEUE	= "vas/CommandStatistic";
+	public static String									COMMAND_ROUTE_QUEUE		= "vas/CommandRoute";
 
-	public static String									COMMAND_LOG_QUEUE		= "queue/CommandLog";
-	public static String									COMMAND_CALLBACK		= "queue/CommandCallback";
+	public static String									COMMAND_LOG_QUEUE		= "vas/CommandLog";
+	public static String									COMMAND_CALLBACK		= "vas/CommandCallback";
 
 	public static boolean									queueServerEnable		= true;
 	public static Context									context					= null;
@@ -665,15 +665,15 @@ public class QueueFactory
 
 					queueConnectionPoolSize = configProvider.getInteger("connectionFactory", 100);
 
-					QUEUE_FACTORY = configProvider.getString("queue.factory", "jms/CCS");
+					QUEUE_FACTORY = configProvider.getString("queue.factory", "jms/VAS");
 
-					ORDER_REQUEST_QUEUE = configProvider.getString("queue.orderRoute", "queue/OrderRoute");
-					ORDER_RESPONSE_QUEUE = configProvider.getString("queue.orderResponse", "queue/OrderResponse");
-					COMMAND_STATISTIC_QUEUE = configProvider.getString("queue.commandStatistic", "queue/CommandStatistic");
+					ORDER_REQUEST_QUEUE = configProvider.getString("queue.orderRoute", "vas/OrderRoute");
+					ORDER_RESPONSE_QUEUE = configProvider.getString("queue.orderResponse", "vas/OrderResponse");
+					COMMAND_STATISTIC_QUEUE = configProvider.getString("queue.commandStatistic", "vas/CommandStatistic");
 
-					COMMAND_ROUTE_QUEUE = configProvider.getString("queue.commandRoute", "queue/CommandRoute");
-					COMMAND_LOG_QUEUE = configProvider.getString("queue.commandLog", "queue/CommandLog");
-					COMMAND_CALLBACK = configProvider.getString("queue.commandCallback", "queue/CommandCallback");
+					COMMAND_ROUTE_QUEUE = configProvider.getString("queue.commandRoute", "vas/CommandRoute");
+					COMMAND_LOG_QUEUE = configProvider.getString("queue.commandLog", "vas/CommandLog");
+					COMMAND_CALLBACK = configProvider.getString("queue.commandCallback", "vas/CommandCallback");
 
 					// connection mode
 					String mode = configProvider.getString("queue.connection", "dedicated");
@@ -751,13 +751,13 @@ public class QueueFactory
 
 			configProvider.loadFromFile("ServerConfig.txt");
 
-			ORDER_REQUEST_QUEUE = configProvider.getString("queue.orderRoute", "queue/OrderRoute");
-			ORDER_RESPONSE_QUEUE = configProvider.getString("queue.orderResponse", "queue/OrderResponse");
-			COMMAND_STATISTIC_QUEUE = configProvider.getString("queue.commandStatistic", "queue/CommandStatistic");
+			ORDER_REQUEST_QUEUE = configProvider.getString("queue.orderRoute", "vas/OrderRoute");
+			ORDER_RESPONSE_QUEUE = configProvider.getString("queue.orderResponse", "vas/OrderResponse");
+			COMMAND_STATISTIC_QUEUE = configProvider.getString("queue.commandStatistic", "vas/CommandStatistic");
 
-			COMMAND_ROUTE_QUEUE = configProvider.getString("queue.commandRoute", "queue/CommandRoute");
-			COMMAND_LOG_QUEUE = configProvider.getString("queue.commandLog", "queue/CommandLog");
-			COMMAND_CALLBACK = configProvider.getString("queue.commandCallback", "queue/CommandCallback");
+			COMMAND_ROUTE_QUEUE = configProvider.getString("queue.commandRoute", "vas/CommandRoute");
+			COMMAND_LOG_QUEUE = configProvider.getString("queue.commandLog", "vas/CommandLog");
+			COMMAND_CALLBACK = configProvider.getString("queue.commandCallback", "vas/CommandCallback");
 		}
 		catch (Exception e)
 		{

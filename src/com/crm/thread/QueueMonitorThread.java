@@ -1,6 +1,5 @@
 package com.crm.thread;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.text.NumberFormat;
 import java.util.Vector;
@@ -8,8 +7,6 @@ import java.util.Vector;
 import javax.jms.Queue;
 import javax.jms.QueueSession;
 
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
@@ -42,8 +39,6 @@ public class QueueMonitorThread extends DispatcherThread
 {
 	protected	String[]			externalQueues		= new String[0];
 
-	protected	String				applicationName		= "";
-	protected	String				monitorURL			= "";	
 	protected	int					maxSize				= 10000;
 	protected	int					warningSize			= 1000;
 	protected	String				warningDiskPath		= "";
@@ -64,9 +59,6 @@ public class QueueMonitorThread extends DispatcherThread
 	public Vector getDispatcherDefinition()
 	{
 		Vector vtReturn = new Vector();
-		
-		vtReturn.addElement(ThreadUtil.createTextParameter("appName", 200, "Application name."));
-		vtReturn.addElement(ThreadUtil.createTextParameter("monitorURL", 400, "Monitor URL."));
 
 		// data source connection
 		vtReturn.addElement(ThreadUtil.createIntegerParameter("queueMaxPending", ""));
@@ -80,9 +72,7 @@ public class QueueMonitorThread extends DispatcherThread
 			vtReturn.addElement(
 					ThreadUtil.createTextParameter("queueList", 4000, "list of external queue"));
 		}
-		vtReturn.addElement(ThreadUtil.createTextParameter("queueLocalName", 100, "jndi queue name"));
-		vtReturn.addElement(ThreadUtil.createIntegerParameter("queueLocalSize", "Max local queue size"));
-
+		
 		vtReturn.addElement(
 				ThreadUtil.createIntegerParameter("warningSize", "send alert when queue size is over this value"));
 		vtReturn.addElement(
@@ -100,7 +90,7 @@ public class QueueMonitorThread extends DispatcherThread
 
 		vtReturn.addElement(ThreadUtil.createBooleanParameter("alarmEnable", "send to alarm thread"));
 
-		vtReturn.addAll(ThreadUtil.createInstanceParameter(this));
+//		vtReturn.addAll(ThreadUtil.createInstanceParameter(this));
 		vtReturn.addAll(ThreadUtil.createLogParameter(this));
 
 		return vtReturn;
@@ -116,8 +106,6 @@ public class QueueMonitorThread extends DispatcherThread
 			super.fillParameter();
 
 			neverExpire = true;
-			applicationName = ThreadUtil.getString(this, "appName", false, "");
-			monitorURL = ThreadUtil.getString(this, "monitorURL", false, "");
 			
 			sysInfoInterval = ThreadUtil.getInt(this, "sysInfoInterval", 1000);
 
@@ -435,36 +423,6 @@ public class QueueMonitorThread extends DispatcherThread
 			}
 
 			Thread.sleep(1);
-		}
-	}
-	
-	public void sendToMonitorServer(String threadId, String log, String status)
-	{
-		if ("".equals(monitorURL))
-			return;
-		HttpPost post = null;
-
-		try
-		{
-			String userAgent = applicationName + "," + threadId + "," + status;
-
-			post = new HttpPost(monitorURL);
-			post.setHeader("User-Agent", userAgent);
-			post.setHeader("Connection", "close");
-
-			ByteArrayInputStream stream = new ByteArrayInputStream(log.getBytes());
-
-			post.setEntity(new InputStreamEntity(stream, log.length()));
-			httpClient.execute(post);
-		}
-		catch (Exception e)
-		{
-			debugMonitor(e);
-		}
-		finally
-		{
-			if (post != null)
-				post.releaseConnection();
 		}
 	}	
 }

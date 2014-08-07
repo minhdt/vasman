@@ -6,7 +6,9 @@ package com.crm.provisioning.thread;
 import java.util.Date;
 import java.util.Vector;
 
+import com.crm.alarm.cache.AlarmFactory;
 import com.crm.kernel.domain.DomainFactory;
+import com.crm.marketing.cache.CampaignFactory;
 import com.crm.product.cache.ProductFactory;
 import com.crm.provisioning.cache.ProvisioningConnection;
 import com.crm.provisioning.cache.ProvisioningEntry;
@@ -14,7 +16,6 @@ import com.crm.provisioning.cache.ProvisioningFactory;
 import com.crm.provisioning.cache.ProvisioningPool;
 import com.crm.provisioning.util.CommandUtil;
 import com.crm.thread.DispatcherThread;
-
 import com.crm.thread.util.ThreadUtil;
 import com.fss.util.AppException;
 
@@ -174,6 +175,8 @@ public class ProvisioningThread extends DispatcherThread
 			DomainFactory.loadCache(now);
 			ProductFactory.loadCache(now);
 			ProvisioningFactory.loadCache(now);
+			CampaignFactory.loadCache(now);
+			AlarmFactory.loadCache(now);
 		}
 		catch (Exception e)
 		{

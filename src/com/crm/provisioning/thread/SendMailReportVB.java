@@ -8,7 +8,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Vector;
@@ -28,10 +27,9 @@ import jxl.write.WritableWorkbook;
 import jxl.write.WriteException;
 import jxl.write.biff.RowsExceededException;
 
-import org.apache.log4j.Logger;
-
 import com.crm.kernel.sql.Database;
 import com.crm.thread.MailThread;
+import com.crm.util.StringUtil;
 import com.fss.thread.ParameterType;
 import com.fss.util.AppException;
 
@@ -41,16 +39,17 @@ public class SendMailReportVB extends MailThread
 	protected String SQLSubscription = "";
 	protected String SQLUnSubscription = "";
 	protected String SQLRenew = "";
-	protected String _timeRun = "";
+	protected String productList = "";
+	protected String content = "";
 
 	protected PreparedStatement _stmtSubscription = null;
 	protected PreparedStatement _stmtUnSubscription = null;
 	protected PreparedStatement _stmtRenewal = null;
 	protected PreparedStatement _stmtUpdate = null;
-	private Connection _conn = null;
 
 	private WritableCellFormat timesBoldUnderline;
 	private WritableCellFormat times;
+	private Connection connection = null;
 	{
 
 	}
@@ -71,8 +70,10 @@ public class SendMailReportVB extends MailThread
 				ParameterType.PARAM_TEXTAREA_MAX, "100", ""));
 		vtReturn.addElement(createParameterDefinition("SQLRenew", "",
 				ParameterType.PARAM_TEXTAREA_MAX, "100", ""));
-		vtReturn.addElement(createParameterDefinition("TimeRun", "",
-				ParameterType.PARAM_TEXTBOX_MAX, "100"));
+		vtReturn.addElement(createParameterDefinition("ProductList", "",
+				ParameterType.PARAM_TEXTAREA_MAX, "100", ""));
+		vtReturn.addElement(createParameterDefinition("MailContent", "",
+				ParameterType.PARAM_TEXTAREA_MAX, "100", ""));
 		
 		vtReturn.addAll(super.getParameterDefinition());
 		
@@ -93,7 +94,8 @@ public class SendMailReportVB extends MailThread
 			SQLSubscription = loadMandatory("SQLSubscription");
 			SQLUnSubscription = loadMandatory("SQLUnsubscription");
 			SQLRenew = loadMandatory("SQLRenew");
-			setTimeRun(loadMandatory("TimeRun"));
+			productList = loadMandatory("ProductList");
+			content = loadMandatory("MailContent");
 		}
 		catch (AppException e)
 		{
@@ -111,18 +113,9 @@ public class SendMailReportVB extends MailThread
 
 		try
 		{
-			_conn = Database.getConnection();
-			String strSQL = SQLSubscription;
-			_stmtSubscription = _conn.prepareStatement(strSQL);
-
-			strSQL = SQLUnSubscription;
-			_stmtUnSubscription = _conn.prepareStatement(strSQL);
-
-			strSQL = SQLRenew;
-			_stmtRenewal = _conn.prepareStatement(strSQL);
-
-			strSQL = "Update subscriberproduct set lastrundate = sysdate where subproductid = ?";
-			_stmtUpdate = _conn.prepareStatement(strSQL);
+			connection = Database.getConnection();
+			String strSQL = "Update subscriberproduct set status = 1 where subproductid = ?";
+			_stmtUpdate = connection.prepareStatement(strSQL);
 		}
 		catch (Exception e)
 		{
@@ -143,7 +136,7 @@ public class SendMailReportVB extends MailThread
 			Database.closeObject(_stmtUnSubscription);
 			Database.closeObject(_stmtRenewal);
 			Database.closeObject(_stmtUpdate);
-			Database.closeObject(_conn);
+			Database.closeObject(connection);
 		}
 		catch (Exception e)
 		{
@@ -159,43 +152,50 @@ public class SendMailReportVB extends MailThread
 	{
 		try
 		{
-			Date cur = new Date();
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-			Calendar timeRun = Calendar.getInstance();
-			timeRun.setTime(sdf.parse(getTimeRun()));
-			
-			if (!cur.before(timeRun.getTime()))
+			File file = new File(folderPath);
+			if (!file.exists())
 			{
-				File file = new File(folderPath);
-				if (!file.exists())
-				{
-					file.mkdirs();
-				}
-	
-				String subscriptionFilePath = "";
-				String unsubscriptionFilePath = "";
-				String renewalFilePath = "";
-				if (folderPath.endsWith("/"))
-				{
-					subscriptionFilePath = folderPath + "SubscriptionList.xls";
-					unsubscriptionFilePath = folderPath + "UnsubscriptionList.xls";
-					renewalFilePath = folderPath + "RenewalList.xls";
-				}
-				else
-				{
-					subscriptionFilePath = folderPath + "/SubscriptionList.xls";
-					unsubscriptionFilePath = folderPath + "/UnsubscriptionList.xls";
-					renewalFilePath = folderPath + "/RenewalList.xls";
-				}
-	
+				file.mkdirs();
+			}
+
+			String subscriptionFilePath = "";
+			String unsubscriptionFilePath = "";
+			String renewalFilePath = "";
+			if (folderPath.endsWith("/"))
+			{
+				subscriptionFilePath = folderPath + "SubscriptionList.xls";
+				unsubscriptionFilePath = folderPath + "UnsubscriptionList.xls";
+				renewalFilePath = folderPath + "RenewalList.xls";
+			}
+			else
+			{
+				subscriptionFilePath = folderPath + "/SubscriptionList.xls";
+				unsubscriptionFilePath = folderPath + "/UnsubscriptionList.xls";
+				renewalFilePath = folderPath + "/RenewalList.xls";
+			}
+			
+			String[] arrProduct = StringUtil.toStringArray(productList, ";");
+			String[] arrSubject = StringUtil.toStringArray(getSubject(), ";");
+			String[] arrSender = StringUtil.toStringArray(getSender(), ";");
+			for (int i=0; i<arrProduct.length; i++)
+			{
+				String strSQL = SQLSubscription;
+				_stmtSubscription = connection.prepareStatement(strSQL);
+				_stmtSubscription.setLong(1, Long.parseLong(arrProduct[i]));
 				writeExcelFile(subscriptionFilePath, "Subscription List",
 						"Subscription List", "No.,Subscription Date,A-number",
 						_stmtSubscription);
-	
+				
+				strSQL = SQLUnSubscription;
+				_stmtUnSubscription = connection.prepareStatement(strSQL);
+				_stmtUnSubscription.setLong(1, Long.parseLong(arrProduct[i]));
 				writeExcelFile(unsubscriptionFilePath, "Unsubscription List",
 						"Unsubscription List", "No.,Unsubscription Date,A-number",
 						_stmtUnSubscription);
-	
+				
+				strSQL = SQLRenew;
+				_stmtRenewal = connection.prepareStatement(strSQL);
+				_stmtRenewal.setLong(1, Long.parseLong(arrProduct[i]));
 				writeExcelFile(renewalFilePath, "Renewal List", "Renewal List",
 						"No.,Renew Date,A-number", _stmtRenewal);
 				
@@ -205,23 +205,15 @@ public class SendMailReportVB extends MailThread
 	
 				String strFileName = subscriptionFilePath + ";"
 						+ unsubscriptionFilePath + ";" + renewalFilePath;
-	
-				sendEmail(getSubject() + df.format(date), getContentType(), strFileName);
-				
-				timeRun.add(Calendar.DATE, 1);
-				setTimeRun(sdf.format(timeRun.getTime()));
-				mprtParam.setProperty("TimeRun", getTimeRun());
-			}
-			else
-			{
-				logMonitor("Not time to run...");
+
+				sendEmail(arrSubject[i] + df.format(date), arrSender[i], getRecipients(), content, strFileName);
 			}
 			
 			storeConfig();
 		}
 		catch (Exception ex)
 		{
-			_logger.error("SendReportVB: " + ex.getMessage());
+			ex.printStackTrace();
 		}
 		finally
 		{
@@ -252,7 +244,7 @@ public class SendMailReportVB extends MailThread
 		catch (Exception ex)
 		{
 			debugMonitor("Loi xay ra khi tao file excel:" + ex.getMessage());
-			_logger.error("SendReportVB:" + ex.getMessage());
+			ex.printStackTrace();
 		}
 	}
 
@@ -319,7 +311,7 @@ public class SendMailReportVB extends MailThread
 
 				addLabel(sheet, 1, row, df.format(result.getTimestamp("dates")));
 
-				addLabel(sheet, 2, row, result.getString("sourceaddress"));
+				addLabel(sheet, 2, row, result.getString("isdn"));
 				counter++;
 				row++;
 
@@ -329,7 +321,7 @@ public class SendMailReportVB extends MailThread
 			if (counter > 1)
 			{
 				_stmtUpdate.executeBatch();
-				_conn.commit();
+				connection.commit();
 			}
 
 		}
@@ -337,7 +329,7 @@ public class SendMailReportVB extends MailThread
 		{
 			debugMonitor("Loi xay ra khi tao noi dung file excel:"
 					+ ex.getMessage());
-			_logger.error("SendReportVB: " + ex.getMessage());
+			ex.printStackTrace();
 		}
 		finally
 		{
@@ -376,16 +368,4 @@ public class SendMailReportVB extends MailThread
 		label = new Label(column, row, s, times);
 		sheet.addCell(label);
 	}
-	
-	public String getTimeRun()
-	{
-		return _timeRun;
-	}
-
-	public void setTimeRun(String _timeRun)
-	{
-		this._timeRun = _timeRun;
-	}
-
-	private static Logger _logger = Logger.getLogger(SendMailReportVB.class);
 }

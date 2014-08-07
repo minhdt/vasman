@@ -49,7 +49,6 @@ public class DBQueueThread extends DispatcherThread
 	protected boolean			pushFreeRequest		= false;
 
 	public int					totalServerPending	= 0;
-	protected long				enquireInterval		= 900000;
 	private int					counter				= 0;
 	
 	protected long				lastRunTime			= System.currentTimeMillis();
@@ -71,7 +70,7 @@ public class DBQueueThread extends DispatcherThread
 		
 		vtReturn.addElement(ThreadUtil.createIntegerParameter("pendingMaxSize", "max request is waitting for process"));
 		vtReturn.addElement(ThreadUtil.createIntegerParameter("overloadWaitTime", "wait in seconds when system is overloading"));
-		vtReturn.addElement(ThreadUtil.createLongParameter("EnquireInterval", ""));
+
 		if (QueueFactory.queueServerEnable)
 		{
 			vtReturn.addElement(
@@ -108,7 +107,7 @@ public class DBQueueThread extends DispatcherThread
 			{
 				batchSize = queueLocalSize;
 			}
-			enquireInterval = ThreadUtil.getLong(this, "EnquireInterval", 900000);
+			
 			orderTimeOut = ThreadUtil.getInt(this, "OrderTimeOut", 60000);
 			pushFreeRequest = ThreadUtil.getBoolean(this, "PushFreeRequest", false);
 		}

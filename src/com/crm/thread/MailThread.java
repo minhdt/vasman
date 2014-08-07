@@ -408,6 +408,11 @@ public class MailThread extends DispatcherThread
 		}
 	}
 	
+	public void sendEmail(String strSubject, String strSender, String srtRecipients, String strContent, String strFileName) throws Exception
+	{
+		sendEmail(strSubject, strSender, srtRecipients, strContent, strFileName, ";");
+	}
+	
 	public void sendEmail(String strSubject, String strSender, String srtRecipients, String strContent, String strFileName, String comma) throws Exception
 	{
 		try
