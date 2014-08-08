@@ -168,7 +168,7 @@
 	ClassName==com.crm.provisioning.thread.OrderRoutingThread
 	StartupType==1
 	Parameter
-		host==http://10.8.13.140/ccws/ccws.asmx
+		host==http://10.230.1.200/ccws/ccws.asmx
 		testOnBorrow==No
 		instanceSize==100
 		softMinEvictableIdleTimeMillis==0
@@ -180,12 +180,12 @@
 		autoReplyIfOverload==No
 		maxWait==60000
 		instanceClass==com.crm.provisioning.thread.OrderRoutingInstance
-		userName==NMS_CCS
+		userName==NMS_APP
 		loadCacheEnable==Yes
 		queueMaxPendingSize==1000
 		minEvictableIdleTimeMillis==0
 		simulationMode==No
-		password==nmsccs!23
+		password==Nms!@#456
 		maxActive==100
 		testWhileIdle==No
 		simulationCause
@@ -320,7 +320,7 @@
 	ClassName==com.crm.provisioning.thread.CommandThread
 	StartupType==1
 	Parameter
-		host==10.8.13.202
+		host==ossdb.vietnamobile.net.vn
 		testOnBorrow==No
 		instanceSize==100
 		softMinEvictableIdleTimeMillis==0
@@ -331,11 +331,11 @@
 		queueName==vas/CRM
 		maxWait==60000
 		instanceClass==com.crm.provisioning.thread.CommandInstance
-		userName==owner_sdp2
+		userName==APP_SDP2
 		loadCacheEnable==No
 		minEvictableIdleTimeMillis==0
 		simulationMode==No
-		password==sdpnms123
+		password==SDP23123app
 		maxActive==100
 		testWhileIdle
 		simulationCause
@@ -366,7 +366,7 @@
 	ClassName==com.crm.provisioning.thread.CommandThread
 	StartupType==1
 	Parameter
-		host==http://10.8.13.140/ccws/ccws.asmx
+		host==http://10.230.1.200/ccws/ccws.asmx
 		testOnBorrow==No
 		instanceSize==100
 		softMinEvictableIdleTimeMillis==1
@@ -377,11 +377,11 @@
 		queueName==vas/CCWS
 		maxWait==60000
 		instanceClass==com.crm.provisioning.thread.CommandInstance
-		userName==NMS_CCS
+		userName==NMS_APP
 		loadCacheEnable==No
 		minEvictableIdleTimeMillis==0
 		simulationMode==No
-		password==nmsccs!23
+		password==Nms!@#456
 		maxActive==100
 		testWhileIdle==No
 		simulationCause
@@ -412,7 +412,7 @@
 	ClassName==com.crm.provisioning.thread.CommandThread
 	StartupType==1
 	Parameter
-		host==10.8.8.10
+		host==10.8.7.17
 		testOnBorrow==Yes
 		instanceSize==1
 		softMinEvictableIdleTimeMillis==10000
@@ -423,16 +423,16 @@
 		queueName==vas/CB
 		maxWait==60000
 		instanceClass==com.crm.provisioning.thread.CommandInstance
-		userName==POS
+		userName==PPV
 		loadCacheEnable==No
 		minEvictableIdleTimeMillis==0
 		simulationMode==No
-		password==abcd1234
+		password==Abcd!23456
 		maxActive==1
 		testWhileIdle==Yes
 		simulationCause
 		numTestsPerEvictionRun==1
-		port==30315
+		port==40015
 		displayDebug==No
 		lifo==Yes
 		simulationExecuteTime
@@ -458,7 +458,7 @@
 	ClassName==com.crm.provisioning.thread.osa.OSAThread
 	StartupType==1
 	Parameter
-		host==http://rtbstest.htmobile.com.vn/osa/mobility
+		host==http://rtbs.htmobile.com.vn/osa/mobility
 		applicationName==VASMAN
 		localCallback==Yes
 		merchantAccount==NMS
@@ -469,10 +469,10 @@
 		snapshotInterval
 		queueName==vas/OSA
 		instanceClass==com.crm.provisioning.thread.osa.OSACommandInstance
-		userName==nms
+		userName==NMS_APP
 		loadCacheEnable==No
 		simulationMode==No
-		password==nms
+		password==Nms!@#456
 		simulationCause
 		port==0
 		displayDebug==No
@@ -484,7 +484,7 @@
 		provisioning==OSA
 		neverExpire==Yes
 		merchantId==6
-		callbackHost==10.8.13.32
+		callbackHost==10.8.11.21
 		statisticInterval
 		currency==VND
 		timeout==60000
@@ -530,7 +530,7 @@
 	ClassName==com.crm.provisioning.thread.EMACommandThread
 	StartupType==1
 	Parameter
-		host==192.168.194.4
+		host==10.10.194.16
 		testOnBorrow==No
 		instanceSize==16
 		softMinEvictableIdleTimeMillis==0
@@ -542,11 +542,11 @@
 		queueName==vas/EMA
 		maxWait==60000
 		instanceClass==com.crm.provisioning.thread.CommandInstance
-		userName==selfcare
+		userName==VASMGNT
 		loadCacheEnable==No
 		minEvictableIdleTimeMillis==0
 		simulationMode==No
-		password==ematest
+		password==vasmgnt
 		maxActive==16
 		testWhileIdle==Yes
 		simulationCause
@@ -623,7 +623,7 @@
 	ClassName==com.crm.provisioning.thread.EPOSCommandThread
 	StartupType==1
 	Parameter
-		host==10.8.13.61
+		host==10.8.2.205
 		testOnBorrow==Yes
 		instanceSize==5
 		softMinEvictableIdleTimeMillis==0
@@ -635,16 +635,16 @@
 		queueName==vas/3G
 		maxWait==60000
 		instanceClass==com.crm.provisioning.thread.CommandInstance
-		userName==APITEST2
+		userName==vasman
 		loadCacheEnable==No
 		minEvictableIdleTimeMillis==0
 		simulationMode==No
-		password==fCIvspJ9goryL1khNOiTJIBjfA0=
+		password==zGKAmLS9nlBBjdRxf+2+X0JiRvg=
 		maxActive==5
 		testWhileIdle==Yes
 		simulationCause
 		numTestsPerEvictionRun==5
-		port==7865
+		port==7883
 		displayDebug==No
 		lifo==Yes
 		simulationExecuteTime
@@ -716,7 +716,7 @@
 	ClassName==com.crm.provisioning.thread.CommandThread
 	StartupType==1
 	Parameter
-		host==192.168.96.30
+		host==10.8.39.10
 		testOnBorrow==No
 		instanceSize==4
 		softMinEvictableIdleTimeMillis==0
@@ -727,16 +727,16 @@
 		queueName==vas/CBS
 		maxWait==60000
 		instanceClass==com.crm.provisioning.thread.CommandInstance
-		userName==vnmtest
+		userName==callblocking
 		loadCacheEnable==No
 		minEvictableIdleTimeMillis==0
 		simulationMode==No
-		password==vnmpwdtest
+		password==hdnh8872ndhn
 		maxActive==4
 		testWhileIdle==No
 		simulationCause
 		numTestsPerEvictionRun==4
-		port==80
+		port==8080
 		displayDebug==No
 		lifo==Yes
 		simulationExecuteTime==100

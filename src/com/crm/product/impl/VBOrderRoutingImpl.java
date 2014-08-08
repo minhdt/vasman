@@ -907,28 +907,38 @@ public class VBOrderRoutingImpl extends VASOrderRoutingImpl
 			}
 		}
 		
-		String currentState = "";
-		try
+		if (order.getActionType().equals(Constants.ACTION_SUBSCRIPTION)
+				&& !Constants.ERROR_REGISTERED.equals(order.getCause()))
 		{
-			currentState = getSubscriberState(instance, orderRoute, product, order);
-		}
-		catch (Exception e)
-		{
-
-		}
-		if (!currentState.equals(Constants.BALANCE_STATE_ACTIVE)
-				&& order.getParameters().getProperty("IsQueryRTBS","false").equals("true")
-				&& order.getStatus() == Constants.ORDER_STATUS_DENIED)
-		{
-			order.setActionType(Constants.ACTION_UNREGISTER);
+			if (subscriberProduct == null)
+			{
+				order.setStatus(Constants.ORDER_STATUS_DENIED);
+				order.setCause(Constants.ERROR_SUBSCRIPTION_NOT_FOUND);
+			}
 			
-			order.setDescription(order.getCause());
-			order.setCause("");
-			/**
-			 * unregister for all subtype = prepaid subtype
-			 */
-			order.setSubscriberType(Constants.PREPAID_SUB_TYPE);
-			order.setStatus(Constants.ORDER_STATUS_PENDING);
+			String currentState = "";
+			try
+			{
+				currentState = getSubscriberState(instance, orderRoute, product, order);
+			}
+			catch (Exception e)
+			{
+	
+			}
+			if (!currentState.equals(Constants.BALANCE_STATE_ACTIVE)
+					&& order.getParameters().getProperty("IsQueryRTBS","false").equals("true")
+					&& order.getStatus() == Constants.ORDER_STATUS_DENIED)
+			{
+				order.setActionType(Constants.ACTION_UNREGISTER);
+				
+				order.setDescription(order.getCause());
+				order.setCause("");
+				/**
+				 * unregister for all subtype = prepaid subtype
+				 */
+				order.setSubscriberType(Constants.PREPAID_SUB_TYPE);
+				order.setStatus(Constants.ORDER_STATUS_PENDING);
+			}
 		}
 
 		if ((error != null) && !(error instanceof AppException))

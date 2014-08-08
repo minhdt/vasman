@@ -310,7 +310,8 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 			}
 		}
 
-		if (order.getActionType().equals(Constants.ACTION_SUBSCRIPTION) && error == null)
+		if (order.getActionType().equals(Constants.ACTION_SUBSCRIPTION)
+				&& !Constants.ERROR_REGISTERED.equals(order.getCause()))
 		{
 			if (subscriberProduct == null)
 			{

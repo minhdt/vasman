@@ -121,12 +121,12 @@ public class VIMReportThread extends MailThread
 					+ productKeyword + "'";
 			stmtCheck = connection.prepareStatement(strSQL);
 
-			logMonitor("SQL check: " + strSQL);
+//			logMonitor("SQL check: " + strSQL);
 
 			strSQL = _strSQL.replaceAll("<%DATE%>", timeRun);
 			stmtQueue = connection.prepareStatement(strSQL);
 
-			logMonitor("SQL get data: " + strSQL);
+//			logMonitor("SQL get data: " + strSQL);
 		}
 		catch (Exception e)
 		{
