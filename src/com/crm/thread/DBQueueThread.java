@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.util.Date;
 import java.util.Vector;
 
+import com.crm.kernel.message.Constants;
 import com.crm.kernel.queue.QueueFactory;
 import com.crm.kernel.sql.Database;
 import com.crm.provisioning.message.CommandMessage;
@@ -172,9 +173,6 @@ public class DBQueueThread extends DispatcherThread
 			QueueFactory.getLocalQueue(queueLocalName).empty();
 
 			QueueFactory.getLocalQueue(queueLocalName).setCheckPending(false);
-			
-			loadDataBase();
-			
 		}
 		catch (Exception e)
 		{
@@ -258,6 +256,10 @@ public class DBQueueThread extends DispatcherThread
 		}
 		catch (Exception e)
 		{
+			logMonitor(e);
+			
+			sendInstanceAlarm(e, Constants.ERROR);
+			
 			throw e;
 		}
 		finally

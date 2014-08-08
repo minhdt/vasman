@@ -3,14 +3,16 @@ package com.crm.provisioning.thread;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Vector;
-import java.util.concurrent.ConcurrentHashMap;
 
+import com.crm.kernel.message.Constants;
 import com.crm.kernel.queue.QueueFactory;
 import com.crm.kernel.sql.Database;
 import com.crm.provisioning.message.CommandMessage;
 import com.crm.thread.util.ThreadUtil;
+import com.crm.util.DateUtil;
 import com.crm.util.StringUtil;
 import com.fss.thread.ParameterType;
 import com.fss.util.AppException;
@@ -18,18 +20,18 @@ import com.fss.util.AppException;
 public class LowBalanceAlertThread extends ProvisioningThread
 {
 	@SuppressWarnings("rawtypes")
-	protected Vector vtAlert = new Vector();
-	
-	protected Connection connection = null;
-	protected PreparedStatement _stmtQueue = null;
-	protected ResultSet rsQueue = null;
+	protected Vector			vtAlert						= new Vector();
 
-	protected String _sqlCommand = "";
-	protected int _restTime = 5;
-	
-	protected long enquireInterval = 900000;
-	
-	public ConcurrentHashMap<Long, Date>	indexes				= new ConcurrentHashMap<Long, Date>();
+	protected Connection		connection					= null;
+	protected PreparedStatement	stmtQueue					= null;
+	protected PreparedStatement	stmtScheduleFlexi			= null;
+	protected PreparedStatement	stmtFlexi					= null;
+
+	protected ResultSet			rsQueue						= null;
+
+	protected String			sqlCommand					= "";
+	protected int				restTime					= 5;
+	protected int				batchCounter				= 0;
 
 	// //////////////////////////////////////////////////////
 	// Override
@@ -66,13 +68,12 @@ public class LowBalanceAlertThread extends ProvisioningThread
 
 		vtReturn.addElement(createParameterDefinition("AlertConfig", "",
 				ParameterType.PARAM_TABLE, vtValue, "Alert Config"));
-		
+
 		vtReturn.addElement(createParameterDefinition("SQLCommand", "",
 				ParameterType.PARAM_TEXTBOX_MAX, "100"));
 		vtReturn.addElement(createParameterDefinition("RestTime", "",
 				ParameterType.PARAM_TEXTBOX_MAX, "100"));
-		vtReturn.addElement(ThreadUtil.createLongParameter("EnquireInterval", ""));
-		
+
 		vtReturn.addAll(super.getParameterDefinition());
 
 		return vtReturn;
@@ -93,10 +94,9 @@ public class LowBalanceAlertThread extends ProvisioningThread
 			{
 				vtAlert = (Vector) ((Vector) obj).clone();
 			}
-			
-			setSQLCommand(loadMandatory("SQLCommand"));
-			setRestTime(loadInteger("RestTime"));
-			setEnquireInterval(loadLong("EnquireInterval"));
+
+			sqlCommand = ThreadUtil.getString(this, "SQLCommand", true, "");
+			restTime = ThreadUtil.getInt(this, "RestTime", 5);
 		}
 		catch (AppException e)
 		{
@@ -107,7 +107,7 @@ public class LowBalanceAlertThread extends ProvisioningThread
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void beforeProcessSession() throws Exception
 	{
 		super.beforeProcessSession();
@@ -115,28 +115,27 @@ public class LowBalanceAlertThread extends ProvisioningThread
 		try
 		{
 			QueueFactory.getLocalQueue(queueLocalName).empty();
-			indexes.clear();
 
-			connection = Database.getConnection();
-			
-			String strSQL = getSQLCommand();
-			_stmtQueue = connection.prepareStatement(strSQL);
+			QueueFactory.getLocalQueue(queueLocalName).setCheckPending(false);
 		}
 		catch (Exception e)
 		{
 			throw e;
 		}
 	}
-	
+
 	public void afterProcessSession() throws Exception
 	{
 		try
 		{
-			QueueFactory.getLocalQueue(queueLocalName).empty();
-			indexes.clear();
-			
-			Database.closeObject(_stmtQueue);
-			Database.closeObject(connection);
+			if (connection != null && !connection.isClosed())
+			{
+				updateToDB();
+				Database.closeObject(stmtQueue);
+				Database.closeObject(stmtFlexi);
+				Database.closeObject(stmtScheduleFlexi);
+				Database.closeObject(connection);
+			}
 		}
 		catch (Exception e)
 		{
@@ -144,61 +143,190 @@ public class LowBalanceAlertThread extends ProvisioningThread
 		}
 		finally
 		{
+			QueueFactory.getLocalQueue(queueLocalName).empty();
 			super.afterProcessSession();
 		}
 	}
-	
-	public CommandMessage pushMessage() throws Exception
-	{
-		CommandMessage request = new CommandMessage();
 
-		request.setRequestTime(new Date());
-		request.setUserName("system");
-		request.setChannel("SMS");
-		request.setSubProductId(rsQueue.getLong("subproductid"));
-		request.setProductId(rsQueue.getLong("productid"));
-		request.setServiceAddress("LBA");
-		request.setIsdn(rsQueue.getString("isdn"));
-		request.setKeyword("LowBalanceAlert");
-		request.getParameters().setProperty("SubscriberStatus", StringUtil.valueOf(rsQueue.getInt("status")));
-
-		return request;
-	}
-	
-	public void doProcessSession() throws Exception
+	public void loadDataBase() throws Exception
 	{
 		try
 		{
-			rsQueue = _stmtQueue.executeQuery();
-	
-			while (isAvailable() && rsQueue.next())
+			connection = Database.getConnection();
+
+			String strSQL = sqlCommand;
+			stmtQueue = connection.prepareStatement(strSQL);
+
+			strSQL = "UPDATE SubscriberProduct SET  scheduletime = ? WHERE subproductid = ? ";
+			stmtScheduleFlexi = connection.prepareStatement(strSQL);
+
+			strSQL = "UPDATE SubscriberProduct SET  scheduletime = ?, status = ? WHERE subproductid = ? ";
+			stmtFlexi = connection.prepareStatement(strSQL);
+		}
+		catch (Exception e)
+		{
+			throw e;
+		}
+	}
+
+	public synchronized void updateFlexi(long id, Calendar scanTime, int status)
+	{
+		try
+		{
+			stmtFlexi.setTimestamp(
+					1,
+					(scanTime != null ? DateUtil.getTimestampSQL(scanTime
+							.getTime()) : null));
+			stmtFlexi.setInt(2, status);
+			stmtFlexi.setLong(3, id);
+
+			addBatchCount();
+			if (getBatchCount() >= 50)
 			{
-				CommandMessage request = pushMessage();
-
-				long requestId = rsQueue.getLong("subproductid");
-
-				long now = System.currentTimeMillis();
-				Date requestDate = indexes.get(requestId);
-				if (requestDate == null
-						|| (requestDate != null && (now - requestDate.getTime()) > 60000))
-				{
-					QueueFactory.attachLocal(queueLocalName, request);
-
-					indexes.put(requestId, new Date());
-				}
-				else
-				{
-					logMonitor("SubProductId " + requestId + " is loaded");
-				}
-
-				Thread.sleep(getRestTime());
+				setBatchCount(0);
+				updateToDB();
 			}
 		}
 		catch (Exception e)
 		{
-			logMonitor(e);
+			debugMonitor(e);
+		}
+	}
+
+	public synchronized void updateScheduleFlexi(long id, Calendar scanTime)
+	{
+		try
+		{
+			stmtScheduleFlexi.setTimestamp(
+					1,
+					(scanTime != null ? DateUtil.getTimestampSQL(scanTime
+							.getTime()) : null));
+			stmtScheduleFlexi.setLong(2, id);
+
+			addBatchCount();
+			if (getBatchCount() >= 50)
+			{
+				setBatchCount(0);
+				updateToDB();
+			}
+		}
+		catch (Exception e)
+		{
+			debugMonitor(e);
+		}
+	}
+
+	public void updateToDB() throws Exception
+	{
+		if (stmtScheduleFlexi != null)
+		{
+			stmtScheduleFlexi.executeBatch();
+		}
+
+		if (stmtFlexi != null)
+		{
+			stmtFlexi.executeBatch();
+		}
+		
+		connection.commit();
+	}
+
+	public void closeDatabase() throws Exception
+	{
+		try
+		{
+			try
+			{
+				updateToDB();
+			}
+			finally
+			{
+				Database.closeObject(stmtQueue);
+				Database.closeObject(stmtFlexi);
+				Database.closeObject(stmtScheduleFlexi);
+				Database.closeObject(connection);
+			}
+		}
+		catch (Exception e)
+		{
+			throw e;
+		}
+		finally
+		{
+			stmtQueue = null;
+			stmtFlexi = null;
+			stmtScheduleFlexi = null;
+			connection = null;
+			QueueFactory.getLocalQueue(queueLocalName).empty();
+		}
+	}
+	
+	public synchronized void addBatchCount()
+	{
+		batchCount++;
+	}
+	
+	public synchronized void setBatchCount(int count)
+	{
+		batchCount = count;
+	}
+
+	public synchronized int getBatchCount()
+	{
+		return batchCount;
+	}
+
+	public void doProcessSession() throws Exception
+	{
+		try
+		{
+			boolean EOF = false;
 			
-//			sendInstanceAlarm(e, Constants.ERROR);
+			loadDataBase();
+			
+			rsQueue = stmtQueue.executeQuery();
+
+			while (isAvailable() && !EOF)
+			{
+				checkInstance();
+				
+				if (rsQueue.next())
+				{
+					CommandMessage request = new CommandMessage();
+	
+					request.setRequestTime(new Date());
+					request.setUserName("system");
+					request.setChannel("SMS");
+					request.setSubProductId(rsQueue.getLong("subproductid"));
+					request.setProductId(rsQueue.getLong("productid"));
+					request.setServiceAddress("LBA");
+					request.setIsdn(rsQueue.getString("isdn"));
+					request.setKeyword("LowBalanceAlert");
+					request.getParameters().setProperty("SubscriberStatus",
+							StringUtil.valueOf(rsQueue.getInt("status")));
+	
+					QueueFactory.attachLocal(queueLocalName, request);
+				}
+				else
+				{
+					EOF = true;
+					Thread.sleep(3000);
+				}
+			}
+			
+			closeDatabase();
+		}
+		catch (Exception e)
+		{
+			logMonitor(e);
+
+			sendInstanceAlarm(e, Constants.ERROR);
+			
+			throw e;
+		}
+		finally
+		{
+			Database.closeObject(rsQueue);
 		}
 	}
 
@@ -293,33 +421,5 @@ public class LowBalanceAlertThread extends ProvisioningThread
 			}
 		}
 		return serviceAddress;
-	}
-	
-	public void setSQLCommand(String _sqlCommand)
-	{
-		this._sqlCommand = _sqlCommand;
-	}
-
-	public String getSQLCommand()
-	{
-		return _sqlCommand;
-	}
-	
-	public int getRestTime() {
-		return _restTime;
-	}
-
-	public void setRestTime(int _restTime) {
-		this._restTime = _restTime;
-	}
-	
-	public void setEnquireInterval(long enquireInterval)
-	{
-		this.enquireInterval = enquireInterval;
-	}
-
-	public long getEnquireInterval()
-	{
-		return enquireInterval;
 	}
 }
