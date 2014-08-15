@@ -581,6 +581,7 @@ public abstract class PDU extends ByteData
         for (int i = 0; i < size; i++) {
             tlv = (TLV)optionalParameters.get(i);
             if ((tlv != null) && tlv.hasValue()) {
+                //GiangNT added System.out.println("Received Tag number: " + tlv.getTag());
                 optBody.appendBuffer(tlv.getData());
             }
         }

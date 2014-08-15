@@ -42,6 +42,7 @@ public class DefaultDebug implements Debug
     public void enter(Object from, String name)
     {
         if (active) {
+            System.out.println(getDelimiter(true, from, name));
             indent++;
         }
     }
@@ -54,6 +55,7 @@ public class DefaultDebug implements Debug
     public void write(String msg)
     {
         if (active) {
+            System.out.println(getIndent() + " " + msg);
         }
     }
 
@@ -70,6 +72,7 @@ public class DefaultDebug implements Debug
                 // it's your fault :-)
                 indent = 0;
             }
+            System.out.println(getDelimiter(false, from, ""));
         }
     }
 

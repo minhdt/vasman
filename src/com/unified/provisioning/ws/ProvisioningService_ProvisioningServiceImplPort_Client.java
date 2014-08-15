@@ -49,16 +49,19 @@ public final class ProvisioningService_ProvisioningServiceImplPort_Client {
         ProvisioningService port = ss.getProvisioningServiceImplPort();  
         
         {
+        System.out.println("Invoking activate...");
         com.unified.provisioning.ws.RequestHeader _activate_header = new com.unified.provisioning.ws.RequestHeader();
         _activate_header.setAccessMedia("AccessMedia1613831050");
         _activate_header.setExternalId("ExternalId-456955777");
         _activate_header.setMsisdn("Msisdn1019409239");
         java.lang.String _activate_serviceName = "_activate_serviceName-1655499323";
         com.unified.provisioning.ws.Response _activate__return = port.activate(_activate_header, _activate_serviceName);
+        System.out.println("activate.result=" + _activate__return);
 
 
         }
         {
+        System.out.println("Invoking subscribe...");
         com.unified.provisioning.ws.RequestHeader _subscribe_header = new com.unified.provisioning.ws.RequestHeader();
         _subscribe_header.setAccessMedia("AccessMedia-259070020");
         _subscribe_header.setExternalId("ExternalId-169133775");
@@ -68,20 +71,24 @@ public final class ProvisioningService_ProvisioningServiceImplPort_Client {
         int _subscribe_packageType = 1425031540;
         java.lang.String _subscribe_serviceName = "_subscribe_serviceName559937102";
         com.unified.provisioning.ws.Response _subscribe__return = port.subscribe(_subscribe_header, _subscribe_imsi, _subscribe_subscriberType, _subscribe_packageType, _subscribe_serviceName);
+        System.out.println("subscribe.result=" + _subscribe__return);
 
 
         }
         {
+        System.out.println("Invoking terminate...");
         com.unified.provisioning.ws.RequestHeader _terminate_header = new com.unified.provisioning.ws.RequestHeader();
         _terminate_header.setAccessMedia("AccessMedia-709429724");
         _terminate_header.setExternalId("ExternalId761864489");
         _terminate_header.setMsisdn("Msisdn-2037186141");
         java.lang.String _terminate_serviceName = "_terminate_serviceName2053647251";
         com.unified.provisioning.ws.Response _terminate__return = port.terminate(_terminate_header, _terminate_serviceName);
+        System.out.println("terminate.result=" + _terminate__return);
 
 
         }
         {
+        System.out.println("Invoking renewalFailure...");
         com.unified.provisioning.ws.RequestHeader _renewalFailure_header = new com.unified.provisioning.ws.RequestHeader();
         _renewalFailure_header.setAccessMedia("AccessMedia-1347860100");
         _renewalFailure_header.setExternalId("ExternalId-1870035462");
@@ -89,10 +96,12 @@ public final class ProvisioningService_ProvisioningServiceImplPort_Client {
         int _renewalFailure_renewalStatus = -1263707663;
         java.lang.String _renewalFailure_serviceName = "_renewalFailure_serviceName1363138205";
         com.unified.provisioning.ws.Response _renewalFailure__return = port.renewalFailure(_renewalFailure_header, _renewalFailure_renewalStatus, _renewalFailure_serviceName);
+        System.out.println("renewalFailure.result=" + _renewalFailure__return);
 
 
         }
         {
+        System.out.println("Invoking switchBillType...");
         com.unified.provisioning.ws.RequestHeader _switchBillType_header = new com.unified.provisioning.ws.RequestHeader();
         _switchBillType_header.setAccessMedia("AccessMedia-231371525");
         _switchBillType_header.setExternalId("ExternalId31408113");
@@ -101,16 +110,19 @@ public final class ProvisioningService_ProvisioningServiceImplPort_Client {
         int _switchBillType_packageType = -994062566;
         java.lang.String _switchBillType_serviceName = "_switchBillType_serviceName-1713545163";
         com.unified.provisioning.ws.Response _switchBillType__return = port.switchBillType(_switchBillType_header, _switchBillType_subscriberType, _switchBillType_packageType, _switchBillType_serviceName);
+        System.out.println("switchBillType.result=" + _switchBillType__return);
 
 
         }
         {
+        System.out.println("Invoking recycle...");
         com.unified.provisioning.ws.RequestHeader _recycle_header = new com.unified.provisioning.ws.RequestHeader();
         _recycle_header.setAccessMedia("AccessMedia1404901092");
         _recycle_header.setExternalId("ExternalId-815209609");
         _recycle_header.setMsisdn("Msisdn-777674914");
         java.lang.String _recycle_serviceName = "_recycle_serviceName-176435274";
         com.unified.provisioning.ws.Response _recycle__return = port.recycle(_recycle_header, _recycle_serviceName);
+        System.out.println("recycle.result=" + _recycle__return);
 
 
         }
