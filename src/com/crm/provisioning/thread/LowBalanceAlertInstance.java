@@ -74,7 +74,7 @@ public class LowBalanceAlertInstance extends ProvisioningInstance
 					String logCheckBalance = request.getIsdn() + ": Balance: " + balanceName + " Remain amount: " + dataAmount + " SubProductId: "
 							+ request.getSubProductId();
 
-					int status = Integer.parseInt(request.getParameters().getProperty("SubscriberStatus", "1"));
+					int status = request.getParameters().getInteger("SubscriberStatus", 1);
 					if (dataAmount < dataLimitation)
 					{
 						status = Constants.SUBSCRIBER_ALERT_BALANCE_STATUS;

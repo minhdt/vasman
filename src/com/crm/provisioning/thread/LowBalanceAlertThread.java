@@ -31,6 +31,7 @@ public class LowBalanceAlertThread extends ProvisioningThread
 
 	protected String			sqlCommand					= "";
 	protected int				restTime					= 5;
+	protected int				batchCounter				= 0;
 
 	// //////////////////////////////////////////////////////
 	// Override
@@ -129,6 +130,7 @@ public class LowBalanceAlertThread extends ProvisioningThread
 		{
 			if (connection != null && !connection.isClosed())
 			{
+				updateToDB();
 				Database.closeObject(stmtQueue);
 				Database.closeObject(stmtFlexi);
 				Database.closeObject(stmtScheduleFlexi);
@@ -177,7 +179,14 @@ public class LowBalanceAlertThread extends ProvisioningThread
 							.getTime()) : null));
 			stmtFlexi.setInt(2, status);
 			stmtFlexi.setLong(3, id);
-			stmtFlexi.executeUpdate();
+			stmtFlexi.addBatch();
+			
+			addBatchCount();
+			if (getBatchCount() >= 50)
+			{
+				setBatchCount(0);
+				updateToDB();
+			}
 		}
 		catch (Exception e)
 		{
@@ -194,22 +203,52 @@ public class LowBalanceAlertThread extends ProvisioningThread
 					(scanTime != null ? DateUtil.getTimestampSQL(scanTime
 							.getTime()) : null));
 			stmtScheduleFlexi.setLong(2, id);
-			stmtScheduleFlexi.executeUpdate();
+			stmtScheduleFlexi.addBatch();
+			
+			addBatchCount();
+			if (getBatchCount() >= 50)
+			{
+				setBatchCount(0);
+				updateToDB();
+			}
 		}
 		catch (Exception e)
 		{
 			debugMonitor(e);
 		}
 	}
-	
+
+	public void updateToDB() throws Exception
+	{
+		if (stmtScheduleFlexi != null)
+		{
+			stmtScheduleFlexi.executeBatch();
+		}
+
+		if (stmtFlexi != null)
+		{
+			stmtFlexi.executeBatch();
+		}
+		
+		connection.commit();
+	}
+
 	public void closeDatabase() throws Exception
 	{
 		try
 		{
-			Database.closeObject(stmtQueue);
-			Database.closeObject(stmtFlexi);
-			Database.closeObject(stmtScheduleFlexi);
-			Database.closeObject(connection);
+			try
+			{
+				updateToDB();
+			}
+			finally
+			{
+				Database.closeObject(rsQueue);
+				Database.closeObject(stmtQueue);
+				Database.closeObject(stmtFlexi);
+				Database.closeObject(stmtScheduleFlexi);
+				Database.closeObject(connection);
+			}
 		}
 		catch (Exception e)
 		{
@@ -223,6 +262,21 @@ public class LowBalanceAlertThread extends ProvisioningThread
 			connection = null;
 			QueueFactory.getLocalQueue(queueLocalName).empty();
 		}
+	}
+	
+	public synchronized void addBatchCount()
+	{
+		batchCount++;
+	}
+	
+	public synchronized void setBatchCount(int count)
+	{
+		batchCount = count;
+	}
+
+	public synchronized int getBatchCount()
+	{
+		return batchCount;
 	}
 	
 	public boolean isOverload()
@@ -267,8 +321,7 @@ public class LowBalanceAlertThread extends ProvisioningThread
 						request.setServiceAddress("LBA");
 						request.setIsdn(rsQueue.getString("isdn"));
 						request.setKeyword("LowBalanceAlert");
-						request.getParameters().setProperty("SubscriberStatus",
-								StringUtil.valueOf(rsQueue.getInt("status")));
+						request.getParameters().setInteger("SubscriberStatus", rsQueue.getInt("status"));
 		
 						QueueFactory.attachLocal(queueLocalName, request);
 					}
@@ -289,10 +342,6 @@ public class LowBalanceAlertThread extends ProvisioningThread
 			sendInstanceAlarm(e, Constants.ERROR);
 			
 			throw e;
-		}
-		finally
-		{
-			Database.closeObject(rsQueue);
 		}
 	}
 
