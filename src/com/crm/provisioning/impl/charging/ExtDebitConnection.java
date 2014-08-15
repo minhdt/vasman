@@ -275,8 +275,6 @@ public class ExtDebitConnection extends ProvisioningConnection
 
 			String response = conn.debit("TransId=0x000000A3&TransDateTime=20060613153023&CpId=ELC&CpName=ELCOM&ANumber=19001570&BNumber=84923527227&SubmitTime=20060419091135&ServiceState=D&SentTime=20060419091135&ContCode=100&ContType=1&Description=ss");
 
-			System.out.println("response: " + response);
-
 			conn.closeConnection();
 		}
 		catch (Exception ex)

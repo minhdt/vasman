@@ -38,8 +38,6 @@ public class Gsm7BitCharsetProvider extends CharsetProvider {
 	 */
 	public Gsm7BitCharsetProvider() {
 		super();
-		if(debug)
-			System.out.println("Instansiating " + CHARSET_NAME);
 		this.gsm7Bit = new Gsm7BitCharset(CHARSET_NAME, null);
 	}
 

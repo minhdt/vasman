@@ -139,7 +139,7 @@ public class LowBalanceAlertInstance extends ProvisioningInstance
 					processMessage(request);
 				}
 
-				Thread.sleep(1);
+				Thread.sleep(getDispatcher().restTime);
 			}
 		}
 		catch (Exception e)

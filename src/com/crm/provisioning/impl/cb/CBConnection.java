@@ -945,11 +945,8 @@ public class CBConnection extends ProvisioningConnection {
 		// {
 		// CBConnection obj = new CBConnection(strHost, strPort, strUser,
 		// strPass);
-		// // System.out.println(obj.unregisterService("0922000511",
 		// 20000161,CANCELLED));
-		// System.out.println(obj.registerService("0922000511",
 		// 20000161,advancedFields,advancedValues));
-		// //System.out.println(obj.registerService("0923361020"));
 		// }
 		// catch (Exception ex)
 		// {
@@ -973,24 +970,18 @@ public class CBConnection extends ProvisioningConnection {
 			// obj.getSubscriberWithHistory("ops$htctstd1b", "0922000511",
 			// spDf.parse("25/06/2012"),
 			// spDf.parse("10/07/2012"));
-			// System.out.println(obj.unregisterService("0922000511", 20000161,
 			// CBConnection.CANCELLED));
 			//
-			// System.out.println(Long.valueOf("2L".substring(0,
 			// "2L".length()-1)));
-			// System.out.println(obj.registerService("0922000511",
 			// 20000161,advancedFields,advancedValues));
-			// System.out.println(obj.registerService("0923361020"));
 
 			//String result = obj.unregisterService("0922000511", 20000221L, 9L);
 			Properties prtResponse = new Properties();
 			long result = obj.getPostpaidStatus("84922000511", prtResponse);
-//			System.out.println(result);
 			obj.closeConnection();
 			Date date = new Date();
 			DateFormat df = new SimpleDateFormat("dd-MMM-yyyy HH:MM:ss");
 			String currentDate = df.format(date);
-//			System.out.println(prtResponse.getProperty("active_date"));
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}

@@ -105,8 +105,6 @@ public class CCWSConnection extends ProvisioningConnection
 			}
 		}
 
-		//System.out.println("in 2" + String.valueOf(System.currentTimeMillis() - start));
-
 		return result;
 	}
 
@@ -793,7 +791,6 @@ public class CCWSConnection extends ProvisioningConnection
 			{
 				result = result + "Circle name: " + arrayOfMS[i].getCircleName() + " Position:" + arrayOfMS[i].getPosition()
 						+ "\n";
-				// System.out.println("Circle name: " +
 				// arrayOfMS[i].getCircleName() +" Position:" +
 				// arrayOfMS[i].getPosition());
 			}

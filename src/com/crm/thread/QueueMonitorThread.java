@@ -422,7 +422,7 @@ public class QueueMonitorThread extends DispatcherThread
 				}
 			}
 
-			Thread.sleep(1);
+			Thread.sleep(getDelayTime());
 		}
 	}	
 }

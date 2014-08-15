@@ -257,14 +257,12 @@ public class Gsm7BitCharset extends Charset {
 				// first check the default alphabet
 				Byte b = (Byte) defaultEncodeMap.get("" + ch);
 				if(debug)
-					System.out.println("Encoding ch " + ch + " to byte " + b);
 				if (b != null) {
 					bb.put((byte) b.byteValue());
 				} else {
 					// check extended alphabet
 					b = (Byte) extEncodeMap.get("" + ch);
 					if(debug)
-						System.out.println("Trying extended map to encode ch " + ch + " to byte " + b);
 					if (b != null) {
 						// since the extended character set takes two bytes 
 						// we have to check that there is enough space left
@@ -316,24 +314,16 @@ public class Gsm7BitCharset extends Charset {
 				byte b = bb.get();
 
 				// first check the default alphabet
-				if(debug)
-					System.out.println("Looking up byte " + b);
 				String s = (String) defaultDecodeMap.get(new Byte(b));
 				if (s != null) {
 					char ch = s.charAt(0);
 					if (ch != '\u001B') {
-						if(debug)
-							System.out.println("Found string " + s);
 						cb.put(ch);
 					} else {
-						if(debug)
-							System.out.println("Found escape character");
 						// check the extended alphabet
 						b = bb.get();
 						s = (String) extDecodeMap.get(new Byte(b));
 						if (s != null) {
-							if(debug)
-								System.out.println("Found extended string " + s);
 							ch = s.charAt(0);
 							cb.put(ch);
 						} else {

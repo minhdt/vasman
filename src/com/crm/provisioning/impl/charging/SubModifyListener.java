@@ -29,7 +29,6 @@ public class SubModifyListener implements TCPDataListener
 				String receive = receiveData.substring(startIndex, endIndex);
 				try
 				{
-					//System.out.println("received: " + receive);
 
 					String seq = receive.split(StringPool.COMMA)[0];
 					Object notifiedObject = notifyMap.remove(seq);

@@ -31,7 +31,6 @@ public class LowBalanceAlertThread extends ProvisioningThread
 
 	protected String			sqlCommand					= "";
 	protected int				restTime					= 5;
-	protected int				batchCounter				= 0;
 
 	// //////////////////////////////////////////////////////
 	// Override
@@ -130,7 +129,6 @@ public class LowBalanceAlertThread extends ProvisioningThread
 		{
 			if (connection != null && !connection.isClosed())
 			{
-				updateToDB();
 				Database.closeObject(stmtQueue);
 				Database.closeObject(stmtFlexi);
 				Database.closeObject(stmtScheduleFlexi);
@@ -179,13 +177,7 @@ public class LowBalanceAlertThread extends ProvisioningThread
 							.getTime()) : null));
 			stmtFlexi.setInt(2, status);
 			stmtFlexi.setLong(3, id);
-
-			addBatchCount();
-			if (getBatchCount() >= 50)
-			{
-				setBatchCount(0);
-				updateToDB();
-			}
+			stmtFlexi.executeUpdate();
 		}
 		catch (Exception e)
 		{
@@ -202,50 +194,22 @@ public class LowBalanceAlertThread extends ProvisioningThread
 					(scanTime != null ? DateUtil.getTimestampSQL(scanTime
 							.getTime()) : null));
 			stmtScheduleFlexi.setLong(2, id);
-
-			addBatchCount();
-			if (getBatchCount() >= 50)
-			{
-				setBatchCount(0);
-				updateToDB();
-			}
+			stmtScheduleFlexi.executeUpdate();
 		}
 		catch (Exception e)
 		{
 			debugMonitor(e);
 		}
 	}
-
-	public void updateToDB() throws Exception
-	{
-		if (stmtScheduleFlexi != null)
-		{
-			stmtScheduleFlexi.executeBatch();
-		}
-
-		if (stmtFlexi != null)
-		{
-			stmtFlexi.executeBatch();
-		}
-		
-		connection.commit();
-	}
-
+	
 	public void closeDatabase() throws Exception
 	{
 		try
 		{
-			try
-			{
-				updateToDB();
-			}
-			finally
-			{
-				Database.closeObject(stmtQueue);
-				Database.closeObject(stmtFlexi);
-				Database.closeObject(stmtScheduleFlexi);
-				Database.closeObject(connection);
-			}
+			Database.closeObject(stmtQueue);
+			Database.closeObject(stmtFlexi);
+			Database.closeObject(stmtScheduleFlexi);
+			Database.closeObject(connection);
 		}
 		catch (Exception e)
 		{
@@ -261,19 +225,18 @@ public class LowBalanceAlertThread extends ProvisioningThread
 		}
 	}
 	
-	public synchronized void addBatchCount()
+	public boolean isOverload()
 	{
-		batchCount++;
-	}
-	
-	public synchronized void setBatchCount(int count)
-	{
-		batchCount = count;
-	}
+		if (QueueFactory.getLocalQueue(queueName).isOverload())
+		{
+			return true;
+		}
+		else if (QueueFactory.getLocalQueue(queueLocalName).isOverload())
+		{
+			return true;
+		}
 
-	public synchronized int getBatchCount()
-	{
-		return batchCount;
+		return false;
 	}
 
 	public void doProcessSession() throws Exception
@@ -290,27 +253,30 @@ public class LowBalanceAlertThread extends ProvisioningThread
 			{
 				checkInstance();
 				
-				if (rsQueue.next())
+				if (!isOverload())
 				{
-					CommandMessage request = new CommandMessage();
-	
-					request.setRequestTime(new Date());
-					request.setUserName("system");
-					request.setChannel("SMS");
-					request.setSubProductId(rsQueue.getLong("subproductid"));
-					request.setProductId(rsQueue.getLong("productid"));
-					request.setServiceAddress("LBA");
-					request.setIsdn(rsQueue.getString("isdn"));
-					request.setKeyword("LowBalanceAlert");
-					request.getParameters().setProperty("SubscriberStatus",
-							StringUtil.valueOf(rsQueue.getInt("status")));
-	
-					QueueFactory.attachLocal(queueLocalName, request);
-				}
-				else
-				{
-					EOF = true;
-					Thread.sleep(3000);
+					if (rsQueue.next())
+					{
+						CommandMessage request = new CommandMessage();
+		
+						request.setRequestTime(new Date());
+						request.setUserName("system");
+						request.setChannel("SMS");
+						request.setSubProductId(rsQueue.getLong("subproductid"));
+						request.setProductId(rsQueue.getLong("productid"));
+						request.setServiceAddress("LBA");
+						request.setIsdn(rsQueue.getString("isdn"));
+						request.setKeyword("LowBalanceAlert");
+						request.getParameters().setProperty("SubscriberStatus",
+								StringUtil.valueOf(rsQueue.getInt("status")));
+		
+						QueueFactory.attachLocal(queueLocalName, request);
+					}
+					else
+					{
+						EOF = true;
+						Thread.sleep(3000);
+					}
 				}
 			}
 			

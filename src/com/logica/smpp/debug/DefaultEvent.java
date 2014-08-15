@@ -34,7 +34,6 @@ public class DefaultEvent implements Event
     public void write(String msg)
     {
         if (active) {
-            System.out.println(msg);
         }
     }
 

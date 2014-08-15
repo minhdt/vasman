@@ -439,7 +439,7 @@ public class DispatcherThread extends ManageableThread
 	{
 		try
 		{
-			QueueFactory.attachAlarm(request);
+			QueueFactory.attachLocal(QueueFactory.ALARM_QUEUE, request);
 		}
 		catch (Exception e)
 		{

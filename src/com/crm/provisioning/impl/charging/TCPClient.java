@@ -169,7 +169,6 @@ public class TCPClient
 						{
 							byte[] buffer = new byte[0];
 							byte[] receivedData = new byte[8];
-							// System.out.println("waiting data...");
 							int byteCount = 0;
 							while (socket.getInputStream().available() > 0)
 							{

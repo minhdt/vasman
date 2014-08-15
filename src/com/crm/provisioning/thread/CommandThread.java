@@ -55,7 +55,7 @@ public class CommandThread extends ProvisioningThread
 
 					if (total > 0)
 					{
-						logMonitor(cmdStatistic.toString() + ", " + statisticInterval);
+//						logMonitor(cmdStatistic.toString() + ", " + statisticInterval);
 
 						try
 						{

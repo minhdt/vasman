@@ -238,7 +238,6 @@ public class CCWSHttpQuery
 		xmlContent = xmlContent.replace("</soap:Envelope>", "");
 		xmlContent = "<?xml version=\"1.0\" encoding=\"utf-8\"?>" + xmlContent;
 
-		// System.out.println(xmlContent);
 		Document document = builder.parse(new InputSource(new StringReader(xmlContent)));
 
 		NodeList nodeList = document.getElementsByTagName("soap:Fault");
@@ -551,14 +550,10 @@ public class CCWSHttpQuery
 
 		long end = System.currentTimeMillis();
 
-		System.out.println("Cost: " + (end - start));
-
-		System.out.println("For debug.");
 		// retrieveSubscriberWithIdentityWithHistory("84922000514", 1 + 512,
 		// startTime.getTime(), endTime.getTime());
 		// String date = "2014-12-31T23:59:59.0000000+07:00";
 		// date = date.substring(0, date.length() - 3) + "00";
 		// SimpleDateFormat sdf = new SimpleDateFormat(dateFormat);
-		// System.out.println(sdf.parse(date).toGMTString());
 	}
 }

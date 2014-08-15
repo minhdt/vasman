@@ -163,9 +163,7 @@ public class VNCSConnection extends ProvisioningConnection
 		{
 			VNCSConnection conn = new VNCSConnection();
 			String response = conn.sendGetRequest("unregister", "84922000512");
-			System.out.println(response);
 //			response = conn.sendGetRequest("changehandset", "84922000512");
-//			System.out.println(response);
 		}
 		catch (Exception e)
 		{

@@ -274,11 +274,9 @@ public class EposConnection extends ProvisioningConnection
 			
 //			boolean response = _connection.changeCos4Pre("0922000515", "UNREGISTER", input);
 //			boolean response = _connection.changeCos4PreCustom("0922000515", "VMAX", input);
-//			System.out.print(response);
 		}
 		catch (Exception e)
 		{
-			System.out.print(e.getMessage());
 			e.printStackTrace();
 		}
 		

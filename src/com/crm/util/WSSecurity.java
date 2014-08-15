@@ -77,12 +77,10 @@ public class WSSecurity
 			File file = new File(WSConfiguration.getConfiguration().getUserFilePath());
 			// File file = new File("D:/users.xml");
 			WSConfiguration.debugMonitor("Load users from " + file.getAbsolutePath());
-			// System.out.println("User file path: " +
 			// WSConfiguration.getConfiguration().getUserFilePath());
 			FileInputStream fileStream = new FileInputStream(file);
 			Document doc = builder.parse(fileStream);
 
-			// System.out.println(WSConfiguration.getConfiguration().getUserFilePath());
 			Element root = doc.getDocumentElement();
 			NodeList children = root.getChildNodes();
 

@@ -18,7 +18,6 @@ public class ExtDebitDataListener extends SubModifyListener
 				String receive = receiveData.substring(startIndex, endIndex);
 				try
 				{
-					// System.out.println("received: " + receive);
 					String command = ExtDebitConnection.getCommand(receive);
 					if (((!command.equals(ExtDebitConnection.CMD_CREATE_SESSION))
 							& (!command.equals(ExtDebitConnection.CMD_DEBIT)))

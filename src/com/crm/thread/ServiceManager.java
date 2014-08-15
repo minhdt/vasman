@@ -41,7 +41,6 @@ public class ServiceManager implements ProcessorListener
 			
 			// Database.appDatasource = new ComboPooledDataSource();
 			
-			// System.out.println("pool: " + Database.appDatasource.toString());
 		}
 		catch (Exception e)
 		{

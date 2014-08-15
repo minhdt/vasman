@@ -66,7 +66,6 @@ public class SubModifyConnection extends ProvisioningConnection
 
 			String response = conn.request("12345", "12345,this is request");
 
-			System.out.println("response: " + response);
 
 			conn.closeConnection();
 		}

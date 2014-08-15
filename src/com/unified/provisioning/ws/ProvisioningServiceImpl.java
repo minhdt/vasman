@@ -37,8 +37,6 @@ public class ProvisioningServiceImpl implements ProvisioningService {
      */
     public com.unified.provisioning.ws.Response activate(RequestHeader header,java.lang.String serviceName) { 
         LOG.info("Executing operation activate");
-        System.out.println(header);
-        System.out.println(serviceName);
         try {
             com.unified.provisioning.ws.Response _return = new com.unified.provisioning.ws.Response();
             _return.setResponseCode(-2018118099);
@@ -56,11 +54,6 @@ public class ProvisioningServiceImpl implements ProvisioningService {
      */
     public com.unified.provisioning.ws.Response subscribe(RequestHeader header,java.lang.String imsi,int subscriberType,int packageType,java.lang.String serviceName) { 
         LOG.info("Executing operation subscribe");
-        System.out.println(header);
-        System.out.println(imsi);
-        System.out.println(subscriberType);
-        System.out.println(packageType);
-        System.out.println(serviceName);
         try {
             com.unified.provisioning.ws.Response _return = new com.unified.provisioning.ws.Response();
             _return.setResponseCode(2040803669);
@@ -78,8 +71,6 @@ public class ProvisioningServiceImpl implements ProvisioningService {
      */
     public com.unified.provisioning.ws.Response terminate(RequestHeader header,java.lang.String serviceName) { 
         LOG.info("Executing operation terminate");
-        System.out.println(header);
-        System.out.println(serviceName);
         try {
             com.unified.provisioning.ws.Response _return = new com.unified.provisioning.ws.Response();
             _return.setResponseCode(-1411422283);
@@ -97,9 +88,6 @@ public class ProvisioningServiceImpl implements ProvisioningService {
      */
     public com.unified.provisioning.ws.Response renewalFailure(RequestHeader header,int renewalStatus,java.lang.String serviceName) { 
         LOG.info("Executing operation renewalFailure");
-        System.out.println(header);
-        System.out.println(renewalStatus);
-        System.out.println(serviceName);
         try {
             com.unified.provisioning.ws.Response _return = new com.unified.provisioning.ws.Response();
             _return.setResponseCode(880587270);
@@ -117,10 +105,6 @@ public class ProvisioningServiceImpl implements ProvisioningService {
      */
     public com.unified.provisioning.ws.Response switchBillType(RequestHeader header,int subscriberType,int packageType,java.lang.String serviceName) { 
         LOG.info("Executing operation switchBillType");
-        System.out.println(header);
-        System.out.println(subscriberType);
-        System.out.println(packageType);
-        System.out.println(serviceName);
         try {
             com.unified.provisioning.ws.Response _return = new com.unified.provisioning.ws.Response();
             _return.setResponseCode(1726065973);
@@ -138,8 +122,6 @@ public class ProvisioningServiceImpl implements ProvisioningService {
      */
     public com.unified.provisioning.ws.Response recycle(RequestHeader header,java.lang.String serviceName) { 
         LOG.info("Executing operation recycle");
-        System.out.println(header);
-        System.out.println(serviceName);
         try {
             com.unified.provisioning.ws.Response _return = new com.unified.provisioning.ws.Response();
             _return.setResponseCode(-1964092351);

@@ -68,8 +68,6 @@ public class CopyOfDatabase extends ObjectPool
 			// appDatasource.setJdbcUrl("jdbc:oracle:thin:@localhost:1521:CRM");
 			// appDatasource.setUser("ccs_owner");
 			// appDatasource.setPassword("ccs_owner");
-
-			System.out.println("pool: " + appDatasource.toString());
 		}
 
 		try

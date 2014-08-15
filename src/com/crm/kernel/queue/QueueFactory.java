@@ -25,7 +25,6 @@ import javax.naming.InitialContext;
 
 import org.apache.log4j.Logger;
 
-import com.crm.kernel.message.AlarmMessage;
 import com.crm.kernel.message.Constants;
 import com.crm.provisioning.message.CommandMessage;
 import com.crm.provisioning.message.OSACallbackMessage;
@@ -47,6 +46,8 @@ public class QueueFactory
 
 	public static String									COMMAND_LOG_QUEUE		= "vas/CommandLog";
 	public static String									COMMAND_CALLBACK		= "vas/CommandCallback";
+	
+	public static String									ALARM_QUEUE				= "vas/Alarm";
 
 	public static boolean									queueServerEnable		= true;
 	public static Context									context					= null;
@@ -73,8 +74,6 @@ public class QueueFactory
 	protected static ConcurrentLinkedQueue<CommandMessage>	commandRoutingQueue		= new ConcurrentLinkedQueue<CommandMessage>();
 	protected static ConcurrentLinkedQueue<CommandMessage>	commandLogQueue			= new ConcurrentLinkedQueue<CommandMessage>();
 	protected static ConcurrentLinkedQueue<CommandMessage>	commandStatiticQueue	= new ConcurrentLinkedQueue<CommandMessage>();
-	
-	protected static ConcurrentLinkedQueue<AlarmMessage>	alarmQueue				= new ConcurrentLinkedQueue<AlarmMessage>();
 
 	private static Object									mutex					= "mutex";
 	public static Logger									log						= Logger.getLogger(QueueFactory.class);
@@ -348,32 +347,6 @@ public class QueueFactory
 		}
 
 		return message;
-	}
-	
-	public static ConcurrentLinkedQueue<AlarmMessage> getAlarmQueue()
-	{
-		return alarmQueue;
-	}
-
-	public static void setAlarmQueue(
-			ConcurrentLinkedQueue<AlarmMessage> alarmQueue)
-	{
-		QueueFactory.alarmQueue = alarmQueue;
-	}
-
-	public static int getAlarmSize()
-	{
-		return alarmQueue.size();
-	}
-
-	public static void attachAlarm(AlarmMessage alarmQueue)
-	{
-		QueueFactory.alarmQueue.offer(alarmQueue);
-	}
-
-	public static AlarmMessage detachAlarm()
-	{
-		return alarmQueue.poll();
 	}
 
 	public static void attachCommandRouting(Object request) throws Exception
@@ -674,6 +647,8 @@ public class QueueFactory
 					COMMAND_ROUTE_QUEUE = configProvider.getString("queue.commandRoute", "vas/CommandRoute");
 					COMMAND_LOG_QUEUE = configProvider.getString("queue.commandLog", "vas/CommandLog");
 					COMMAND_CALLBACK = configProvider.getString("queue.commandCallback", "vas/CommandCallback");
+					
+					ALARM_QUEUE = configProvider.getString("queue.alarm", "vas/Alarm");
 
 					// connection mode
 					String mode = configProvider.getString("queue.connection", "dedicated");
@@ -758,6 +733,8 @@ public class QueueFactory
 			COMMAND_ROUTE_QUEUE = configProvider.getString("queue.commandRoute", "vas/CommandRoute");
 			COMMAND_LOG_QUEUE = configProvider.getString("queue.commandLog", "vas/CommandLog");
 			COMMAND_CALLBACK = configProvider.getString("queue.commandCallback", "vas/CommandCallback");
+			
+			ALARM_QUEUE = configProvider.getString("queue.alarm", "vas/Alarm");
 		}
 		catch (Exception e)
 		{

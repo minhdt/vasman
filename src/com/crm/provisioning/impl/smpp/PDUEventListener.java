@@ -160,7 +160,7 @@ public class PDUEventListener extends SmppObject implements ServerPDUEventListen
 					{
 						CommandMessage message = SMPPConnection.getMessageFromPDU(pdu);
 
-						QueueFactory.attachLocal(((SMPPThread)getDispatcher()).queueLocalName, message);
+						QueueFactory.attachLocal(((SMPPThread)getDispatcher()).receivedQueueName, message);
 					}
 					catch (Exception ex)
 					{

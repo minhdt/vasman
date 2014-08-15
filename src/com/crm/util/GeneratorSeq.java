@@ -203,7 +203,6 @@ public class GeneratorSeq
 	{
 		for (int i = 0; i < 110000; i++)
 		{
-			System.out.println(getNextSeq());
 			try
 			{
 				Thread.sleep(1);

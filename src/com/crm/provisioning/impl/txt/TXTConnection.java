@@ -121,7 +121,6 @@ public class TXTConnection extends ProvisioningConnection
 //			response = connection.renewal(request, 123456, "ACTIVE", "PARTIAL", 10);
 //			request.setChannel("core");
 //			response = connection.renewal(request, 123456, "SUSPENDED", "", 0);
-			System.out.print(response);
 		}
 		catch (Exception e)
 		{

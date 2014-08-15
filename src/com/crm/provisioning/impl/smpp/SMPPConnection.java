@@ -813,7 +813,7 @@ public class SMPPConnection extends ProvisioningConnection
 						submitRequest.debugString());
 				submit(submitRequest);
 				
-				prepaidSendLogTransmitter(request, submitRequest, 6);
+				logTransmitter(request, submitRequest, 6);
 			}
 		}
 		else
@@ -825,7 +825,7 @@ public class SMPPConnection extends ProvisioningConnection
 			request.setRequestTime(new Date());
 			submit(submitRequest);
 			
-			prepaidSendLogTransmitter(request, submitRequest, 0);
+			logTransmitter(request, submitRequest, 0);
 		}
 	}
 
@@ -1176,7 +1176,7 @@ public class SMPPConnection extends ProvisioningConnection
 			return null;
 	}
 	
-	public void prepaidSendLogTransmitter(CommandMessage request, SubmitSM submitRequest, int byteIndex)
+	public void logTransmitter(CommandMessage request, SubmitSM submitRequest, int byteIndex)
 	{
 		try
 		{

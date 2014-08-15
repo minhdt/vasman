@@ -195,15 +195,6 @@ public class OSAConnection extends ProvisioningConnection
 			safeClose(response);
 
 			parserCost = (System.currentTimeMillis() - startTime);
-
-			if (sessionId.equals(""))
-			{
-				System.out.println(soapAction + ": " + responseCost + "," + entityCost + "," + parserCost);
-			}
-			else
-			{
-				System.out.println("sessionId = " + sessionId + " : " + soapAction + ", " + responseCost + "," + entityCost + "," + parserCost);
-			}
 		}
 
 		return "";

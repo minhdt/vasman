@@ -119,7 +119,6 @@ public class SignatureCallConnection extends ProvisioningConnection
 			// response = connection.unregister(request);
 			// response = connection.reactive(request);
 			// response = connection.renewal(request, 601);
-			System.out.print(response);
 		}
 		catch (Exception e)
 		{

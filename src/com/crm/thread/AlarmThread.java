@@ -82,7 +82,7 @@ public class AlarmThread extends MailThread
 			indexes.clear();
 		}
 
-		return (AlarmMessage) QueueFactory.detachAlarm();
+		return (AlarmMessage) QueueFactory.detachLocal(QueueFactory.ALARM_QUEUE);
 	}
 	
 	@Override

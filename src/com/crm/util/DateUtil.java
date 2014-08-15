@@ -330,7 +330,6 @@ public class DateUtil
 		{
 			diff--;
 		}
-		System.out.println("diff: " + diff);
 
 		return lastDate;
 	}
@@ -573,14 +572,5 @@ public class DateUtil
 		calendar.set(2000, 01, 29, 23, 59, 59);
 
 		Date date = new Date();
-
-		System.out.println(date.toString());
-
-		System.out.println(DateUtil.getLastDate(calendar.getTime(), date, "day", 3));
-		System.out.println(DateUtil.getLastDate(calendar.getTime(), date, "week", 1));
-		System.out.println(DateUtil.getLastDate(calendar.getTime(), date, "month", 1));
-		System.out.println(DateUtil.getLastDate(calendar.getTime(), date, "year", 1));
-
-		System.out.println(DateUtil.getCycleDate(calendar.getTime(), date));
 	}
 }

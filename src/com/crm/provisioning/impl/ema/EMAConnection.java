@@ -197,7 +197,6 @@ public class EMAConnection extends ProvisioningConnection
 			
 			for (int i = 0; i < 10; i++)
 			{
-//				System.out.println("Check connection =" + connection.validate());
 				Thread.sleep(1000);
 			}
 		}

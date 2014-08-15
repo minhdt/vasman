@@ -281,7 +281,6 @@ public class CBSConnection extends ProvisioningConnection
 //			// response = connection.switchList("84922000512", 2);
 //			// response = connection.addWhiteList("84922000512","84922000514");
 //			// response = connection.getWhiteList("84922000512");
-////			System.out.print(response);
 //		}
 //		catch (Exception e)
 //		{

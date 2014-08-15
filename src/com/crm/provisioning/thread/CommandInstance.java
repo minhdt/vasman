@@ -318,7 +318,7 @@ public class CommandInstance extends ProvisioningInstance
 				}
 			}
 			
-			displayCommand(result, startTime, dispatcher.displayDebug);
+//			displayCommand(result, startTime, dispatcher.displayDebug);
 			
 			if (result.getStatus() == Constants.ORDER_STATUS_DENIED)
 			{

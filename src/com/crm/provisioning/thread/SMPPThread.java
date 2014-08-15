@@ -88,7 +88,7 @@ public class SMPPThread extends CommandThread
 
 	public boolean	useConcatenated		= false;
 	public int		orderTimeout		= 60000;
-//	public String	receivedQueueName	= "";
+	public String	receivedQueueName	= "";
 	
 	public boolean	passiveEnquireLink	= false;
 	public String logDatePattern = "'.'yyyyMMdd'.log'";
@@ -110,7 +110,7 @@ public class SMPPThread extends CommandThread
 		vtReturn.add(ThreadUtil.createIntegerParameter("orderTimeout", "Time to live of order (s)."));
 		vtReturn.addAll(ThreadUtil.createProvisioningParameter(this));
 		vtReturn.addAll(ThreadUtil.createQueueParameter(this));
-//		vtReturn.add(ThreadUtil.createTextParameter("receivedQueueName", 100, "Incoming SMS queue."));
+		vtReturn.add(ThreadUtil.createTextParameter("receivedQueueName", 100, "Incoming SMS queue."));
 		vtReturn.addAll(ThreadUtil.createInstanceParameter(this));
 		vtReturn.addAll(ThreadUtil.createLogParameter(this));
 		vtReturn.add(ThreadUtil.createTextParameter("logDatePattern", 200, "Date pattern of rolling date to append in the end of file name for backing up, default ('.'yyyyMMdd'.log')."));
@@ -146,7 +146,7 @@ public class SMPPThread extends CommandThread
 
 		orderTimeout = ThreadUtil.getInt(this, "orderTimeout", 60000);
 		logDatePattern = ThreadUtil.getString(this, "logDatePattern", false, "'.'yyyyMMdd'.log'");
-//		receivedQueueName = ThreadUtil.getString(this, "receivedQueueName", false, "queue/OrderRoute");
+		receivedQueueName = ThreadUtil.getString(this, "receivedQueueName", false, "queue/OrderRoute");
 	}
 
 	// //////////////////////////////////////////////////////
@@ -276,7 +276,8 @@ public class SMPPThread extends CommandThread
 		{
 			try
 			{
-				QueueFactory.sendMessage(getQueueSession(), transmitter, QueueFactory.getQueue(QueueFactory.COMMAND_LOG_QUEUE));
+				QueueFactory.attachLocal(QueueFactory.COMMAND_LOG_QUEUE, transmitter);
+//				QueueFactory.sendMessage(getQueueSession(), transmitter, QueueFactory.getQueue(QueueFactory.COMMAND_LOG_QUEUE));
 			}
 			catch (Exception e)
 			{

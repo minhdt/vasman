@@ -354,10 +354,6 @@ public class ProductCache
 				{
 					product.getScores().add(score);
 				}
-				else
-				{
-//					System.out.println(rsConfig.getLong("productId"));
-				}
 			}
 
 			log.debug("Product route are loaded");

@@ -161,8 +161,6 @@ public class WSConfiguration extends AppProperties
 		long n = df.parse("20100101000101001").getTime();
 		long l = (new Date()).getTime();
 		l = l - n;
-		System.out.println(l);
 		String strhex = Long.toHexString(l).toUpperCase();
-		System.out.println(strhex);
 	}
 }
