@@ -1028,6 +1028,42 @@ public class SubscriberProductImpl
 			Database.closeObject(stmtSubscription);
 		}
 	}
+	
+	public static void unregisterMulti(Connection connection, String isdn, String listProductId)
+			throws Exception
+	{
+		PreparedStatement stmtSubscription = null;
+
+		try
+		{
+			String sql = "Update SubscriberProduct "
+					+ "   Set 	modifiedDate = sysDate "
+					+ "   		, unregisterDate = sysDate, barringStatus = ?, supplierStatus = ?, lastrundate = sysdate, status = 0 "
+					+ "	  Where isdn = ? and productId in (" + listProductId + ") and " + CONDITION_UNTERMINATED;
+
+			stmtSubscription = connection.prepareStatement(sql);
+
+			stmtSubscription.setInt(1, Constants.USER_CANCEL_STATUS);
+			stmtSubscription.setInt(2, Constants.SUPPLIER_CANCEL_STATUS);
+			stmtSubscription.setString(3, isdn);
+
+			stmtSubscription.execute();
+
+//			if (stmtSubscription.getUpdateCount() == 0 && !byPass)
+//			{
+//				throw new AppException(Constants.ERROR_UNREGISTERED);
+//			}
+		}
+		catch (Exception e)
+		{
+			throw e;
+		}
+		finally
+		{
+			connection.commit();
+			Database.closeObject(stmtSubscription);
+		}
+	}
 
 	public static void barringBySupplier(Connection connection, long userId,
 			String userName, long subProductId) throws Exception
@@ -1928,26 +1964,26 @@ public class SubscriberProductImpl
 			}
 
 			// check product are registered or not
-			String[] listProductId = product.getParameter("listProductId", "")
-					.split(",");
-			for (int i = 0; i < listProductId.length; i++)
-			{
-				subscriberProduct = getActive(connection, subscriberId, isdn,
-						Long.parseLong(listProductId[i]));
-				if (subscriberProduct != null)
-				{
-					break;
-				}
-			}
-
-			if (subscriberProduct != null)
-			{
-				long subProductId = subscriberProduct.getSubProductId();
-				
-				boolean byPass = product.getParameter("ByPassUnregiterResult", "false").equalsIgnoreCase("true");
-				unregister(connection, userId, userName, subProductId,
-						productId, byPass);
-			}
+			unregisterMulti(connection, isdn, product.getParameter("listProductId", ""));
+			
+//			for (int i = 0; i < listProductId.length; i++)
+//			{
+//				subscriberProduct = getActive(connection, subscriberId, isdn,
+//						Long.parseLong(listProductId[i]));
+//				if (subscriberProduct != null)
+//				{
+//					break;
+//				}
+//			}
+//
+//			if (subscriberProduct != null)
+//			{
+//				long subProductId = subscriberProduct.getSubProductId();
+//				
+//				boolean byPass = product.getParameter("ByPassUnregiterResult", "false").equalsIgnoreCase("true");
+//				unregister(connection, userId, userName, subProductId,
+//						productId, byPass);
+//			}
 
 			// register product for subscriber
 			String sql = "Insert into SubscriberProduct "
@@ -2129,23 +2165,23 @@ public class SubscriberProductImpl
 			}
 
 			// check product are registered or not
-			String[] listProductId = product.getParameter("listProductId", "")
-					.split(",");
-			for (int i = 0; i < listProductId.length; i++)
-			{
-				subscriberProduct = getActive(connection, subscriberId, isdn,
-						Long.parseLong(listProductId[i]));
-				if (subscriberProduct != null)
-				{
-					break;
-				}
-			}
-
-			if (subscriberProduct != null)
-			{
-				long subProductId = subscriberProduct.getSubProductId();
-				updateExpireWhenInvite(connection, expirationDate, subProductId);
-			}
+//			String[] listProductId = product.getParameter("listProductId", "")
+//					.split(",");
+//			for (int i = 0; i < listProductId.length; i++)
+//			{
+//				subscriberProduct = getActive(connection, subscriberId, isdn,
+//						Long.parseLong(listProductId[i]));
+//				if (subscriberProduct != null)
+//				{
+//					break;
+//				}
+//			}
+//
+//			if (subscriberProduct != null)
+//			{
+//				long subProductId = subscriberProduct.getSubProductId();
+			updateExpireWhenInvite(connection, expirationDate, isdn, product.getParameter("listProductId", ""));
+//			}
 
 			// register product for subscriber
 			String sql = "Insert into SubscriberProduct "
@@ -2255,7 +2291,7 @@ public class SubscriberProductImpl
 		}
 	}
 	
-	public static void updateExpireWhenInvite(Connection connection, Date expirationDate, long subProductId)
+	public static void updateExpireWhenInvite(Connection connection, Date expirationDate, String isdn, String listProductId)
 			throws Exception
 	{
 		PreparedStatement stmtSubscription = null;
@@ -2263,20 +2299,20 @@ public class SubscriberProductImpl
 		try
 		{
 			String sql = "Update SubscriberProduct "
-					+ "   Set 	modifiedDate = sysDate, lastrundate = sysdate, expirationDate = ? "
-					+ "	  Where subProductId = ? and " + CONDITION_UNTERMINATED;
+					+ "   Set 	modifiedDate = sysDate, lastrundate = sysdate, expirationDate = ?, status = 1 "
+					+ "	  Where isdn = ? and status not in (8,11) and productid in (" + listProductId + ") and " + CONDITION_UNTERMINATED;
 
 			stmtSubscription = connection.prepareStatement(sql);
 
 			stmtSubscription.setTimestamp(1, DateUtil.getTimestampSQL(expirationDate));
-			stmtSubscription.setLong(2, subProductId);
+			stmtSubscription.setString(2, isdn);
 
 			stmtSubscription.execute();
 			
-			if (stmtSubscription.getUpdateCount() == 0)
-			{
-				throw new AppException(Constants.ERROR_UNREGISTERED);
-			}
+//			if (stmtSubscription.getUpdateCount() == 0)
+//			{
+//				throw new AppException(Constants.ERROR_UNREGISTERED);
+//			}
 		}
 		catch (Exception e)
 		{

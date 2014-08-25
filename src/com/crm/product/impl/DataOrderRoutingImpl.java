@@ -22,6 +22,7 @@ import com.crm.provisioning.util.ResponseUtil;
 import com.crm.subscriber.bean.SubscriberProduct;
 import com.crm.subscriber.impl.DataPackageImpl;
 import com.crm.subscriber.impl.SubscriberEntryImpl;
+import com.crm.subscriber.impl.SubscriberOrderImpl;
 import com.crm.subscriber.impl.SubscriberProductImpl;
 import com.crm.util.DateUtil;
 import com.crm.util.GeneratorSeq;
@@ -142,6 +143,20 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 		catch (Exception e)
 		{
 			throw e;
+		}
+	}
+	
+	@Override
+	public void checkBlacklist(OrderRoutingInstance instance, ProductEntry product, CommandMessage order) throws Exception
+	{
+		for (int j = 0; j < product.getBlacklistProducts().length; j++)
+		{
+			int pendingOrder = SubscriberOrderImpl.getRegisteredOrder(
+						order.getIsdn(), product.getBlacklistProducts()[j], order.getOrderDate());
+			if (pendingOrder > 0)
+			{
+				throw new AppException(Constants.ERROR_BLACKLIST_PRODUCT);
+			}
 		}
 	}
 
