@@ -139,7 +139,7 @@ public class EMACommandImpl extends CommandImpl
 //			request.setResponse(responseMessage);
 
 		}
-		catch (IOException e)
+		catch (Exception e)
 		{
 			throw e;
 		}

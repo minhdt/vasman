@@ -53,60 +53,44 @@ public class VIMConnection extends ProvisioningConnection
 		return super.openConnection();
 	}
 
-	public String register(CommandMessage request, int subscriberType, int packageType, int sessionid) throws Exception
-	{
-		String responseCode = "";
-		try
-		{
-			RequestHeader header = new RequestHeader();
-			header.setAccessMedia(request.getChannel());
-			header.setExternalId("" + sessionid);
-			header.setMsisdn(request.getIsdn());
-
-			response = service.subscribe(header, "", subscriberType, packageType, getProductAlias(request.getProductId()));
-			responseCode = response.getResponseName();
-		}
-		catch (Exception e)
-		{
-			throw e;
-		}
-		return responseCode;
-	}
-
-	public String unregister(CommandMessage request, int sessionid) throws Exception
+	public Response register(CommandMessage request, int subscriberType, int packageType, int sessionid) throws Exception
 	{
 		RequestHeader header = new RequestHeader();
 		header.setAccessMedia(request.getChannel());
 		header.setExternalId("" + sessionid);
 		header.setMsisdn(request.getIsdn());
 
-		response = service.recycle(header, getProductAlias(request.getProductId()));
-
-		return response.getResponseName();
+		return service.subscribe(header, "", subscriberType, packageType, getProductAlias(request.getProductId()));
 	}
 
-	public String reactive(CommandMessage request, int sessionid) throws Exception
+	public Response unregister(CommandMessage request, int sessionid) throws Exception
 	{
 		RequestHeader header = new RequestHeader();
 		header.setAccessMedia(request.getChannel());
 		header.setExternalId("" + sessionid);
 		header.setMsisdn(request.getIsdn());
 
-		response = service.activate(header, getProductAlias(request.getProductId()));
-
-		return response.getResponseName();
+		return service.recycle(header, getProductAlias(request.getProductId()));
 	}
 
-	public String renewal(CommandMessage request, int renewalStatus, int sessionid) throws Exception
+	public Response reactive(CommandMessage request, int sessionid) throws Exception
 	{
 		RequestHeader header = new RequestHeader();
 		header.setAccessMedia(request.getChannel());
 		header.setExternalId("" + sessionid);
 		header.setMsisdn(request.getIsdn());
 
-		response = service.renewalFailure(header, renewalStatus, getProductAlias(request.getProductId()));
+		return service.activate(header, getProductAlias(request.getProductId()));
+	}
 
-		return response.getResponseName();
+	public Response renewal(CommandMessage request, int renewalStatus, int sessionid) throws Exception
+	{
+		RequestHeader header = new RequestHeader();
+		header.setAccessMedia(request.getChannel());
+		header.setExternalId("" + sessionid);
+		header.setMsisdn(request.getIsdn());
+
+		return service.renewalFailure(header, renewalStatus, getProductAlias(request.getProductId()));
 	}
 
 	public String isSuccessCommand(String result)

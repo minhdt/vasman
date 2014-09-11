@@ -11,6 +11,7 @@ import com.crm.provisioning.cache.ProvisioningCommand;
 import com.crm.provisioning.impl.CommandImpl;
 import com.crm.provisioning.message.CommandMessage;
 import com.crm.provisioning.thread.CommandInstance;
+import com.crm.util.StringUtil;
 
 public class SignatureCallCommandImpl extends CommandImpl
 {
@@ -66,11 +67,18 @@ public class SignatureCallCommandImpl extends CommandImpl
 					instance.closeProvisioningConnection(connection);
 				}
 	
-				if (responseCode == provisioningCommand.getParameters().getInteger("expectedResult", 0))
+				boolean found = false;
+				int[] arrExpecteds = StringUtil.toIntegerArray(provisioningCommand.getParameter("expectedResult", "0"), ";");
+
+				for (int j = 0; !found && (j < arrExpecteds.length); j++)
 				{
-					request.setCause(Constants.SUCCESS);
+					if (responseCode == arrExpecteds[j])
+					{
+						found = true;
+					}
 				}
-				else
+				
+				if (!found)
 				{
 					request.setCause(Constants.ERROR);
 				}
@@ -122,11 +130,18 @@ public class SignatureCallCommandImpl extends CommandImpl
 					instance.closeProvisioningConnection(connection);
 				}
 	
-				if (responseCode == provisioningCommand.getParameters().getInteger("expectedResult", 0))
+				boolean found = false;
+				int[] arrExpecteds = StringUtil.toIntegerArray(provisioningCommand.getParameter("expectedResult", "0"), ";");
+
+				for (int j = 0; !found && (j < arrExpecteds.length); j++)
 				{
-					request.setCause(Constants.SUCCESS);
+					if (responseCode == arrExpecteds[j])
+					{
+						found = true;
+					}
 				}
-				else
+				
+				if (!found)
 				{
 					request.setCause(Constants.ERROR);
 				}
@@ -184,11 +199,18 @@ public class SignatureCallCommandImpl extends CommandImpl
 					instance.closeProvisioningConnection(connection);
 				}
 	
-				if (responseCode == provisioningCommand.getParameters().getInteger("expectedResult", 0))
+				boolean found = false;
+				int[] arrExpecteds = StringUtil.toIntegerArray(provisioningCommand.getParameter("expectedResult", "0"), ";");
+
+				for (int j = 0; !found && (j < arrExpecteds.length); j++)
 				{
-					request.setCause(Constants.SUCCESS);
+					if (responseCode == arrExpecteds[j])
+					{
+						found = true;
+					}
 				}
-				else
+				
+				if (!found)
 				{
 					request.setCause(Constants.ERROR);
 				}
@@ -234,19 +256,26 @@ public class SignatureCallCommandImpl extends CommandImpl
 					int sessionId = setRequestLog(instance, request, "DEACTIVE(" + request.getIsdn() + ")");
 					responseCode = connection.renewal(request, channel, SUBSCRIBER_STATUS_SUSPENDED, chargingType, 0, sessionId);
 					setResponse(instance, request, "CS." + responseCode, sessionId);
+					
+					boolean found = false;
+					int[] arrExpecteds = StringUtil.toIntegerArray(provisioningCommand.getParameter("expectedResult", "0"), ";");
+
+					for (int j = 0; !found && (j < arrExpecteds.length); j++)
+					{
+						if (responseCode == arrExpecteds[j])
+						{
+							found = true;
+						}
+					}
+					
+					if (!found)
+					{
+						request.setCause(Constants.ERROR);
+					}
 				}
 				finally
 				{
 					instance.closeProvisioningConnection(connection);
-				}
-				
-				if (responseCode == provisioningCommand.getParameters().getInteger("expectedResult", 0))
-				{
-					request.setCause(Constants.SUCCESS);
-				}
-				else
-				{
-					request.setCause(Constants.ERROR);
 				}
 			}
 			catch (Exception e)

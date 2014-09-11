@@ -6,6 +6,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -18,6 +19,8 @@ import jxl.WorkbookSettings;
 import jxl.format.Border;
 import jxl.format.BorderLineStyle;
 import jxl.format.UnderlineStyle;
+import jxl.write.DateFormats;
+import jxl.write.DateTime;
 import jxl.write.Label;
 import jxl.write.Number;
 import jxl.write.WritableCellFormat;
@@ -35,21 +38,21 @@ import com.fss.util.AppException;
 
 public class SendMailReportVB extends MailThread
 {
-	protected String folderPath;
-	protected String SQLSubscription = "";
-	protected String SQLUnSubscription = "";
-	protected String SQLRenew = "";
-	protected String productList = "";
-	protected String content = "";
+	protected String			folderPath;
+	protected String			SQLSubscription		= "";
+	protected String			SQLUnSubscription	= "";
+	protected String			SQLRenew			= "";
+	protected String			productList			= "";
+	protected String			content				= "";
 
-	protected PreparedStatement _stmtSubscription = null;
-	protected PreparedStatement _stmtUnSubscription = null;
-	protected PreparedStatement _stmtRenewal = null;
-	protected PreparedStatement _stmtUpdate = null;
+	protected PreparedStatement	_stmtSubscription	= null;
+	protected PreparedStatement	_stmtUnSubscription	= null;
+	protected PreparedStatement	_stmtRenewal		= null;
+	protected PreparedStatement	_stmtUpdate			= null;
 
-	private WritableCellFormat timesBoldUnderline;
-	private WritableCellFormat times;
-	private Connection connection = null;
+	private WritableCellFormat	timesBoldUnderline;
+	private WritableCellFormat	times;
+	private Connection			connection			= null;
 	{
 
 	}
@@ -62,21 +65,15 @@ public class SendMailReportVB extends MailThread
 	{
 		Vector vtReturn = new Vector();
 
-		vtReturn.addElement(createParameterDefinition("FolderPath", "",
-				ParameterType.PARAM_TEXTAREA_MAX, "100", ""));
-		vtReturn.addElement(createParameterDefinition("SQLSubscription", "",
-				ParameterType.PARAM_TEXTAREA_MAX, "100", ""));
-		vtReturn.addElement(createParameterDefinition("SQLUnsubscription", "",
-				ParameterType.PARAM_TEXTAREA_MAX, "100", ""));
-		vtReturn.addElement(createParameterDefinition("SQLRenew", "",
-				ParameterType.PARAM_TEXTAREA_MAX, "100", ""));
-		vtReturn.addElement(createParameterDefinition("ProductList", "",
-				ParameterType.PARAM_TEXTAREA_MAX, "100", ""));
-		vtReturn.addElement(createParameterDefinition("MailContent", "",
-				ParameterType.PARAM_TEXTAREA_MAX, "100", ""));
-		
+		vtReturn.addElement(createParameterDefinition("FolderPath", "", ParameterType.PARAM_TEXTAREA_MAX, "100", ""));
+		vtReturn.addElement(createParameterDefinition("SQLSubscription", "", ParameterType.PARAM_TEXTAREA_MAX, "100", ""));
+		vtReturn.addElement(createParameterDefinition("SQLUnsubscription", "", ParameterType.PARAM_TEXTAREA_MAX, "100", ""));
+		vtReturn.addElement(createParameterDefinition("SQLRenew", "", ParameterType.PARAM_TEXTAREA_MAX, "100", ""));
+		vtReturn.addElement(createParameterDefinition("ProductList", "", ParameterType.PARAM_TEXTAREA_MAX, "100", ""));
+		vtReturn.addElement(createParameterDefinition("MailContent", "", ParameterType.PARAM_TEXTAREA_MAX, "100", ""));
+
 		vtReturn.addAll(super.getParameterDefinition());
-		
+
 		return vtReturn;
 	}
 
@@ -88,7 +85,7 @@ public class SendMailReportVB extends MailThread
 		try
 		{
 			super.fillParameter();
-	
+
 			// Fill parameter
 			folderPath = loadMandatory("FolderPath");
 			SQLSubscription = loadMandatory("SQLSubscription");
@@ -173,42 +170,37 @@ public class SendMailReportVB extends MailThread
 				unsubscriptionFilePath = folderPath + "/UnsubscriptionList.xls";
 				renewalFilePath = folderPath + "/RenewalList.xls";
 			}
-			
+
 			String[] arrProduct = StringUtil.toStringArray(productList, ";");
 			String[] arrSubject = StringUtil.toStringArray(getSubject(), ";");
 			String[] arrSender = StringUtil.toStringArray(getSender(), ";");
-			for (int i=0; i<arrProduct.length; i++)
+			for (int i = 0; i < arrProduct.length; i++)
 			{
 				String strSQL = SQLSubscription;
 				_stmtSubscription = connection.prepareStatement(strSQL);
 				_stmtSubscription.setLong(1, Long.parseLong(arrProduct[i]));
-				writeExcelFile(subscriptionFilePath, "Subscription List",
-						"Subscription List", "No.,Subscription Date,A-number",
-						_stmtSubscription);
-				
+				writeExcelFile(subscriptionFilePath, "Subscription List", "Subscription List", "No.,Subscription Date,A-number", _stmtSubscription);
+
 				strSQL = SQLUnSubscription;
 				_stmtUnSubscription = connection.prepareStatement(strSQL);
 				_stmtUnSubscription.setLong(1, Long.parseLong(arrProduct[i]));
-				writeExcelFile(unsubscriptionFilePath, "Unsubscription List",
-						"Unsubscription List", "No.,Unsubscription Date,A-number",
+				writeExcelFile(unsubscriptionFilePath, "Unsubscription List", "Unsubscription List", "No.,Unsubscription Date,A-number",
 						_stmtUnSubscription);
-				
+
 				strSQL = SQLRenew;
 				_stmtRenewal = connection.prepareStatement(strSQL);
 				_stmtRenewal.setLong(1, Long.parseLong(arrProduct[i]));
-				writeExcelFile(renewalFilePath, "Renewal List", "Renewal List",
-						"No.,Renew Date,A-number", _stmtRenewal);
-				
+				writeExcelFile(renewalFilePath, "Renewal List", "Renewal List", "No.,Renew Date,A-number", _stmtRenewal);
+
 				// Send mail
 				Date date = new Date();
 				DateFormat df = new SimpleDateFormat("dd-MM-yyyy HH");
-	
-				String strFileName = subscriptionFilePath + ";"
-						+ unsubscriptionFilePath + ";" + renewalFilePath;
+
+				String strFileName = subscriptionFilePath + ";" + unsubscriptionFilePath + ";" + renewalFilePath;
 
 				sendEmail(arrSubject[i] + df.format(date), arrSender[i], getRecipients(), content, strFileName);
 			}
-			
+
 			storeConfig();
 		}
 		catch (Exception ex)
@@ -220,9 +212,8 @@ public class SendMailReportVB extends MailThread
 		}
 	}
 
-	public void writeExcelFile(String outputFile, String sheetName,
-			String strHeader, String strSubHeader, PreparedStatement obj)
-			throws IOException, WriteException
+	public void writeExcelFile(String outputFile, String sheetName, String strHeader, String strSubHeader, PreparedStatement obj) throws IOException,
+			WriteException
 	{
 		try
 		{
@@ -231,8 +222,7 @@ public class SendMailReportVB extends MailThread
 
 			wbSettings.setLocale(new Locale("en", "EN"));
 
-			WritableWorkbook workbook = Workbook.createWorkbook(file,
-					wbSettings);
+			WritableWorkbook workbook = Workbook.createWorkbook(file, wbSettings);
 			workbook.createSheet(sheetName, 0);
 			WritableSheet excelSheet = workbook.getSheet(0);
 			createLabel(excelSheet, strHeader, strSubHeader);
@@ -248,8 +238,7 @@ public class SendMailReportVB extends MailThread
 		}
 	}
 
-	private void createLabel(WritableSheet sheet, String strHeader,
-			String strSubHeader) throws WriteException
+	private void createLabel(WritableSheet sheet, String strHeader, String strSubHeader) throws WriteException
 	{
 		// Lets create a times font
 		WritableFont times10pt = new WritableFont(WritableFont.TIMES, 10);
@@ -263,9 +252,7 @@ public class SendMailReportVB extends MailThread
 		times.setWrap(true);
 
 		// Create create a bold font with no underlines
-		WritableFont times10ptBoldUnderline = new WritableFont(
-				WritableFont.TIMES, 10, WritableFont.BOLD, false,
-				UnderlineStyle.NO_UNDERLINE);
+		WritableFont times10ptBoldUnderline = new WritableFont(WritableFont.TIMES, 10, WritableFont.BOLD, false, UnderlineStyle.NO_UNDERLINE);
 		timesBoldUnderline = new WritableCellFormat(times10ptBoldUnderline);
 		timesBoldUnderline.setBorder(border, lineStyle);
 
@@ -293,14 +280,13 @@ public class SendMailReportVB extends MailThread
 		}
 	}
 
-	private void createContent(WritableSheet sheet, int StartRow,
-			PreparedStatement obj) throws WriteException, RowsExceededException
+	private void createContent(WritableSheet sheet, int StartRow, PreparedStatement obj) throws WriteException, RowsExceededException
 	{
 		int counter = 1;
 		int row = StartRow;
 		ResultSet result = null;
 
-		DateFormat df = new SimpleDateFormat("dd-MM-yyyy");
+		// DateFormat df = new SimpleDateFormat("dd-MM-yyyy");
 
 		try
 		{
@@ -309,7 +295,9 @@ public class SendMailReportVB extends MailThread
 			{
 				addNumber(sheet, 0, row, counter);
 
-				addLabel(sheet, 1, row, df.format(result.getTimestamp("dates")));
+				// addLabel(sheet, 1, row,
+				// df.format(result.getTimestamp("dates")));
+				addDate(sheet, 1, row, result.getTimestamp("dates"));
 
 				addLabel(sheet, 2, row, result.getString("isdn"));
 				counter++;
@@ -327,8 +315,7 @@ public class SendMailReportVB extends MailThread
 		}
 		catch (Exception ex)
 		{
-			debugMonitor("Loi xay ra khi tao noi dung file excel:"
-					+ ex.getMessage());
+			debugMonitor("Loi xay ra khi tao noi dung file excel:" + ex.getMessage());
 			ex.printStackTrace();
 		}
 		finally
@@ -345,24 +332,29 @@ public class SendMailReportVB extends MailThread
 		}
 	}
 
-	private void addCaption(WritableSheet sheet, int column, int row, String s)
-			throws RowsExceededException, WriteException
+	private void addCaption(WritableSheet sheet, int column, int row, String s) throws RowsExceededException, WriteException
 	{
 		Label label;
 		label = new Label(column, row, s, timesBoldUnderline);
 		sheet.addCell(label);
 	}
 
-	private void addNumber(WritableSheet sheet, int column, int row,
-			Integer integer) throws WriteException, RowsExceededException
+	private void addNumber(WritableSheet sheet, int column, int row, Integer integer) throws WriteException, RowsExceededException
 	{
 		Number number;
 		number = new Number(column, row, integer, times);
 		sheet.addCell(number);
 	}
 
-	private void addLabel(WritableSheet sheet, int column, int row, String s)
-			throws WriteException, RowsExceededException
+	private void addDate(WritableSheet sheet, int column, int row, Timestamp time) throws WriteException, RowsExceededException
+	{
+		Date orderDate = new Date(time.getTime());
+		WritableCellFormat cf = new WritableCellFormat(DateFormats.FORMAT9);
+		DateTime dt = new DateTime(column, row, orderDate, cf, DateTime.GMT);
+		sheet.addCell(dt);
+	}
+
+	private void addLabel(WritableSheet sheet, int column, int row, String s) throws WriteException, RowsExceededException
 	{
 		Label label;
 		label = new Label(column, row, s, times);

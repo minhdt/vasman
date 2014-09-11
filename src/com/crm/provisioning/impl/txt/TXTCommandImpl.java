@@ -9,6 +9,7 @@ import com.crm.provisioning.cache.ProvisioningCommand;
 import com.crm.provisioning.impl.CommandImpl;
 import com.crm.provisioning.message.CommandMessage;
 import com.crm.provisioning.thread.CommandInstance;
+import com.crm.util.StringUtil;
 
 public class TXTCommandImpl extends CommandImpl
 {
@@ -52,7 +53,18 @@ public class TXTCommandImpl extends CommandImpl
 				int responseCode = connection.register(request, subscriberType, sessionId, packageType);
 				setResponse(instance, request, "TXT." + responseCode, sessionId);
 				
-				if (responseCode != 0)
+				boolean found = false;
+				int[] arrExpecteds = StringUtil.toIntegerArray(provisioningCommand.getParameter("expectedResult", "0"), ";");
+
+				for (int j = 0; !found && (j < arrExpecteds.length); j++)
+				{
+					if (responseCode == arrExpecteds[j])
+					{
+						found = true;
+					}
+				}
+				
+				if (!found)
 				{
 					request.setCause(Constants.ERROR);
 				}
@@ -88,7 +100,18 @@ public class TXTCommandImpl extends CommandImpl
 				int responseCode = connection.unregister(request, sessionId);
 				setResponse(instance, request, "TXT." + responseCode, sessionId);
 				
-				if (responseCode != 0)
+				boolean found = false;
+				int[] arrExpecteds = StringUtil.toIntegerArray(provisioningCommand.getParameter("expectedResult", "0"), ";");
+
+				for (int j = 0; !found && (j < arrExpecteds.length); j++)
+				{
+					if (responseCode == arrExpecteds[j])
+					{
+						found = true;
+					}
+				}
+				
+				if (!found)
 				{
 					request.setCause(Constants.ERROR);
 				}
@@ -139,7 +162,18 @@ public class TXTCommandImpl extends CommandImpl
 				int responseCode = connection.renewal(request, sessionId, ACTIVE_STATUS_CODE, chargeType, renewalDays);
 				setResponse(instance, request, "TXT." + responseCode, sessionId);
 					
-				if (responseCode != 0)
+				boolean found = false;
+				int[] arrExpecteds = StringUtil.toIntegerArray(provisioningCommand.getParameter("expectedResult", "0"), ";");
+
+				for (int j = 0; !found && (j < arrExpecteds.length); j++)
+				{
+					if (responseCode == arrExpecteds[j])
+					{
+						found = true;
+					}
+				}
+				
+				if (!found)
 				{
 					request.setCause(Constants.ERROR);
 				}
@@ -175,7 +209,18 @@ public class TXTCommandImpl extends CommandImpl
 				int responseCode = connection.renewal(request, sessionId, SUSPENDED_STATUS_CODE, "", 0);
 				setResponse(instance, request, "TXT." + responseCode, sessionId);
 				
-				if (responseCode != 0)
+				boolean found = false;
+				int[] arrExpecteds = StringUtil.toIntegerArray(provisioningCommand.getParameter("expectedResult", "0"), ";");
+
+				for (int j = 0; !found && (j < arrExpecteds.length); j++)
+				{
+					if (responseCode == arrExpecteds[j])
+					{
+						found = true;
+					}
+				}
+				
+				if (!found)
 				{
 					request.setCause(Constants.ERROR);
 				}

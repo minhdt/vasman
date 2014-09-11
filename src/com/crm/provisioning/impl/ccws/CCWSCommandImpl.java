@@ -2198,10 +2198,7 @@ public class CCWSCommandImpl extends CommandImpl
 					// calculate expiration date for this balance
 					Calendar expiredDate = balance.getAccountExpiration();
 
-					if (expiredDate.getTime().after(now))
-					{
-						expiredDate.setTime(now);
-					}
+					expiredDate.setTime(now);
 
 					boolean clearBalance = product.getParameters().getBoolean(
 							prefix + ".clear", false);
@@ -2235,8 +2232,36 @@ public class CCWSCommandImpl extends CommandImpl
 					long sessionId = setRequest(instance, result,
 							"com.comverse_in.prepaid.ccws.ServiceSoapStub.modifySubscriber:"
 									+ getLogBalances(balances, isdn));
-					connection.setBalance(isdn, balances, activeDate, comment);
-					setResponse(instance, result, Constants.SUCCESS, sessionId);
+//					connection.setBalance(isdn, balances, activeDate, comment);
+//					setResponse(instance, result, Constants.SUCCESS, sessionId);
+					
+					try
+					{
+						connection.setBalance(isdn, balances, activeDate, comment);
+						setResponse(instance, result, Constants.SUCCESS, sessionId);
+					}
+					catch (AxisFault error)
+					{
+						error.printStackTrace();
+						String errorCode = getErrorCode(instance, request, error);
+						if (!errorCode.equals(""))
+						{
+							setResponse(instance, result, "CCWS." + errorCode, sessionId);
+							result.setStatus(Constants.ORDER_STATUS_DENIED);
+							if (errorCode.equals("4072"))
+							{
+								result.setCause(Constants.ERROR_BALANCE_IN_USED);
+							}
+							else
+							{
+								result.setCause(Constants.ERROR);
+							}
+						}
+						else
+						{
+							throw error;
+						}
+					}
 				}
 			}
 			catch (Exception error)

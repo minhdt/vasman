@@ -104,6 +104,8 @@ public class Constants
 	public final static String	ACTION_REGISTER					= "register";
 
 	public final static String	ACTION_UNREGISTER				= "unregister";
+	
+	public final static String	ACTION_CLEAR_DATA				= "clear-data";
 
 	public final static String	ACTION_CANCEL					= "cancel";
 
@@ -144,6 +146,10 @@ public class Constants
 	public final static String	ACTION_FREE_TO_NORMAL			= "free-to-normal";
 	
 	public final static String	ACTION_INVITE					= "invite";
+	
+	public final static String	ACTION_CONFIRM_REGISTER			= "confirm-register";
+	
+	public final static String	ACTION_CONFIRM_UNREGISTER		= "confirm-unregister";
 
 	// order constants
 	public static final int		ORDER_STATUS_APPROVED			= 0;
@@ -335,6 +341,7 @@ public class Constants
 	public final static String	ERROR_EXPIRE_TOO_LARGE			= "expire-too-large";
 	public final static String	ERROR_OUT_OF_EXPIRE				= "out-of-expire";
 	public final static String	ERROR_BALANCE_TOO_SMALL			= "balance-too-small";
+	public final static String	ERROR_BALANCE_IN_USED			= "balance-in-used";
 	public final static String	ERROR_INVALID_OWNER				= "invalid-owner";
 	public final static String	ERROR_INVALID_DELIVER			= "invalid-deliver";
 	public final static String	ERROR_OVER_MEMBER_LIMITATION	= "over-max-member";
@@ -378,4 +385,6 @@ public class Constants
 	// Insert table product keyword
 	public final static String	VERIFY_KEYWORD					= "true";
 
+	public static final String	ERROR_PRODUCT_LIST_NOT_FOUND	= "product-list-not-found";
+	public static final String	ERROR_PACKAGE_LIST_NOT_FOUND	= "package-list-not-found";
 }

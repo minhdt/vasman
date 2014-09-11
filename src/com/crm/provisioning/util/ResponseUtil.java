@@ -18,7 +18,6 @@ import com.crm.thread.DispatcherInstance;
 
 /**
  * @author ThangPV
- * 
  */
 public class ResponseUtil
 {
@@ -45,9 +44,7 @@ public class ResponseUtil
 	public static String	SERIAL				= "serial";
 
 	/**
-	 * add static fields.
-	 * 
-	 * Edited by NamTA
+	 * add static fields. Edited by NamTA
 	 */
 	public static String	ACCOUNT_STATE		= "account.state";
 	public static String	BALANCES			= "balances";
@@ -65,8 +62,10 @@ public class ResponseUtil
 	public static String	SMS_TYPE			= "smsType";
 	public static String	SMS_CMD_CHECK		= "smsCmdCheck";
 
-	public static String formatResponse(
-			DispatcherInstance instance, ProductEntry product, CommandMessage request, String actionType, String template)
+	public static String	SUCCESS_PRODUCT		= "successproduct";
+	public static String	FAILED_PRODUCT		= "failedproduct";
+
+	public static String formatResponse(DispatcherInstance instance, ProductEntry product, CommandMessage request, String actionType, String template)
 	{
 		String content = template;
 
@@ -76,10 +75,8 @@ public class ResponseUtil
 			{
 				content = content.replaceAll("~PRODUCT_ALIAS~", product.getIndexKey());
 				content = content.replaceAll("~PRODUCT_TITLE~", product.getTitle());
-				content = content
-						.replaceAll("~PRODUCT_START_DATE~", String.format(Constants.DATE_FORMAT, product.getStartDate()));
-				content = content.replaceAll("~PRODUCT_EXPIRE_DATE~",
-						String.format(Constants.DATE_FORMAT, product.getExpirationDate()));
+				content = content.replaceAll("~PRODUCT_START_DATE~", String.format(Constants.DATE_FORMAT, product.getStartDate()));
+				content = content.replaceAll("~PRODUCT_EXPIRE_DATE~", String.format(Constants.DATE_FORMAT, product.getExpirationDate()));
 			}
 
 			Calendar now = Calendar.getInstance();
@@ -99,9 +96,7 @@ public class ResponseUtil
 			// request.getResponseValue("balance.expireDate"));
 
 			/**
-			 * Begin balance info replacement
-			 * 
-			 * Created by NamTA
+			 * Begin balance info replacement Created by NamTA
 			 */
 
 			Pattern balancePattern = Pattern.compile("~CUR_BALANCE_([a-zA-Z0-9_]+)~");
@@ -165,17 +160,20 @@ public class ResponseUtil
 			// member
 			content = content.replaceAll("~MEMBER~", request.getResponseValue(MEMBER));
 			content = content.replaceAll("~FREE_MEMBER~", request.getResponseValue(MEMBER_FREE));
-			
+
 			// black list, white list
 			content = content.replaceAll("~BLACK~", request.getResponseValue(BLACK_LIST));
 			content = content.replaceAll("~WHITE~", request.getResponseValue(WHITE_LIST));
-			
+
 			// Promotion
 			content = content.replaceAll("~SMS_TEXT~", request.getResponseValue(SMS_TEXT));
-			
+
 			// Mobile security
 			content = content.replaceAll("~SMS_HREF~", request.getResponseValue(SMS_HREF));
 			content = content.replaceAll("~SERIAL~", request.getResponseValue(SERIAL));
+			
+			content = content.replaceAll("~SUCCESS_PRODUCT~", request.getResponseValue(SUCCESS_PRODUCT));
+			content = content.replaceAll("~FAILED_PRODUCT~", request.getResponseValue(FAILED_PRODUCT));
 		}
 		catch (Exception e)
 		{
@@ -189,9 +187,8 @@ public class ResponseUtil
 		return content;
 	}
 
-	public static void sendResponse(
-			DispatcherInstance instance, ProductRoute orderRoute, CommandMessage request
-			, String actionType, String cause, String prefix, String postfix, String isdn)
+	public static void sendResponse(DispatcherInstance instance, ProductRoute orderRoute, CommandMessage request, String actionType, String cause,
+			String prefix, String postfix, String isdn)
 	{
 		if ((request == null) || isdn.equals(""))
 		{
@@ -199,25 +196,21 @@ public class ResponseUtil
 		}
 
 		String content = "";
-		
+
 		if (request.getChannel().equals(Constants.CHANNEL_WEB))
 		{
-			if (!request.getCause().equals("")
-					&& !request.getCause().equals(Constants.SUCCESS))
+			if (!request.getCause().equals("") && !request.getCause().equals(Constants.SUCCESS))
 				return;
-			
-			if (!request.getActionType().equals(Constants.ACTION_SUBSCRIPTION)
-					&& !request.getActionType().equals(Constants.ACTION_SUPPLIER_DEACTIVE)
-					&& !request.getActionType().equals(Constants.ACTION_SUPPLIER_REACTIVE)
-					&& !request.getActionType().equals(Constants.ACTION_TOPUP)
+
+			if (!request.getActionType().equals(Constants.ACTION_SUBSCRIPTION) && !request.getActionType().equals(Constants.ACTION_SUPPLIER_DEACTIVE)
+					&& !request.getActionType().equals(Constants.ACTION_SUPPLIER_REACTIVE) && !request.getActionType().equals(Constants.ACTION_TOPUP)
 					&& !request.getActionType().equals(Constants.ACTION_FREE))
 				return;
 		}
-		
+
 		if (request.getChannel().equals(Constants.CHANNEL_CORE))
 		{
-			if (!request.getCause().equals("")
-					&& !request.getCause().contains(Constants.SUCCESS)
+			if (!request.getCause().equals("") && !request.getCause().contains(Constants.SUCCESS)
 					&& !request.getCause().contains(Constants.ERROR_NOT_ENOUGH_MONEY))
 				return;
 		}
@@ -279,14 +272,13 @@ public class ResponseUtil
 				CommandUtil.sendSMS(instance, request, serviceAddress, isdn, content);
 
 				if (orderRoute != null && orderRoute.getParameter("SimulationSMS", "false").equals("true")
-						&& request.getCause().equals(Constants.SUCCESS)
-						&& request.getActionType().equals(Constants.ACTION_REGISTER))
+						&& request.getCause().equals(Constants.SUCCESS) && request.getActionType().equals(Constants.ACTION_REGISTER))
 				{
 					String strSC = orderRoute.getParameter("SimulationSMS.shotcode", "223");
 					String strContent = orderRoute.getParameter("SimulationSMS.content", "GPRS");
-					CommandUtil.sendSMS(instance, request, isdn, strSC , strContent);
+					CommandUtil.sendSMS(instance, request, isdn, strSC, strContent);
 				}
-				
+
 				instance.debugMonitor("sendNotify: " + request.getIsdn() + " - " + content);
 			}
 		}
@@ -316,9 +308,8 @@ public class ResponseUtil
 		sendResponse(instance, orderRoute, request, Constants.ACTION_ADVERTISING, "", "", "", request.getShipTo());
 	}
 
-	public static String getResponseTemplate(
-			DispatcherInstance instance, ProductRoute orderRoute, CommandMessage request, String actionType, String cause)
-			throws Exception
+	public static String getResponseTemplate(DispatcherInstance instance, ProductRoute orderRoute, CommandMessage request, String actionType,
+			String cause) throws Exception
 	{
 		String content = "";
 
@@ -356,16 +347,15 @@ public class ResponseUtil
 				}
 				else
 				{
-					if (request.getCampaignId() != Constants.DEFAULT_ID
-							&& !request.getResponseValue(SMS_TEXT).equals(""))
+					if (request.getCampaignId() != Constants.DEFAULT_ID && !request.getResponseValue(SMS_TEXT).equals(""))
 					{
 						content = product.getParameter("CampaignFormat", "~SMS_TEXT~");
 					}
-					
+
 					if (content.equals(""))
 					{
-						productMessage = product.getProductMessage(
-								actionType, request.getCampaignId(), request.getLanguageId(), request.getChannel(), cause);
+						productMessage = product.getProductMessage(actionType, request.getCampaignId(), request.getLanguageId(),
+								request.getChannel(), cause);
 					}
 				}
 			}
@@ -378,20 +368,12 @@ public class ResponseUtil
 			}
 			else if (content.equals("") && !request.getChannel().equals(Constants.CHANNEL_WEB))
 			{
-				if (!request.getChannel().equals(Constants.CHANNEL_WEB))
-				{
-					content = DomainFactory.getCache().getDomain("RESPONSE_MESSAGE", actionType + "." + cause);
+				content = DomainFactory.getCache().getDomain("RESPONSE_MESSAGE", actionType + "." + cause);
 
-					if (content.equals(""))
-					{
-						content = DomainFactory.getCache().getDomain("RESPONSE_MESSAGE", cause);
-					}
+				if (content.equals(""))
+				{
+					content = DomainFactory.getCache().getDomain("RESPONSE_MESSAGE", cause);
 				}
-				// if (content.equals(""))
-				// {
-				// content = cause;
-				// // throw new AppException(cause);
-				// }
 			}
 		}
 		catch (Exception e)
@@ -423,8 +405,7 @@ public class ResponseUtil
 		return content.replaceAll("~" + tag + "~", String.valueOf(value));
 	}
 
-	public static String replaceByParameter(CommandMessage request, String content, String tag, String parameter)
-			throws Exception
+	public static String replaceByParameter(CommandMessage request, String content, String tag, String parameter) throws Exception
 	{
 		return content.replaceAll("~" + tag + "~", request.getParameters().getString("response." + parameter));
 	}

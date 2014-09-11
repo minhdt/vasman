@@ -31,10 +31,8 @@ import com.fss.util.AppException;
 
 public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 {
-	public void checkActionType(OrderRoutingInstance instance,
-			ProductRoute orderRoute, ProductEntry product,
-			CommandMessage order, SubscriberProduct subscriberProduct)
-			throws Exception
+	public void checkActionType(OrderRoutingInstance instance, ProductRoute orderRoute, ProductEntry product, CommandMessage order,
+			SubscriberProduct subscriberProduct) throws Exception
 	{
 		Date now = new Date();
 
@@ -45,8 +43,7 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 				int remainDays = 0;
 				if (subscriberProduct.getExpirationDate() != null)
 				{
-					remainDays = DateUtil.getDateDiff(now,
-							subscriberProduct.getExpirationDate());
+					remainDays = DateUtil.getDateDiff(now, subscriberProduct.getExpirationDate());
 				}
 
 				if (remainDays < 0)
@@ -55,8 +52,7 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 				}
 
 				order.setResponseValue("service.activeDays", remainDays);
-				order.setResponseValue("service.activeDate",
-						subscriberProduct.getExpirationDate());
+				order.setResponseValue("service.activeDate", subscriberProduct.getExpirationDate());
 			}
 
 			if (subscriberProduct != null)
@@ -66,8 +62,7 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 
 			String actionType = order.getActionType();
 
-			if (actionType.equals(Constants.ACTION_REGISTER)
-					&& (subscriberProduct != null))
+			if (actionType.equals(Constants.ACTION_REGISTER) && (subscriberProduct != null))
 			{
 				if (orderRoute.isTopupEnable())
 				{
@@ -85,18 +80,23 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 				{
 					if (actionType.equals(Constants.ACTION_SUBSCRIPTION))
 					{
-						throw new AppException(
-								Constants.ERROR_SUBSCRIPTION_NOT_FOUND);
+						throw new AppException(Constants.ERROR_SUBSCRIPTION_NOT_FOUND);
 					}
 					else if (actionType.equals(Constants.ACTION_UNREGISTER))
 					{
-						throw new AppException(
-								Constants.ERROR_SUBSCRIPTION_NOT_FOUND);
+						throw new AppException(Constants.ERROR_SUBSCRIPTION_NOT_FOUND);
 					}
 					else if (actionType.equals(Constants.ACTION_CANCEL))
 					{
-						throw new AppException(
-								Constants.ERROR_SUBSCRIPTION_NOT_FOUND);
+						throw new AppException(Constants.ERROR_SUBSCRIPTION_NOT_FOUND);
+					}
+					else if (actionType.equals(Constants.ACTION_CONFIRM_UNREGISTER))
+					{
+						throw new AppException(Constants.ERROR_SUBSCRIPTION_NOT_FOUND);
+					}
+					else if (actionType.equals(Constants.ACTION_CLEAR_DATA))
+					{
+						throw new AppException(Constants.ERROR_SUBSCRIPTION_NOT_FOUND);
 					}
 					else if (actionType.equals(Constants.ACTION_TOPUP))
 					{
@@ -125,8 +125,7 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 			}
 
 			// get associate product
-			if (actionType.equals(Constants.ACTION_REGISTER)
-					|| actionType.equals(Constants.ACTION_UPGRADE))
+			if (actionType.equals(Constants.ACTION_REGISTER) || actionType.equals(Constants.ACTION_UPGRADE))
 			{
 				checkBlacklist(instance, product, order);
 
@@ -145,14 +144,13 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 			throw e;
 		}
 	}
-	
+
 	@Override
 	public void checkBlacklist(OrderRoutingInstance instance, ProductEntry product, CommandMessage order) throws Exception
 	{
 		for (int j = 0; j < product.getBlacklistProducts().length; j++)
 		{
-			int pendingOrder = SubscriberOrderImpl.getRegisteredOrder(
-						order.getIsdn(), product.getBlacklistProducts()[j], order.getOrderDate());
+			int pendingOrder = SubscriberOrderImpl.getRegisteredOrder(order.getIsdn(), product.getBlacklistProducts()[j], order.getOrderDate());
 			if (pendingOrder > 0)
 			{
 				throw new AppException(Constants.ERROR_BLACKLIST_PRODUCT);
@@ -160,8 +158,7 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 		}
 	}
 
-	public CommandMessage parser(OrderRoutingInstance instance,
-			ProductRoute orderRoute, CommandMessage order) throws Exception
+	public CommandMessage parser(OrderRoutingInstance instance, ProductRoute orderRoute, CommandMessage order) throws Exception
 	{
 		Exception error = null;
 
@@ -189,8 +186,7 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 			}
 
 			// check product in available list
-			product = ProductFactory.getCache()
-					.getProduct(order.getProductId());
+			product = ProductFactory.getCache().getProduct(order.getProductId());
 
 			// check promotion
 			if (orderRoute.isCheckPromotion())
@@ -201,18 +197,15 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 			// get current subscriber product
 			if (order.getSubProductId() == Constants.DEFAULT_ID)
 			{
-				subscriberProduct = SubscriberProductImpl.getActive(
-						order.getIsdn(), order.getProductId());
+				subscriberProduct = SubscriberProductImpl.getActive(order.getIsdn(), order.getProductId());
 			}
 			else
 			{
-				subscriberProduct = SubscriberProductImpl.getProduct(order
-						.getSubProductId());
+				subscriberProduct = SubscriberProductImpl.getProduct(order.getSubProductId());
 			}
 
 			// check action type
-			checkActionType(instance, orderRoute, product, order,
-					subscriberProduct);
+			checkActionType(instance, orderRoute, product, order, subscriberProduct);
 
 			// validate
 			if (orderRoute.isCheckBalance())
@@ -224,50 +217,33 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 			{
 				if (order.getSubscriberType() == Constants.UNKNOW_SUB_TYPE)
 				{
-					order.setSubscriberType(SubscriberEntryImpl
-							.getSubscriberType(order.getIsdn()));
+					order.setSubscriberType(SubscriberEntryImpl.getSubscriberType(order.getIsdn()));
 				}
 
 				order.setAmount(order.getQuantity() * order.getPrice());
 			}
 
-			if ((order.getStatus() == Constants.ORDER_STATUS_DENIED)
-					&& order.getCause()
-							.equals(Constants.ERROR_NOT_ENOUGH_MONEY))
+			if ((order.getStatus() == Constants.ORDER_STATUS_DENIED) && order.getCause().equals(Constants.ERROR_NOT_ENOUGH_MONEY))
 			{
 				if (order.getActionType().equals(Constants.ACTION_SUBSCRIPTION))
 				{
-					ProductMessage productMessage = product.getProductMessage(
-							order.getActionType(), order.getCampaignId(),
-							order.getLanguageId(), order.getChannel(),
-							order.getCause());
+					ProductMessage productMessage = product.getProductMessage(order.getActionType(), order.getCampaignId(), order.getLanguageId(),
+							order.getChannel(), order.getCause());
 					if (productMessage != null)
 					{
 						String content = productMessage.getContent();
 						if (subscriberProduct.getExpirationDate() != null)
 						{
-							content = content.replaceAll(
-									"~SERVICE_EXPIRE_DATE~", StringUtil.format(
-											subscriberProduct
-													.getExpirationDate(),
-											"dd/MM/yyyy"));
-							SubscriberEntity subscriberEntity = ((VNMMessage) order)
-									.getSubscriberEntity();
-							BalanceEntity balance = CCWSConnection.getBalance(
-									subscriberEntity, "GPRS");
+							content = content.replaceAll("~SERVICE_EXPIRE_DATE~",
+									StringUtil.format(subscriberProduct.getExpirationDate(), "dd/MM/yyyy"));
+							SubscriberEntity subscriberEntity = ((VNMMessage) order).getSubscriberEntity();
+							BalanceEntity balance = CCWSConnection.getBalance(subscriberEntity, "GPRS");
 
-							double convertRatio = Double.parseDouble(product
-									.getParameter("ConvertRatio",
-											"0.00000095367431640625"));
-							content = content.replaceAll(
-									"~SERVICE_BALANCE~",
-									StringUtil.format(
-											balance.getAvailableBalance()
-													* convertRatio, "#,##0"));
+							double convertRatio = Double.parseDouble(product.getParameter("ConvertRatio", "0.00000095367431640625"));
+							content = content.replaceAll("~SERVICE_BALANCE~",
+									StringUtil.format(balance.getAvailableBalance() * convertRatio, "#,##0"));
 						}
-						SubscriberProductImpl.insertSendSMS(
-								product.getParameter("ProductShotCode", ""),
-								order.getIsdn(), content);
+						SubscriberProductImpl.insertSendSMS(product.getParameter("ProductShotCode", ""), order.getIsdn(), content);
 					}
 
 					order.setActionType(Constants.ACTION_UNREGISTER);
@@ -278,18 +254,13 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 				}
 				else
 				{
-					if (orderRoute.isCheckPromotion()
-							&& order.getActionType().equals(
-									Constants.ACTION_REGISTER))
+					if (orderRoute.isCheckPromotion() && order.getActionType().equals(Constants.ACTION_REGISTER))
 					{
 						long lastCampaignId = order.getCampaignId();
-						checkPromotion(instance, orderRoute, order,
-								product.getAlias() + "."
-										+ Constants.ERROR_NOT_ENOUGH_MONEY);
+						checkPromotion(instance, orderRoute, order, product.getAlias() + "." + Constants.ERROR_NOT_ENOUGH_MONEY);
 						if (order.getCampaignId() != lastCampaignId)
 						{
-							order.getParameters()
-									.setBoolean("FreeOneDay", true);
+							order.getParameters().setBoolean("FreeOneDay", true);
 							order.setCause("");
 							order.setStatus(Constants.ORDER_STATUS_PENDING);
 						}
@@ -325,8 +296,7 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 			}
 		}
 
-		if (order.getActionType().equals(Constants.ACTION_SUBSCRIPTION)
-				&& !Constants.ERROR_REGISTERED.equals(order.getCause()))
+		if (order.getActionType().equals(Constants.ACTION_SUBSCRIPTION) && !Constants.ERROR_REGISTERED.equals(order.getCause()))
 		{
 			if (subscriberProduct == null)
 			{
@@ -337,16 +307,14 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 			String currentState = "";
 			try
 			{
-				currentState = getSubscriberState(instance, orderRoute,
-						product, order);
+				currentState = getSubscriberState(instance, orderRoute, product, order);
 			}
 			catch (Exception e)
 			{
 
 			}
 
-			if (!currentState.equals(Constants.BALANCE_STATE_ACTIVE)
-					&& order.getStatus() == Constants.ORDER_STATUS_DENIED)
+			if (!currentState.equals(Constants.BALANCE_STATE_ACTIVE) && order.getStatus() == Constants.ORDER_STATUS_DENIED)
 			{
 				order.setActionType(Constants.ACTION_UNREGISTER);
 
@@ -369,14 +337,13 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 
 		return order;
 	}
-	
-	public CommandMessage inviteService(OrderRoutingInstance instance,
-			ProductRoute orderRoute, CommandMessage order) throws Exception
+
+	public CommandMessage inviteService(OrderRoutingInstance instance, ProductRoute orderRoute, CommandMessage order) throws Exception
 	{
 		Exception error = null;
 
 		ProductEntry product = null;
-		
+
 		try
 		{
 			// check SMS syntax
@@ -392,14 +359,13 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 			}
 
 			// check product in available list
-			product = ProductFactory.getCache()
-					.getProduct(order.getProductId());
+			product = ProductFactory.getCache().getProduct(order.getProductId());
 
 			order.getParameters().setString("INVITER_ISDN", order.getIsdn());
-			
+
 			order.setResponseValue(ResponseUtil.LEADER, order.getIsdn());
 			order.setResponseValue(ResponseUtil.SERVICE_ALIAS, product.getAlias());
-			
+
 			// validate
 			if (orderRoute.isCheckBalance())
 			{
@@ -409,13 +375,12 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 			{
 				if (order.getSubscriberType() == Constants.UNKNOW_SUB_TYPE)
 				{
-					order.setSubscriberType(SubscriberEntryImpl
-							.getSubscriberType(order.getIsdn()));
+					order.setSubscriberType(SubscriberEntryImpl.getSubscriberType(order.getIsdn()));
 				}
 
 				order.setAmount(order.getQuantity() * order.getPrice());
 			}
-			
+
 			order.getParameters().setInteger("INVITER_SUBSCRIBERTYPE", order.getSubscriberType());
 
 			if (order.getStatus() != Constants.ORDER_STATUS_DENIED)
@@ -423,20 +388,20 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 				checkSubscriberType(instance, product, order);
 				order.setProvisioningType("ROUTE");
 				instance.sendCommandLog(order);
-				
+
 				String inviteeIsdn = CommandUtil.addCountryCode(order.getParameters().getString("sms.params[0]"));
 				verifyNumber(inviteeIsdn);
-				
+
 				if (order.getIsdn().equals(inviteeIsdn))
 				{
 					throw new AppException(Constants.ERROR_INVALID_DELIVER);
 				}
-				
+
 				order.setResponseValue(ResponseUtil.REFERAL, inviteeIsdn);
-				
+
 				order.getParameters().setString("INVITEE_ISDN", inviteeIsdn);
 				order.setIsdn(inviteeIsdn);
-				
+
 				order = checkBalanceInvite(instance, orderRoute, order, false);
 				order.getParameters().setProperty("IsQueryRTBS", "true");
 				if (order.getStatus() != Constants.ORDER_STATUS_DENIED)
@@ -482,7 +447,7 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 				order.setDescription(error.getMessage());
 			}
 		}
-		
+
 		if ((error != null) && !(error instanceof AppException))
 		{
 			throw error;
@@ -492,50 +457,132 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 
 		return order;
 	}
-	
-	public CommandMessage notInviteService(OrderRoutingInstance instance,
-			ProductRoute orderRoute, CommandMessage order) throws Exception
+
+	public CommandMessage notInviteService(OrderRoutingInstance instance, ProductRoute orderRoute, CommandMessage order) throws Exception
 	{
 		return order;
 	}
 
-	public CommandMessage unregister(OrderRoutingInstance instance,
-			ProductRoute orderRoute, CommandMessage order) throws Exception
+	public CommandMessage unregister(OrderRoutingInstance instance, ProductRoute orderRoute, CommandMessage order) throws Exception
 	{
 		order = this.parser(instance, orderRoute, order);
-		
-		if (order.getStatus() != Constants.ORDER_STATUS_DENIED && order.getChannel().equals(Constants.CHANNEL_SMS))
+
+		VNMMessage vnmMessage = CommandUtil.createVNMMessage(order);
+
+		if (vnmMessage.getStatus() != Constants.ORDER_STATUS_DENIED && vnmMessage.getChannel().equals(Constants.CHANNEL_SMS))
 		{
-			if (order.getSubProductId() != Constants.DEFAULT_ID)
+			CCWSConnection connection = null;
+
+			SubscriberRetrieve subscriberRetrieve = null;
+
+			SubscriberEntity subscriberEntity = null;
+
+			ProductEntry product = ProductFactory.getCache().getProduct(vnmMessage.getProductId());
+			try
 			{
-				order.setCause(Constants.ERROR_SUBSCRIPTION_NOT_FOUND);
-				order.setStatus(Constants.ORDER_STATUS_DENIED);
-				return order;
-			}
-			
-			if (DataPackageImpl.isConfirmRegister(order.getSubProductId(), Constants.SUBSCRIBER_CONFIRM_UNREGISTER_STATUS))
-			{
-				if (order.getActionType().equals(Constants.ACTION_CONFIRM))
+				connection = (CCWSConnection) instance.getProvisioningConnection();
+
+				int queryLevel = orderRoute.getParameters().getInteger("prepaid.queryLevel", 1);
+
+				try
 				{
-					order.setCause(Constants.ERROR_INVALID_REQUEST);
-					order.setStatus(Constants.ORDER_STATUS_DENIED);
+					int sessionId = 0;
+					try
+					{
+						sessionId = GeneratorSeq.getNextSeq();
+					}
+					catch (Exception e)
+					{
+					}
+					String strRequest = (new CCWSCommandImpl()).getLogRequest(
+							"com.comverse_in.prepaid.ccws.ServiceSoapStub.retrieveSubscriberWithIdentityNoHistory", order.getIsdn());
+					instance.logMonitor("SEND: " + strRequest + ". Product= " + product.getAlias() + ". ID=" + sessionId);
+					vnmMessage.setRequest("SEND: " + strRequest + ". Product= " + product.getAlias() + ". ID=" + sessionId);
+
+					Date startTime = new Date();
+					vnmMessage.setRequestTime(new Date());
+
+					subscriberRetrieve = connection.getSubscriber(vnmMessage.getIsdn(), queryLevel);
+					Date endTime = new Date();
+					long costTime = CommandUtil.calculateCostTime(startTime, endTime);
+					if (subscriberRetrieve != null)
+					{
+						subscriberEntity = subscriberRetrieve.getSubscriberData();
+						String strResponse = (new CCWSCommandImpl()).getLogResponse(subscriberEntity, vnmMessage.getIsdn());
+
+						vnmMessage.setResponseTime(new Date());
+						instance.logMonitor("RECEIVE:" + strResponse + ". ID=" + sessionId + ". costTime=" + costTime);
+						vnmMessage.setResponse("RECEIVE:" + strResponse + ". ID=" + sessionId + ". costTime=" + costTime);
+					}
+				}
+				catch (Exception e)
+				{
+					vnmMessage.setSubscriberType(Constants.UNKNOW_SUB_TYPE);
+				}
+				finally
+				{
+					instance.closeProvisioningConnection(connection);
+				}
+
+				if (subscriberEntity == null)
+				{
+					if (vnmMessage.getSubscriberType() == Constants.PREPAID_SUB_TYPE)
+					{
+						throw new AppException(Constants.ERROR);
+					}
+				}
+				else
+				{
+					vnmMessage.setSubscriberRetrieve(subscriberRetrieve);
+					vnmMessage.setSubscriberType(Constants.PREPAID_SUB_TYPE);
+
+//					validateState(instance, orderRoute, product, vnmMessage);
+				}
+
+				BalanceEntity balance = CCWSConnection.getBalance(subscriberEntity, "GPRS");
+
+				double convertRatio = Double.parseDouble(product.getParameter("ConvertRatio", "0.00000095367431640625"));
+				vnmMessage.setResponseValue("GPRS.amount", StringUtil.format((balance.getAvailableBalance()) * convertRatio, "#,##0"));
+			}
+			catch (AppException e)
+			{
+				vnmMessage.setCause(e.getMessage());
+				vnmMessage.setDescription(e.getContext());
+				vnmMessage.setStatus(Constants.ORDER_STATUS_DENIED);
+			}
+			catch (Exception e)
+			{
+				throw e;
+			}
+			finally
+			{
+				instance.closeProvisioningConnection(connection);
+			}
+
+			boolean isRequest = DataPackageImpl.isConfirm(vnmMessage.getIsdn(), vnmMessage.getProductId(), Constants.ACTION_CONFIRM_UNREGISTER,
+					Constants.ACTION_CLEAR_DATA, product.getParameters().getInteger("ConfirmTime", 600));
+			if (isRequest)
+			{
+				if (vnmMessage.getActionType().equals(Constants.ACTION_CONFIRM_UNREGISTER))
+				{
+					vnmMessage.setCause(Constants.ERROR_INVALID_REQUEST);
+					vnmMessage.setStatus(Constants.ORDER_STATUS_DENIED);
 				}
 			}
 			else
 			{
-				if (order.getActionType().equals(Constants.ACTION_UNREGISTER))
+				if (!vnmMessage.getActionType().equals(Constants.ACTION_CONFIRM_UNREGISTER))
 				{
-					order.setCause(Constants.ERROR_INVALID_REQUEST);
-					order.setStatus(Constants.ORDER_STATUS_DENIED);
+					vnmMessage.setCause(Constants.ERROR_INVALID_REQUEST);
+					vnmMessage.setStatus(Constants.ORDER_STATUS_DENIED);
 				}
 			}
 		}
-		
-		return order;
+
+		return (vnmMessage == null) ? order : vnmMessage;
 	}
-	
-	public CommandMessage checkBalanceInvite(OrderRoutingInstance instance,
-			ProductRoute orderRoute, CommandMessage order, boolean isInviter)
+
+	public CommandMessage checkBalanceInvite(OrderRoutingInstance instance, ProductRoute orderRoute, CommandMessage order, boolean isInviter)
 			throws Exception
 	{
 		ProductEntry product = null;
@@ -575,14 +622,14 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 					catch (Exception e)
 					{
 					}
-					String strRequest = (new CCWSCommandImpl())
-							.getLogRequest("com.comverse_in.prepaid.ccws.ServiceSoapStub.retrieveSubscriberWithIdentityNoHistory", vnmMessage.getIsdn());
+					String strRequest = (new CCWSCommandImpl()).getLogRequest(
+							"com.comverse_in.prepaid.ccws.ServiceSoapStub.retrieveSubscriberWithIdentityNoHistory", vnmMessage.getIsdn());
 					instance.logMonitor("SEND: " + strRequest + ". Product= " + product.getAlias() + ". ID=" + sessionId);
 					vnmMessage.setRequest("SEND: " + strRequest + ". Product= " + product.getAlias() + ". ID=" + sessionId);
-					
+
 					Date startTime = new Date();
 					vnmMessage.setRequestTime(new Date());
-					
+
 					subscriberRetrieve = connection.getSubscriber(vnmMessage.getIsdn(), queryLevel);
 					Date endTime = new Date();
 					long costTime = CommandUtil.calculateCostTime(startTime, endTime);
@@ -590,18 +637,21 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 					{
 						subscriberEntity = subscriberRetrieve.getSubscriberData();
 						String strResponse = (new CCWSCommandImpl()).getLogResponse(subscriberEntity, vnmMessage.getIsdn());
-						
-						vnmMessage.setSubscriberType(Constants.PREPAID_SUB_TYPE); // DuyMB fixbug add 20130108
-						
+
+						vnmMessage.setSubscriberType(Constants.PREPAID_SUB_TYPE); // DuyMB
+																					// fixbug
+																					// add
+																					// 20130108
+
 						vnmMessage.setResponseTime(new Date());
 						instance.logMonitor("RECEIVE:" + strResponse + ". ID=" + sessionId + ". costTime=" + costTime);
 						vnmMessage.setResponse("RECEIVE:" + strResponse + ". ID=" + sessionId + ". costTime=" + costTime);
-					}					
+					}
 				}
 				catch (Exception e)
 				{
-					//vnmMessage.setSubscriberType(SubscriberEntryImpl.getSubscriberType(vnmMessage.getIsdn()));
-					//vnmMessage.setSubscriberType(Constants.POSTPAID_SUB_TYPE);
+					// vnmMessage.setSubscriberType(SubscriberEntryImpl.getSubscriberType(vnmMessage.getIsdn()));
+					// vnmMessage.setSubscriberType(Constants.POSTPAID_SUB_TYPE);
 					vnmMessage.setSubscriberType(Constants.UNKNOW_SUB_TYPE);
 				}
 				finally
@@ -626,8 +676,7 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 
 					for (BalanceEntity balance : balances)
 					{
-						vnmMessage.setResponseValue(balance.getBalanceName() + ".amount",
-								StringUtil.format(balance.getBalance(), "#"));
+						vnmMessage.setResponseValue(balance.getBalanceName() + ".amount", StringUtil.format(balance.getBalance(), "#"));
 						vnmMessage.setResponseValue(balance.getBalanceName() + ".expireDate",
 								StringUtil.format(balance.getAccountExpiration().getTime(), "dd/MM/yyyy HH:mm:ss"));
 					}
@@ -636,21 +685,23 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 					// End edited
 
 					validateState(instance, orderRoute, product, vnmMessage);
-					
+
 					if (!isInviter)
 					{
 						validateCOS(instance, orderRoute, product, vnmMessage);
 					}
 					else
 					{
-						//2013-07-25 MinhDT Change start for CR charge promotion
-	//					validateBalance(instance, orderRoute, product, vnmMessage);
+						// 2013-07-25 MinhDT Change start for CR charge
+						// promotion
+						// validateBalance(instance, orderRoute, product,
+						// vnmMessage);
 						boolean notEnough = true;
 						String error = "";
 						boolean chargeMulti = product.getParameter("ChargeMulti." + order.getActionType(), "false").equals("true");
 						if (chargeMulti && product.getAvailBalances().length > 0)
 						{
-							for (int i=0; i< product.getAvailBalances().length; i++)
+							for (int i = 0; i < product.getAvailBalances().length; i++)
 							{
 								try
 								{
@@ -670,7 +721,7 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 										notEnough = true;
 									}
 								}
-								
+
 								if (!notEnough)
 								{
 									break;
@@ -683,7 +734,7 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 						}
 					}
 				}
-				//2013-07-25 MinhDT Change end for CR charge promotion
+				// 2013-07-25 MinhDT Change end for CR charge promotion
 			}
 			catch (AppException e)
 			{
@@ -708,7 +759,7 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 
 		return (vnmMessage == null) ? order : vnmMessage;
 	}
-	
+
 	public void verifyNumber(String number) throws Exception
 	{
 		Pattern pattern = Pattern.compile("\\d{11}");
@@ -723,9 +774,8 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 				throw new AppException(Constants.ERROR_INVALID_DELIVER);
 			}
 		}
-		
-		if (!number.startsWith(Constants.SHORT_CODE_VNM_8492)
-				&& !number.startsWith(Constants.SHORT_CODE_VNM_84186)
+
+		if (!number.startsWith(Constants.SHORT_CODE_VNM_8492) && !number.startsWith(Constants.SHORT_CODE_VNM_84186)
 				&& !number.startsWith(Constants.SHORT_CODE_VNM_84188))
 		{
 			throw new AppException(Constants.ERROR_INVALID_DELIVER);

@@ -1941,6 +1941,28 @@ public class StringUtil
 
 		return strReturn;
 	}
+	
+	@SuppressWarnings("rawtypes")
+	public static int[] toIntegerArray(String strSource, String strSeparator)
+	{
+		Vector vtReturn = toStringVector(nvl(strSource, ""), strSeparator);
+
+		int[] iReturn = new int[vtReturn.size()];
+
+		for (int iIndex = 0; iIndex < iReturn.length; iIndex++)
+		{
+			try
+			{
+				iReturn[iIndex] = (Integer) vtReturn.elementAt(iIndex);
+			}
+			catch (Exception e)
+			{
+				
+			}
+		}
+
+		return iReturn;
+	}
 
 	// //////////////////////////////////////////////////////
 	/**
