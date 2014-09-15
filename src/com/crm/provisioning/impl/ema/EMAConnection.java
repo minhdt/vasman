@@ -17,6 +17,8 @@ public class EMAConnection extends ProvisioningConnection
 	public boolean			isOpen					= false;
 	public boolean			isLogin					= false;
 	public boolean			isSending				= false;
+	
+	private Object			obSyn					= new Object();
 
 	public EMAConnection()
 	{
@@ -138,7 +140,10 @@ public class EMAConnection extends ProvisioningConnection
 			logMonitor(getConnectionId() + ": RECEIVE-KEEP-CONNECTION: " + receive.replaceAll("\nEnter command: ", ""));
 			check = true;
 
-			setLastRun(new Date());
+			synchronized (obSyn)
+			{
+				setLastRun(new Date());
+			}
 		}
 		catch (Exception e)
 		{
@@ -165,6 +170,11 @@ public class EMAConnection extends ProvisioningConnection
 		// Remove prompt & correct response
 		str = str.substring(0, str.length() - mstrPrompt.length());
 
+		synchronized (obSyn)
+		{
+			setLastRun(new Date());
+		}
+		
 		return str;
 	}
 

@@ -289,8 +289,17 @@ public class AlarmThread extends MailThread
 			{
 				debugMonitor("Sending alarm mail");
 				
-				sendEmail(alarmEntry.getSubject() + " - " + alarm.getAlarm().getCause(), alarmEntry.getSenderEmail(),
+				try
+				{
+					initMailSession();
+					
+					sendEmail(alarmEntry.getSubject() + " - " + alarm.getAlarm().getCause(), alarmEntry.getSenderEmail(),
 							alarmEntry.getSendToEmail(), strContent, null, StringPool.COMMA);
+				}
+				finally
+				{
+					detroyMailSessioin();
+				}
 				
 				debugMonitor("Finish send alarm mail");
 			}

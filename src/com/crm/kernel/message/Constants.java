@@ -361,7 +361,6 @@ public class Constants
 	public final static int		VERIFY_CONDITION_SUCCESS		= 0;
 	public final static int		VERIFY_CONDITION_FAIL			= 1;
 	
-	
 	// DATE
 	public final static String	DATE_FORMAT						= "dd/MM/yyyy HH:mm:ss";
 
@@ -387,4 +386,5 @@ public class Constants
 
 	public static final String	ERROR_PRODUCT_LIST_NOT_FOUND	= "product-list-not-found";
 	public static final String	ERROR_PACKAGE_LIST_NOT_FOUND	= "package-list-not-found";
+	public static final String	ERROR_SERVICE_LIST_NOT_FOUND	= "service-list-not-found";
 }

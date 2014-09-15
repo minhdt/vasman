@@ -3,7 +3,6 @@
  */
 package com.crm.provisioning.impl.ema;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -80,8 +79,6 @@ public class EMACommandImpl extends CommandImpl
 						emaResponse = emaResponse + responseMessage.trim();
 					}
 				}
-				
-				connection.setLastRun(new Date());
 				
 				setResponse(instance, request, emaResponse, sessionId);
 			}
@@ -215,8 +212,6 @@ public class EMACommandImpl extends CommandImpl
 	
 					while (true)
 					{
-						boolean cfnrcFlag = false;
-	
 						prefix = "command." + node + ".";
 	
 						String template = provisioningCommand.getParameter(prefix
@@ -317,8 +312,6 @@ public class EMACommandImpl extends CommandImpl
 								emaResponse = emaResponse + responseMessage.trim();
 							}
 						}
-						
-						connection.setLastRun(new Date());
 						
 						setResponse(instance, request, emaResponse, sessionId);
 					}

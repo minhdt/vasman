@@ -75,31 +75,39 @@ public class ProcessCleanLogFile extends ManageableThread
 
 	public void processSession() throws Exception
 	{
-		fillLogFile();
-		for(int i = 0;i < vtDir.size();i++)
+		try
+		{	
+			fillLogFile();
+			for(int i = 0;i < vtDir.size();i++)
+			{
+				@SuppressWarnings("rawtypes")
+				String strPath = (String)((Vector)vtDir.elementAt(i)).elementAt(0);
+				if(strPath == null || strPath.length() == 0)
+				{
+					continue;
+				}
+				
+				File f = new File(strPath);
+				if(f.exists())
+				{
+					if(f.isFile())
+					{	
+						processGzipFile(f);
+					}
+					else if(f.isDirectory())
+					{
+						processGzipDirectory(f);
+					}
+				}
+				if(fileTransferMode)
+				{
+					copyFileToServer(strPath, destFolder + strPath);
+				}
+			}
+		}
+		catch (Exception e)
 		{
-			@SuppressWarnings("rawtypes")
-			String strPath = (String)((Vector)vtDir.elementAt(i)).elementAt(0);
-			if(strPath == null || strPath.length() == 0)
-			{
-				continue;
-			}
-			File f = new File(strPath);
-			if(f.exists())
-			{
-				if(f.isFile())
-				{
-					processGzipFile(f);
-				}
-				else if(f.isDirectory())
-				{
-					processGzipDirectory(f);
-				}
-			}
-			if(fileTransferMode)
-			{
-				copyFileToServer(strPath, destFolder + strPath);
-			}
+			e.printStackTrace();
 		}
 	}
 
@@ -114,18 +122,20 @@ public class ProcessCleanLogFile extends ManageableThread
 		
 		for(int i = 0;i < lFile.length;i++)
 		{
-			String vstrFileTemp = lFile[i];
-			String vstrFile = f.getAbsolutePath() + File.separator + vstrFileTemp;
+			String vstrFile = f.getAbsolutePath() + File.separator + lFile[i];
+			
 			File vf = new File(vstrFile);
 			if(!vf.isFile() || vstrFile.length() < 8)
 			{
 				logMonitor("Igoned file " + vstrFile);
 				continue;
 			}
-			String vstrSubFile = vstrFileTemp.substring(0,8);
-			try
+
+			File tempFile = new File(vstrFile);
+			if (tempFile.exists())
 			{
-				Date dte = sdf.parse(vstrSubFile);
+				Date dte = new Date(tempFile.lastModified());
+				logMonitor(dte.toString());
 				Date dteNow = new Date();
 				dte = com.fss.util.DateUtil.addDay(dte,mDays);
 				if(dte.after(dteNow))
@@ -134,12 +144,6 @@ public class ProcessCleanLogFile extends ManageableThread
 					continue;
 				}
 				processGzipFile(vf);
-			}
-			catch(ParseException ex)
-			{
-				ex.printStackTrace();
-				logMonitor("Igoned file " + vstrFile);
-				continue;
 			}
 		}
 	}

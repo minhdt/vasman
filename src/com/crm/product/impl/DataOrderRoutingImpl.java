@@ -469,7 +469,7 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 
 		VNMMessage vnmMessage = CommandUtil.createVNMMessage(order);
 
-		if (vnmMessage.getStatus() != Constants.ORDER_STATUS_DENIED && vnmMessage.getChannel().equals(Constants.CHANNEL_SMS))
+		if (vnmMessage.getStatus() != Constants.ORDER_STATUS_DENIED)
 		{
 			CCWSConnection connection = null;
 
@@ -559,22 +559,25 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 				instance.closeProvisioningConnection(connection);
 			}
 
-			boolean isRequest = DataPackageImpl.isConfirm(vnmMessage.getIsdn(), vnmMessage.getProductId(), Constants.ACTION_CONFIRM_UNREGISTER,
-					Constants.ACTION_CLEAR_DATA, product.getParameters().getInteger("ConfirmTime", 600));
-			if (isRequest)
+			if (vnmMessage.getChannel().equals(Constants.CHANNEL_SMS))
 			{
-				if (vnmMessage.getActionType().equals(Constants.ACTION_CONFIRM_UNREGISTER))
+				boolean isRequest = DataPackageImpl.isConfirm(vnmMessage.getIsdn(), vnmMessage.getProductId(), Constants.ACTION_CONFIRM_UNREGISTER,
+						Constants.ACTION_CLEAR_DATA, product.getParameters().getInteger("ConfirmTime", 600));
+				if (isRequest)
 				{
-					vnmMessage.setCause(Constants.ERROR_INVALID_REQUEST);
-					vnmMessage.setStatus(Constants.ORDER_STATUS_DENIED);
+					if (vnmMessage.getActionType().equals(Constants.ACTION_CONFIRM_UNREGISTER))
+					{
+						vnmMessage.setCause(Constants.ERROR_INVALID_REQUEST);
+						vnmMessage.setStatus(Constants.ORDER_STATUS_DENIED);
+					}
 				}
-			}
-			else
-			{
-				if (!vnmMessage.getActionType().equals(Constants.ACTION_CONFIRM_UNREGISTER))
+				else
 				{
-					vnmMessage.setCause(Constants.ERROR_INVALID_REQUEST);
-					vnmMessage.setStatus(Constants.ORDER_STATUS_DENIED);
+					if (!vnmMessage.getActionType().equals(Constants.ACTION_CONFIRM_UNREGISTER))
+					{
+						vnmMessage.setCause(Constants.ERROR_INVALID_REQUEST);
+						vnmMessage.setStatus(Constants.ORDER_STATUS_DENIED);
+					}
 				}
 			}
 		}
