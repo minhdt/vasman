@@ -178,4 +178,9 @@ public class CampaignEntry extends IndexNode
 
 		return result;
 	}
+	
+	public boolean isCampaignGift()
+	{
+		return getParameters().getBoolean("CampaignForGift", false);
+	}
 }

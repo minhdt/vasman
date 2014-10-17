@@ -7,13 +7,16 @@ import java.net.SocketException;
 import java.rmi.RemoteException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Properties;
 
 import org.apache.axis.AxisFault;
 
 import com.comverse_in.prepaid.ccws.ArrayOfDeltaBalance;
+import com.comverse_in.prepaid.ccws.BalanceCreditAccount;
 import com.comverse_in.prepaid.ccws.BalanceEntity;
 import com.comverse_in.prepaid.ccws.BalanceEntityBase;
 import com.comverse_in.prepaid.ccws.SubscriberEntity;
@@ -48,8 +51,7 @@ import com.fss.util.AppException;
  */
 public class CCWSCommandImpl extends CommandImpl
 {
-	public String getErrorCode(CommandInstance instance,
-			CommandMessage request, Exception error)
+	public String getErrorCode(CommandInstance instance, CommandMessage request, Exception error)
 	{
 		String errorCode = "";
 		try
@@ -59,8 +61,7 @@ public class CCWSCommandImpl extends CommandImpl
 			if (errorCode.startsWith("<ErrorCode>"))
 			{
 				errorCode = errorCode.substring("<ErrorCode>".length());
-				errorCode = errorCode.substring(0,
-						errorCode.indexOf("</ErrorCode>"));
+				errorCode = errorCode.substring(0, errorCode.indexOf("</ErrorCode>"));
 			}
 			else
 			{
@@ -71,7 +72,7 @@ public class CCWSCommandImpl extends CommandImpl
 		{
 			errorCode = "CCWS unknown" + (error != null ? (": " + error.toString()) : "");
 		}
-		
+
 		return errorCode;
 	}
 
@@ -80,8 +81,7 @@ public class CCWSCommandImpl extends CommandImpl
 	// Author : ThangPV
 	// Created Date : 16/09/2004
 	// //////////////////////////////////////////////////////
-	public SubscriberEntity getSubscriber(CommandInstance instance,
-			CommandMessage request) throws Exception
+	public SubscriberEntity getSubscriber(CommandInstance instance, CommandMessage request) throws Exception
 	{
 		CCWSConnection connection = null;
 
@@ -98,20 +98,13 @@ public class CCWSCommandImpl extends CommandImpl
 			{
 				String isdn = CommandUtil.addCountryCode(request.getIsdn());
 
-				connection = (CCWSConnection) instance
-						.getProvisioningConnection();
-				long sessionId = setRequest(
-						instance,
-						request,
-						getLogRequest(
-								"com.comverse_in.prepaid.ccws.ServiceSoapStub.retrieveSubscriberWithIdentityNoHistory",
-								request.getIsdn()));
+				connection = (CCWSConnection) instance.getProvisioningConnection();
+				long sessionId = setRequest(instance, request,
+						getLogRequest("com.comverse_in.prepaid.ccws.ServiceSoapStub.retrieveSubscriberWithIdentityNoHistory", request.getIsdn()));
 
 				subscriber = connection.getSubscriberInfor(isdn);
 
-				setResponse(instance, request,
-						getLogResponse(subscriber, request.getIsdn()),
-						sessionId);
+				setResponse(instance, request, getLogResponse(subscriber, request.getIsdn()), sessionId);
 
 				if (request instanceof VNMMessage)
 				{
@@ -136,14 +129,11 @@ public class CCWSCommandImpl extends CommandImpl
 	// Author : ThangPV
 	// Created Date : 16/09/2004
 	// //////////////////////////////////////////////////////
-	public void validateStatus(CommandInstance instance,
-			CommandMessage request, SubscriberEntity subscriber)
-			throws Exception
+	public void validateStatus(CommandInstance instance, CommandMessage request, SubscriberEntity subscriber) throws Exception
 	{
 		try
 		{
-			ProductEntry product = ProductFactory.getCache().getProduct(
-					request.getProductId());
+			ProductEntry product = ProductFactory.getCache().getProduct(request.getProductId());
 
 			if ((subscriber == null) || (product == null))
 			{
@@ -178,13 +168,11 @@ public class CCWSCommandImpl extends CommandImpl
 	// Author : ThangPV
 	// Created Date : 16/09/2004
 	// //////////////////////////////////////////////////////
-	public void validateCOS(CommandInstance instance, CommandMessage request,
-			SubscriberEntity subscriber) throws Exception
+	public void validateCOS(CommandInstance instance, CommandMessage request, SubscriberEntity subscriber) throws Exception
 	{
 		try
 		{
-			ProductEntry product = ProductFactory.getCache().getProduct(
-					request.getProductId());
+			ProductEntry product = ProductFactory.getCache().getProduct(request.getProductId());
 
 			if ((subscriber == null) || (product == null))
 			{
@@ -218,9 +206,7 @@ public class CCWSCommandImpl extends CommandImpl
 	// Author : ThangPV
 	// Created Date : 16/09/2004
 	// //////////////////////////////////////////////////////
-	public void validateBalance(CommandInstance instance,
-			ProductRoute orderRoute, ProductEntry product, VNMMessage vnmMessage)
-			throws Exception
+	public void validateBalance(CommandInstance instance, ProductRoute orderRoute, ProductEntry product, VNMMessage vnmMessage) throws Exception
 	{
 		SubscriberEntity subscriberEntity = null;
 
@@ -228,8 +214,7 @@ public class CCWSCommandImpl extends CommandImpl
 		{
 			subscriberEntity = vnmMessage.getSubscriberEntity();
 
-			BalanceEntity balance = CCWSConnection.getBalance(subscriberEntity,
-					CCWSConnection.CORE_BALANCE);
+			BalanceEntity balance = CCWSConnection.getBalance(subscriberEntity, CCWSConnection.CORE_BALANCE);
 
 			if (balance.getAvailableBalance() < product.getMinBalance())
 			{
@@ -239,24 +224,19 @@ public class CCWSCommandImpl extends CommandImpl
 			// set default price
 			vnmMessage.setOfferPrice(product.getPrice());
 
-			ProductPrice productPrice = product.getProductPrice(
-					vnmMessage.getChannel(), vnmMessage.getActionType(),
-					vnmMessage.getSegmentId(),
-					vnmMessage.getAssociateProductId(),
-					vnmMessage.getQuantity(), vnmMessage.getOrderDate());
+			ProductPrice productPrice = product.getProductPrice(vnmMessage.getChannel(), vnmMessage.getActionType(), vnmMessage.getSegmentId(),
+					vnmMessage.getAssociateProductId(), vnmMessage.getQuantity(), vnmMessage.getOrderDate());
 
 			int quantity = 1;
 
 			if (productPrice != null)
 			{
-				if (balance.getAvailableBalance() >= productPrice
-						.getFullOfCharge())
+				if (balance.getAvailableBalance() >= productPrice.getFullOfCharge())
 				{
 					vnmMessage.setPrice(productPrice.getFullOfCharge());
 					vnmMessage.setFullOfCharge(true);
 				}
-				else if (balance.getAvailableBalance() < productPrice
-						.getBaseOfCharge())
+				else if (balance.getAvailableBalance() < productPrice.getBaseOfCharge())
 				{
 					throw new AppException(Constants.ERROR_NOT_ENOUGH_MONEY);
 				}
@@ -265,8 +245,7 @@ public class CCWSCommandImpl extends CommandImpl
 					vnmMessage.setFullOfCharge(false);
 					vnmMessage.setPrice(productPrice.getBaseOfCharge());
 
-					quantity = (int) (balance.getAvailableBalance() / vnmMessage
-							.getPrice());
+					quantity = (int) (balance.getAvailableBalance() / vnmMessage.getPrice());
 
 					if (quantity == 0)
 					{
@@ -284,8 +263,7 @@ public class CCWSCommandImpl extends CommandImpl
 			}
 
 			vnmMessage.setQuantity(quantity);
-			vnmMessage.setAmount(vnmMessage.getPrice()
-					* vnmMessage.getQuantity());
+			vnmMessage.setAmount(vnmMessage.getPrice() * vnmMessage.getQuantity());
 
 			if (balance.getAvailableBalance() < vnmMessage.getAmount())
 			{
@@ -299,9 +277,7 @@ public class CCWSCommandImpl extends CommandImpl
 	}
 
 	// DuyMB add end check cosname khi huy 3G 2011/12/07
-	public VNMMessage checkBalance(CommandInstance instance,
-			ProvisioningCommand provisioningCommand, CommandMessage request)
-			throws Exception
+	public VNMMessage checkBalance(CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request) throws Exception
 	{
 		VNMMessage vnmMessage = CommandUtil.createVNMMessage(request);
 
@@ -317,11 +293,9 @@ public class CCWSCommandImpl extends CommandImpl
 			{
 				long productId = vnmMessage.getProductId();
 
-				ProductEntry product = ProductFactory.getCache().getProduct(
-						productId);
+				ProductEntry product = ProductFactory.getCache().getProduct(productId);
 
-				ProductRoute orderRoute = ProductFactory.getCache()
-						.getProductRoute(vnmMessage.getRouteId());
+				ProductRoute orderRoute = ProductFactory.getCache().getProductRoute(vnmMessage.getRouteId());
 
 				subscriber = getSubscriber(instance, vnmMessage);
 
@@ -335,13 +309,11 @@ public class CCWSCommandImpl extends CommandImpl
 
 						validateCOS(instance, vnmMessage, subscriber);
 
-						validateBalance(instance, orderRoute, product,
-								vnmMessage);
+						validateBalance(instance, orderRoute, product, vnmMessage);
 					}
 					catch (AppException e)
 					{
-						if (e.getMessage().equals(
-								Constants.ERROR_NOT_ENOUGH_MONEY))
+						if (e.getMessage().equals(Constants.ERROR_NOT_ENOUGH_MONEY))
 						{
 							isNotEnoughMoney = true;
 						}
@@ -356,16 +328,14 @@ public class CCWSCommandImpl extends CommandImpl
 					}
 				}
 
-
-				SubscriberProduct subscriberProduct = SubscriberProductImpl
-						.getActive(vnmMessage.getIsdn(), productId);
+				SubscriberProduct subscriberProduct = SubscriberProductImpl.getActive(vnmMessage.getIsdn(), productId);
 
 				Date currentDate = new Date();
 				if (isNotEnoughMoney)
 				{
 					String actionType = vnmMessage.getActionType();
 					String cause = Constants.ERROR_NOT_ENOUGH_MONEY;
-					
+
 					if (actionType.equals(Constants.ACTION_TOPUP))
 					{
 						if (vnmMessage.getRequestValue("first-action-type", "").equals(Constants.ACTION_SUBSCRIPTION))
@@ -378,8 +348,7 @@ public class CCWSCommandImpl extends CommandImpl
 					{
 						if (subscriberProduct == null)
 						{
-							throw new AppException(
-									Constants.ERROR_SUBSCRIPTION_NOT_FOUND);
+							throw new AppException(Constants.ERROR_SUBSCRIPTION_NOT_FOUND);
 						}
 						if (subscriberProduct.getExpirationDate().before(currentDate))
 						{
@@ -403,16 +372,14 @@ public class CCWSCommandImpl extends CommandImpl
 						vnmMessage.setCause(cause);
 					}
 				}
-				
+
 				if (vnmMessage.getActionType().equals(Constants.ACTION_SUBSCRIPTION)
 						|| vnmMessage.getActionType().equals(Constants.ACTION_SUPPLIER_DEACTIVE))
 				{
 					if (subscriberProduct == null)
 						throw new AppException(Constants.ERROR_SUBSCRIPTION_NOT_FOUND);
-					if ((subscriberProduct.getGraceDate() == null && vnmMessage.getActionType().equals(
-							Constants.ACTION_SUPPLIER_DEACTIVE))
-							|| (subscriberProduct.getGraceDate() != null
-									&& subscriberProduct.getGraceDate().before(currentDate)))
+					if ((subscriberProduct.getGraceDate() == null && vnmMessage.getActionType().equals(Constants.ACTION_SUPPLIER_DEACTIVE))
+							|| (subscriberProduct.getGraceDate() != null && subscriberProduct.getGraceDate().before(currentDate)))
 					{
 						vnmMessage.setActionType(Constants.ACTION_UNREGISTER);
 
@@ -435,16 +402,14 @@ public class CCWSCommandImpl extends CommandImpl
 	// Author : ThangPV
 	// Created Date : 16/09/2004
 	// //////////////////////////////////////////////////////
-	public VNMMessage modifyBalance(CommandInstance instance,
-			ProvisioningCommand provisioningCommand, CommandMessage request)
-			throws Exception
+	public VNMMessage modifyBalance(CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request) throws Exception
 	{
 		CCWSConnection connection = null;
 
-		BalanceEntityBase[] balances = null;
+		List<BalanceEntityBase> balances = null;
 
 		VNMMessage result = CommandUtil.createVNMMessage(request);
-		
+
 		String isdn = CommandUtil.addCountryCode(result.getIsdn());
 
 		if (instance.getDebugMode().equals("depend"))
@@ -455,97 +420,85 @@ public class CCWSCommandImpl extends CommandImpl
 		{
 			try
 			{
-				ProductEntry product = ProductFactory.getCache().getProduct(
-						result.getProductId());
+				ProductEntry product = ProductFactory.getCache().getProduct(result.getProductId());
 
 				SubscriberEntity subscriber = getSubscriber(instance, result);
 
 				String cosName = subscriber.getCOSName();
+
+				String[] addBalances = StringUtil.toStringArray(product.getParameter("balances", ""), StringPool.COMMA);
 				
-				String[] addBalances = StringUtil.toStringArray(
-						product.getParameter("balances", ""), StringPool.COMMA);
+				String chargedBalance = "";
 
 				Date now = new Date();
 
-				balances = new BalanceEntityBase[addBalances.length];
+				balances = new ArrayList<BalanceEntityBase>();
 
 				Calendar activeDate = Calendar.getInstance();
 
-				result.setRequestValue("balances.premodified.activeDate",
-						subscriber.getDateEnterActive().getTime());
+				result.setRequestValue("balances.premodified.activeDate", subscriber.getDateEnterActive().getTime());
 				for (int j = 0; j < addBalances.length; j++)
 				{
 					String balanceName = addBalances[j];
 
-					String prefix = "balance." + result.getActionType() + "."
-							+ balanceName;
+					String prefix = "balance." + result.getActionType() + "." + balanceName;
 
 					// get current balance
-					BalanceEntity balance = CCWSConnection.getBalance(
-							subscriber, balanceName);
+					BalanceEntity balance = CCWSConnection.getBalance(subscriber, balanceName);
 
 					// save original balance status before add
-					result.setRequestValue("balances." + balanceName
-							+ ".premodified.expirationDate", balance
-							.getAccountExpiration().getTime());
-					result.setRequestValue("balances." + balanceName
-							+ ".premodified.amount", balance.getBalance());
+					result.setRequestValue("balances." + balanceName + ".premodified.expirationDate", balance.getAccountExpiration().getTime());
+					result.setRequestValue("balances." + balanceName + ".premodified.amount", balance.getBalance());
 
 					// calculate expiration date for this balance
 					Calendar maxExpiredDate = Calendar.getInstance();
 
 					maxExpiredDate.setTime(now);
-					
+
 					maxExpiredDate.set(Calendar.HOUR_OF_DAY, 23);
 					maxExpiredDate.set(Calendar.MINUTE, 59);
 					maxExpiredDate.set(Calendar.SECOND, 59);
 
-					int maxDays = product.getParameters().getInteger(
-							prefix + ".maxDays");
+					int maxDays = product.getParameters().getInteger(prefix + ".maxDays");
 
 					maxExpiredDate.add(Calendar.DATE, maxDays);
 
-					
 					Calendar expiredDate = balance.getAccountExpiration();
-					
+
 					if (product.isSubscription())
 					{
-						SubscriberProduct subProduct = SubscriberProductImpl.getUnterminated(
-								request.getIsdn(), request.getProductId());
+						SubscriberProduct subProduct = SubscriberProductImpl.getUnterminated(request.getIsdn(), request.getProductId());
 						if (subProduct != null)
 						{
 							expiredDate.setTime(subProduct.getExpirationDate());
 						}
 					}
-					
-//					int expireTime = product.getParameters().getInteger(
-//							prefix + ".days");
+
+					// int expireTime = product.getParameters().getInteger(
+					// prefix + ".days");
 					int expireTime = product.getSubscriptionPeriod();
 					if (result.getCampaignId() != Constants.DEFAULT_ID)
 					{
-						CampaignEntry campaign = CampaignFactory.getCache()
-								.getCampaign(result.getCampaignId());
+						CampaignEntry campaign = CampaignFactory.getCache().getCampaign(result.getCampaignId());
 
 						if ((campaign != null))
 						{
 							expireTime = campaign.getSchedulePeriod();
 						}
 					}
-					
-					String setExpFlg = product.getParameters().getString(
-							prefix + ".resetexpiredate", "false");
 
-//					boolean includeCurrentDay = result.getParameters().getBoolean(
-//							"includeCurrentDay");
-					
-					if (expiredDate.getTimeInMillis() < now.getTime()
-							|| setExpFlg.equals("true"))
+					String setExpFlg = product.getParameters().getString(prefix + ".resetexpiredate", "false");
+
+					// boolean includeCurrentDay =
+					// result.getParameters().getBoolean(
+					// "includeCurrentDay");
+
+					if (expiredDate.getTimeInMillis() < now.getTime() || setExpFlg.equals("true"))
 					{
 						expireTime--;
 						expiredDate.setTime(now);
 					}
-					else if (expiredDate.getTimeInMillis() >= now.getTime()
-							&& result.getActionType().equals(Constants.ACTION_SUBSCRIPTION))
+					else if (expiredDate.getTimeInMillis() >= now.getTime() && result.getActionType().equals(Constants.ACTION_SUBSCRIPTION))
 					{
 						expireTime--;
 					}
@@ -553,13 +506,10 @@ public class CCWSCommandImpl extends CommandImpl
 					boolean truncExpire = Boolean.parseBoolean(product.getParameter("TruncExpireDate", "true"));
 					if (truncExpire)
 					{
-						int expireHour = product.getParameters().getInteger(
-								prefix + ".expire.hour", 23);
-						int expireMinute = product.getParameters().getInteger(
-								prefix + ".expire.minute", 59);
-						int expireSecond = product.getParameters().getInteger(
-								prefix + ".expire.second", 59);
-	
+						int expireHour = product.getParameters().getInteger(prefix + ".expire.hour", 23);
+						int expireMinute = product.getParameters().getInteger(prefix + ".expire.minute", 59);
+						int expireSecond = product.getParameters().getInteger(prefix + ".expire.second", 59);
+
 						expiredDate.set(Calendar.HOUR_OF_DAY, expireHour);
 						expiredDate.set(Calendar.MINUTE, expireMinute);
 						expiredDate.set(Calendar.SECOND, expireSecond);
@@ -580,53 +530,49 @@ public class CCWSCommandImpl extends CommandImpl
 						activeDate = expiredDate;
 					}
 
-					double amount = product.getParameters().getDouble(
-							prefix + ".amount");
+					double amount = product.getParameters().getDouble(prefix + ".amount");
 
-					balances[j] = new BalanceEntityBase();
+					BalanceEntityBase modifyBalance = new BalanceEntityBase();
 
-					balances[j].setBalanceName(balanceName);
+					modifyBalance.setBalanceName(balanceName);
 
 					// Need to check accumulate or reset account DuyMB.
-					String accumulateFlg = product.getParameters().getString(
-							prefix + ".accumulate", "false");
+					String accumulateFlg = product.getParameters().getString(prefix + ".accumulate", "false");
 					if (accumulateFlg.equals("true"))
 					{
-						balances[j].setBalance(balance.getBalance() + amount);
+						modifyBalance.setBalance(balance.getBalance() + amount);
 					}
 					else
 					{
-						balances[j].setBalance(amount);
+						modifyBalance.setBalance(amount);
 					}
-					
-					balances[j].setAccountExpiration(expiredDate);
+
+					modifyBalance.setAccountExpiration(expiredDate);
 
 					// Add response value for writing log file
-					result.setResponseValue(balances[j].getBalanceName()
-							+ ".amount",
-							StringUtil.format(balances[j].getBalance(), "#"));
+					result.setResponseValue(modifyBalance.getBalanceName() + ".amount", StringUtil.format(modifyBalance.getBalance(), "#"));
 
-					result.setResponseValue(balances[j].getBalanceName()
-							+ ".expireDate", StringUtil.format(balances[j]
-							.getAccountExpiration().getTime(),
-							Constants.DATE_FORMAT));
+					result.setResponseValue(modifyBalance.getBalanceName() + ".expireDate",
+							StringUtil.format(modifyBalance.getAccountExpiration().getTime(), Constants.DATE_FORMAT));
+
+					balances.add(modifyBalance);
+					
+					chargedBalance = chargedBalance + StringPool.COMMA + balanceName;
 				}
 
 				// String comment = product.getIndexKey();
 
-				String comment = product.getParameter(
-						"mtrComment." + product.getAlias() + "."
-								+ request.getActionType(), "Comment MTR"
-								+ product.getAlias());
+				String comment = product.getParameter("mtrComment." + product.getAlias() + "." + request.getActionType(),
+						"Comment MTR" + product.getAlias());
 
 				// modify balances
-				if (balances.length > 0)
+				if (balances.size() > 0)
 				{
-					connection = (CCWSConnection) instance
-							.getProvisioningConnection();
-					
-					BalanceEntityBase[] balancesModify = new BalanceEntityBase[balances.length + 1];
-					//Sync expire Core with expire GPRS of some COS
+					connection = (CCWSConnection) instance.getProvisioningConnection();
+
+					// BalanceEntityBase[] balancesModify = new
+					// BalanceEntityBase[balances.length + 1];
+					// Sync expire Core with expire GPRS of some COS
 					boolean syncCOSList = product.getParameter("SyncCOSList", "false").equalsIgnoreCase("true");
 					String[] blackCOSList = product.getParameter("BlackCOS", "").split(",");
 					boolean isBlackList = false;
@@ -637,40 +583,47 @@ public class CCWSCommandImpl extends CommandImpl
 							isBlackList = true;
 						}
 					}
-					
+
 					if (syncCOSList && !isBlackList)
 					{
-						for (int j=0; j<balances.length; j++)
-						{	
-							balancesModify[j] = balances[j];
-							
-							BalanceEntity core = CCWSConnection.getBalance(connection.getSubscriberInfor(isdn),
-									CCWSConnection.CORE_BALANCE);
-							
-							if (balances[j].getBalanceName().equals("GPRS")
-									&& balances[j].getAccountExpiration().after(core.getAccountExpiration()))
+						for (int j = 0; j < balances.size(); j++)
+						{
+							BalanceEntity core = CCWSConnection.getBalance(connection.getSubscriberInfor(isdn), CCWSConnection.CORE_BALANCE);
+
+							if (balances.get(j).getBalanceName().equals("GPRS")
+									&& balances.get(j).getAccountExpiration().after(core.getAccountExpiration()))
 							{
-								balancesModify[balances.length] = new BalanceEntityBase();
-								balancesModify[balances.length].setBalanceName("Core");
-								balancesModify[balances.length].setBalance(core.getBalance());
-								balancesModify[balances.length].setAccountExpiration(balances[j].getAccountExpiration());
+								BalanceEntityBase coreBalance = new BalanceEntityBase();
+								coreBalance.setBalanceName("Core");
+								coreBalance.setBalance(core.getBalance());
+								coreBalance.setAccountExpiration(balances.get(j).getAccountExpiration());
+
+								balances.add(coreBalance);
+								
+								chargedBalance = chargedBalance + StringPool.COMMA + CCWSConnection.CORE_BALANCE;
 							}
 						}
 					}
-					else
+					// else
+					// {
+					// for (int j=0; j<balances.length; j++)
+					// {
+					// balancesModify[j] = balances[j];
+					// }
+					// }
+					
+					BalanceEntityBase[] modifyBalances = new BalanceEntityBase[balances.size()];
+
+					for (int i = 0; i < balances.size(); i++)
 					{
-						for (int j=0; j<balances.length; j++)
-						{	
-							balancesModify[j] = balances[j];
-						}
+						modifyBalances[i] = balances.get(i);
 					}
 
 					long sessionId = setRequest(instance, result,
-							"com.comverse_in.prepaid.ccws.ServiceSoapStub.modifySubscriber:"
-									+ getLogBalances(balancesModify, isdn));
+							"com.comverse_in.prepaid.ccws.ServiceSoapStub.modifySubscriber:" + getLogBalances(modifyBalances, isdn));
 					try
 					{
-						connection.setBalance(isdn, balancesModify, activeDate, comment);
+						connection.setBalance(isdn, modifyBalances, activeDate, comment);
 						setResponse(instance, result, Constants.SUCCESS, sessionId);
 					}
 					catch (AxisFault error)
@@ -702,9 +655,8 @@ public class CCWSCommandImpl extends CommandImpl
 
 		return result;
 	}
-	
-	public VNMMessage modifyBalanceWhenInvite(CommandInstance instance,
-			ProvisioningCommand provisioningCommand, CommandMessage request)
+
+	public VNMMessage modifyBalanceWhenInvite(CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request)
 			throws Exception
 	{
 		CCWSConnection connection = null;
@@ -712,7 +664,7 @@ public class CCWSCommandImpl extends CommandImpl
 		BalanceEntityBase[] balances = null;
 
 		VNMMessage result = CommandUtil.createVNMMessage(request);
-		
+
 		String isdn = CommandUtil.addCountryCode(request.getParameters().getString("INVITEE_ISDN"));
 		result.setIsdn(isdn);
 
@@ -724,15 +676,13 @@ public class CCWSCommandImpl extends CommandImpl
 		{
 			try
 			{
-				ProductEntry product = ProductFactory.getCache().getProduct(
-						result.getProductId());
+				ProductEntry product = ProductFactory.getCache().getProduct(result.getProductId());
 
 				SubscriberEntity subscriber = getSubscriber(instance, result);
 
 				String cosName = subscriber.getCOSName();
-				
-				String[] addBalances = StringUtil.toStringArray(
-						product.getParameter("balances", ""), StringPool.COMMA);
+
+				String[] addBalances = StringUtil.toStringArray(product.getParameter("balances", ""), StringPool.COMMA);
 
 				Date now = new Date();
 
@@ -740,81 +690,69 @@ public class CCWSCommandImpl extends CommandImpl
 
 				Calendar activeDate = Calendar.getInstance();
 
-				result.setRequestValue("balances.premodified.activeDate",
-						subscriber.getDateEnterActive().getTime());
+				result.setRequestValue("balances.premodified.activeDate", subscriber.getDateEnterActive().getTime());
 				for (int j = 0; j < addBalances.length; j++)
 				{
 					String balanceName = addBalances[j];
 
-					String prefix = "balance." + result.getActionType() + "."
-							+ balanceName;
+					String prefix = "balance." + result.getActionType() + "." + balanceName;
 
 					// get current balance
-					BalanceEntity balance = CCWSConnection.getBalance(
-							subscriber, balanceName);
+					BalanceEntity balance = CCWSConnection.getBalance(subscriber, balanceName);
 
 					// save original balance status before add
-					result.setRequestValue("balances." + balanceName
-							+ ".premodified.expirationDate", balance
-							.getAccountExpiration().getTime());
-					result.setRequestValue("balances." + balanceName
-							+ ".premodified.amount", balance.getBalance());
+					result.setRequestValue("balances." + balanceName + ".premodified.expirationDate", balance.getAccountExpiration().getTime());
+					result.setRequestValue("balances." + balanceName + ".premodified.amount", balance.getBalance());
 
 					// calculate expiration date for this balance
 					Calendar maxExpiredDate = Calendar.getInstance();
 
 					maxExpiredDate.setTime(now);
-					
+
 					maxExpiredDate.set(Calendar.HOUR_OF_DAY, 23);
 					maxExpiredDate.set(Calendar.MINUTE, 59);
 					maxExpiredDate.set(Calendar.SECOND, 59);
 
-					int maxDays = product.getParameters().getInteger(
-							prefix + ".maxDays");
+					int maxDays = product.getParameters().getInteger(prefix + ".maxDays");
 
 					maxExpiredDate.add(Calendar.DATE, maxDays);
 
-					
 					Calendar expiredDate = balance.getAccountExpiration();
-					
+
 					if (product.isSubscription())
 					{
-						SubscriberProduct subProduct = SubscriberProductImpl.getUnterminated(
-								request.getIsdn(), request.getProductId());
+						SubscriberProduct subProduct = SubscriberProductImpl.getUnterminated(request.getIsdn(), request.getProductId());
 						if (subProduct != null)
 						{
 							expiredDate.setTime(subProduct.getExpirationDate());
 						}
 					}
-					
-//					int expireTime = product.getParameters().getInteger(
-//							prefix + ".days");
+
+					// int expireTime = product.getParameters().getInteger(
+					// prefix + ".days");
 					int expireTime = product.getSubscriptionPeriod();
 					if (result.getCampaignId() != Constants.DEFAULT_ID)
 					{
-						CampaignEntry campaign = CampaignFactory.getCache()
-								.getCampaign(result.getCampaignId());
+						CampaignEntry campaign = CampaignFactory.getCache().getCampaign(result.getCampaignId());
 
 						if ((campaign != null))
 						{
 							expireTime = campaign.getSchedulePeriod();
 						}
 					}
-					
-					String setExpFlg = product.getParameters().getString(
-							prefix + ".resetexpiredate", "false");
 
-//					boolean includeCurrentDay = result.getParameters().getBoolean(
-//							"includeCurrentDay");
-					
-					if (expiredDate.getTimeInMillis() < now.getTime()
-							|| setExpFlg.equals("true"))
+					String setExpFlg = product.getParameters().getString(prefix + ".resetexpiredate", "false");
+
+					// boolean includeCurrentDay =
+					// result.getParameters().getBoolean(
+					// "includeCurrentDay");
+
+					if (expiredDate.getTimeInMillis() < now.getTime() || setExpFlg.equals("true"))
 					{
 						expireTime--;
 						expiredDate.setTime(now);
 					}
-					else if (expiredDate.getTimeInMillis() >= now.getTime()
-							&& result.getActionType().equals(Constants.ACTION_SUBSCRIPTION))
+					else if (expiredDate.getTimeInMillis() >= now.getTime() && result.getActionType().equals(Constants.ACTION_SUBSCRIPTION))
 					{
 						expireTime--;
 					}
@@ -822,13 +760,10 @@ public class CCWSCommandImpl extends CommandImpl
 					boolean truncExpire = Boolean.parseBoolean(product.getParameter("TruncExpireDate", "true"));
 					if (truncExpire)
 					{
-						int expireHour = product.getParameters().getInteger(
-								prefix + ".expire.hour", 23);
-						int expireMinute = product.getParameters().getInteger(
-								prefix + ".expire.minute", 59);
-						int expireSecond = product.getParameters().getInteger(
-								prefix + ".expire.second", 59);
-	
+						int expireHour = product.getParameters().getInteger(prefix + ".expire.hour", 23);
+						int expireMinute = product.getParameters().getInteger(prefix + ".expire.minute", 59);
+						int expireSecond = product.getParameters().getInteger(prefix + ".expire.second", 59);
+
 						expiredDate.set(Calendar.HOUR_OF_DAY, expireHour);
 						expiredDate.set(Calendar.MINUTE, expireMinute);
 						expiredDate.set(Calendar.SECOND, expireSecond);
@@ -849,16 +784,14 @@ public class CCWSCommandImpl extends CommandImpl
 						activeDate = expiredDate;
 					}
 
-					double amount = product.getParameters().getDouble(
-							prefix + ".amount");
+					double amount = product.getParameters().getDouble(prefix + ".amount");
 
 					balances[j] = new BalanceEntityBase();
 
 					balances[j].setBalanceName(balanceName);
 
 					// Need to check accumulate or reset account DuyMB.
-					String accumulateFlg = product.getParameters().getString(
-							prefix + ".accumulate", "false");
+					String accumulateFlg = product.getParameters().getString(prefix + ".accumulate", "false");
 					if (accumulateFlg.equals("true"))
 					{
 						balances[j].setBalance(balance.getBalance() + amount);
@@ -867,35 +800,28 @@ public class CCWSCommandImpl extends CommandImpl
 					{
 						balances[j].setBalance(amount);
 					}
-					
+
 					balances[j].setAccountExpiration(expiredDate);
 
 					// Add response value for writing log file
-					result.setResponseValue(balances[j].getBalanceName()
-							+ ".amount",
-							StringUtil.format(balances[j].getBalance(), "#"));
+					result.setResponseValue(balances[j].getBalanceName() + ".amount", StringUtil.format(balances[j].getBalance(), "#"));
 
-					result.setResponseValue(balances[j].getBalanceName()
-							+ ".expireDate", StringUtil.format(balances[j]
-							.getAccountExpiration().getTime(),
-							Constants.DATE_FORMAT));
+					result.setResponseValue(balances[j].getBalanceName() + ".expireDate",
+							StringUtil.format(balances[j].getAccountExpiration().getTime(), Constants.DATE_FORMAT));
 				}
 
 				// String comment = product.getIndexKey();
 
-				String comment = product.getParameter(
-						"mtrComment." + product.getAlias() + "."
-								+ request.getActionType(), "Comment MTR"
-								+ product.getAlias());
+				String comment = product.getParameter("mtrComment." + product.getAlias() + "." + request.getActionType(),
+						"Comment MTR" + product.getAlias());
 
 				// modify balances
 				if (balances.length > 0)
 				{
-					connection = (CCWSConnection) instance
-							.getProvisioningConnection();
-					
+					connection = (CCWSConnection) instance.getProvisioningConnection();
+
 					BalanceEntityBase[] balancesModify = new BalanceEntityBase[balances.length + 1];
-					//Sync expire Core with expire GPRS of some COS
+					// Sync expire Core with expire GPRS of some COS
 					boolean syncCOSList = product.getParameter("SyncCOSList", "false").equalsIgnoreCase("true");
 					String[] blackCOSList = product.getParameter("BlackCOS", "").split(",");
 					boolean isBlackList = false;
@@ -906,18 +832,16 @@ public class CCWSCommandImpl extends CommandImpl
 							isBlackList = true;
 						}
 					}
-					
+
 					if (syncCOSList && !isBlackList)
 					{
-						for (int j=0; j<balances.length; j++)
-						{	
+						for (int j = 0; j < balances.length; j++)
+						{
 							balancesModify[j] = balances[j];
-							
-							BalanceEntity core = CCWSConnection.getBalance(connection.getSubscriberInfor(isdn),
-									CCWSConnection.CORE_BALANCE);
-							
-							if (balances[j].getBalanceName().equals("GPRS")
-									&& balances[j].getAccountExpiration().after(core.getAccountExpiration()))
+
+							BalanceEntity core = CCWSConnection.getBalance(connection.getSubscriberInfor(isdn), CCWSConnection.CORE_BALANCE);
+
+							if (balances[j].getBalanceName().equals("GPRS") && balances[j].getAccountExpiration().after(core.getAccountExpiration()))
 							{
 								balancesModify[balances.length] = new BalanceEntityBase();
 								balancesModify[balances.length].setBalanceName(CCWSConnection.CORE_BALANCE);
@@ -928,15 +852,14 @@ public class CCWSCommandImpl extends CommandImpl
 					}
 					else
 					{
-						for (int j=0; j<balances.length; j++)
-						{	
+						for (int j = 0; j < balances.length; j++)
+						{
 							balancesModify[j] = balances[j];
 						}
 					}
 
 					long sessionId = setRequest(instance, result,
-							"com.comverse_in.prepaid.ccws.ServiceSoapStub.modifySubscriber:"
-									+ getLogBalances(balancesModify, isdn));
+							"com.comverse_in.prepaid.ccws.ServiceSoapStub.modifySubscriber:" + getLogBalances(balancesModify, isdn));
 					try
 					{
 						connection.setBalance(isdn, balancesModify, activeDate, comment);
@@ -944,8 +867,8 @@ public class CCWSCommandImpl extends CommandImpl
 					}
 					catch (AxisFault error)
 					{
-//						result.setIsdn(request.getParameters().getString("INVITER_ISDN"));
-						
+						// result.setIsdn(request.getParameters().getString("INVITER_ISDN"));
+
 						error.printStackTrace();
 						String errorCode = getErrorCode(instance, request, error);
 						if (!errorCode.equals(""))
@@ -963,8 +886,8 @@ public class CCWSCommandImpl extends CommandImpl
 			}
 			catch (Exception error)
 			{
-//				result.setIsdn(request.getParameters().getString("INVITER_ISDN"));
-				
+				// result.setIsdn(request.getParameters().getString("INVITER_ISDN"));
+
 				processError(instance, provisioningCommand, result, error);
 			}
 			finally
@@ -975,11 +898,9 @@ public class CCWSCommandImpl extends CommandImpl
 
 		return result;
 	}
-	
-	//2013-08-01 MinhDT Add start for CR charge promotion
-	public VNMMessage debitBalance(CommandInstance instance,
-			ProvisioningCommand provisioningCommand, CommandMessage request)
-			throws Exception
+
+	// 2013-08-01 MinhDT Add start for CR charge promotion
+	public VNMMessage debitBalance(CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request) throws Exception
 	{
 		CCWSConnection connection = null;
 
@@ -1002,29 +923,24 @@ public class CCWSCommandImpl extends CommandImpl
 		{
 			try
 			{
-				ProductEntry product = ProductFactory.getCache().getProduct(
-						result.getProductId());
-				
+				ProductEntry product = ProductFactory.getCache().getProduct(result.getProductId());
+
 				SubscriberEntity subscriber = getSubscriber(instance, result);
-				
+
 				balances = new BalanceEntityBase[1];
-				
+
 				Calendar activeDate = Calendar.getInstance();
 
-				result.setRequestValue("balances.premodified.activeDate",
-						subscriber.getDateEnterActive().getTime());
-				
+				result.setRequestValue("balances.premodified.activeDate", subscriber.getDateEnterActive().getTime());
+
 				// get current balance
-				BalanceEntity balance = CCWSConnection.getBalance(
-						subscriber, result.getBalanceType());
+				BalanceEntity balance = CCWSConnection.getBalance(subscriber, result.getBalanceType());
 
 				// save original balance status before add
-				result.setRequestValue("balances." + result.getBalanceType()
-						+ ".premodified.expirationDate", balance
-						.getAccountExpiration().getTime());
-				result.setRequestValue("balances." + result.getBalanceType()
-						+ ".premodified.amount", balance.getBalance());
-				
+				result.setRequestValue("balances." + result.getBalanceType() + ".premodified.expirationDate", balance.getAccountExpiration()
+						.getTime());
+				result.setRequestValue("balances." + result.getBalanceType() + ".premodified.amount", balance.getBalance());
+
 				Calendar expiredDate = balance.getAccountExpiration();
 
 				balances[0] = new BalanceEntityBase();
@@ -1033,35 +949,30 @@ public class CCWSCommandImpl extends CommandImpl
 				balances[0].setAccountExpiration(expiredDate);
 
 				// Add response value for writing log file
-				result.setResponseValue(balances[0].getBalanceName()
-						+ ".amount",
-						StringUtil.format(balances[0].getBalance(), "#"));
+				result.setResponseValue(balances[0].getBalanceName() + ".amount", StringUtil.format(balances[0].getBalance(), "#"));
 
-				result.setResponseValue(balances[0].getBalanceName()
-						+ ".expireDate", StringUtil.format(balances[0]
-						.getAccountExpiration().getTime(),
-						Constants.DATE_FORMAT));
+				result.setResponseValue(balances[0].getBalanceName() + ".expireDate",
+						StringUtil.format(balances[0].getAccountExpiration().getTime(), Constants.DATE_FORMAT));
 
 				// String comment = product.getIndexKey();
 
-				String comment = product.getParameter(
-						"mtrComment." + product.getAlias() + "."
-								+ request.getActionType(), "Comment MTR"
-								+ product.getAlias());
+				String comment = product.getParameter("mtrComment." + product.getAlias() + "." + request.getActionType(),
+						"Comment MTR" + product.getAlias());
 
 				// modify balances
 				connection = (CCWSConnection) instance.getProvisioningConnection();
-	
-				long sessionId = setRequest(instance, result,
-						"com.comverse_in.prepaid.ccws.ServiceSoapStub.modifySubscriber:"
-								+ getLogBalances(balances, isdn)
-								+ " - Before modify:{" + balance.getBalance() + ";" 
+
+				long sessionId = setRequest(
+						instance,
+						result,
+						"com.comverse_in.prepaid.ccws.ServiceSoapStub.modifySubscriber:" + getLogBalances(balances, isdn) + " - Before modify:{"
+								+ balance.getBalance() + ";"
 								+ new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(balance.getAccountExpiration().getTime()) + "}");
 				try
 				{
 					connection.setBalance(isdn, balances, activeDate, comment);
 					setResponse(instance, result, Constants.SUCCESS, sessionId);
-					
+
 					result.setPaid(true);
 				}
 				catch (AxisFault error)
@@ -1092,9 +1003,287 @@ public class CCWSCommandImpl extends CommandImpl
 		return result;
 	}
 	
-	public VNMMessage creditBalance(CommandInstance instance,
-			ProvisioningCommand provisioningCommand, CommandMessage request)
-			throws Exception
+	public VNMMessage creditMultiBalance(CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request) throws Exception
+	{
+		CCWSConnection connection = null;
+
+		List<BalanceCreditAccount> balances = null;
+
+		VNMMessage result = CommandUtil.createVNMMessage(request);
+
+		String isdn = CommandUtil.addCountryCode(result.getIsdn());
+
+		if (instance.getDebugMode().equals("depend"))
+		{
+			simulation(instance, provisioningCommand, result);
+		}
+		else
+		{
+			try
+			{
+				ProductEntry product = ProductFactory.getCache().getProduct(result.getProductId());
+
+				SubscriberEntity subscriber = getSubscriber(instance, result);
+
+				String cosName = subscriber.getCOSName();
+
+				String[] addBalances = StringUtil.toStringArray(product.getParameter("balances", ""), StringPool.COMMA);
+
+				String chargedBalance = "";
+				
+				Date now = new Date();
+
+				balances = new ArrayList<BalanceCreditAccount>();
+
+				Calendar activeDate = Calendar.getInstance();
+
+				result.setRequestValue("balances.premodified.activeDate", subscriber.getDateEnterActive().getTime());
+				for (int j = 0; j < addBalances.length; j++)
+				{
+					String balanceName = addBalances[j];
+
+					String prefix = "balance." + result.getActionType() + "." + balanceName;
+
+					// get current balance
+					BalanceEntity balance = CCWSConnection.getBalance(subscriber, balanceName);
+
+					// save original balance status before add
+					result.setRequestValue("balances." + balanceName + ".premodified.expirationDate", balance.getAccountExpiration().getTime());
+					result.setRequestValue("balances." + balanceName + ".premodified.amount", balance.getBalance());
+
+					// calculate expiration date for this balance
+					Calendar maxExpiredDate = Calendar.getInstance();
+
+					maxExpiredDate.setTime(now);
+
+					maxExpiredDate.set(Calendar.HOUR_OF_DAY, 23);
+					maxExpiredDate.set(Calendar.MINUTE, 59);
+					maxExpiredDate.set(Calendar.SECOND, 59);
+
+					int maxDays = product.getParameters().getInteger(prefix + ".maxDays");
+
+					maxExpiredDate.add(Calendar.DATE, maxDays);
+
+					Calendar expiredDate = balance.getAccountExpiration();
+
+					if (product.isSubscription())
+					{
+						SubscriberProduct subProduct = SubscriberProductImpl.getUnterminated(request.getIsdn(), request.getProductId());
+						if (subProduct != null)
+						{
+							expiredDate.setTime(subProduct.getExpirationDate());
+						}
+					}
+
+					// int expireTime = product.getParameters().getInteger(
+					// prefix + ".days");
+					int expireTime = product.getSubscriptionPeriod();
+					if (result.getCampaignId() != Constants.DEFAULT_ID)
+					{
+						CampaignEntry campaign = CampaignFactory.getCache().getCampaign(result.getCampaignId());
+
+						if ((campaign != null))
+						{
+							expireTime = campaign.getSchedulePeriod();
+						}
+					}
+
+					String setExpFlg = product.getParameters().getString(prefix + ".resetexpiredate", "false");
+
+					// boolean includeCurrentDay =
+					// result.getParameters().getBoolean(
+					// "includeCurrentDay");
+
+					if (expiredDate.getTimeInMillis() < now.getTime() || setExpFlg.equals("true"))
+					{
+						expireTime--;
+						expiredDate.setTime(now);
+					}
+					else if (expiredDate.getTimeInMillis() >= now.getTime() && result.getActionType().equals(Constants.ACTION_SUBSCRIPTION))
+					{
+						expireTime--;
+					}
+
+					boolean truncExpire = Boolean.parseBoolean(product.getParameter("TruncExpireDate", "true"));
+					if (truncExpire)
+					{
+						int expireHour = product.getParameters().getInteger(prefix + ".expire.hour", 23);
+						int expireMinute = product.getParameters().getInteger(prefix + ".expire.minute", 59);
+						int expireSecond = product.getParameters().getInteger(prefix + ".expire.second", 59);
+
+						expiredDate.set(Calendar.HOUR_OF_DAY, expireHour);
+						expiredDate.set(Calendar.MINUTE, expireMinute);
+						expiredDate.set(Calendar.SECOND, expireSecond);
+					}
+
+					if (expireTime > 0)
+					{
+						expiredDate.add(Calendar.DATE, expireTime);
+					}
+
+					if ((maxDays > 0) && expiredDate.after(maxExpiredDate))
+					{
+						expiredDate = maxExpiredDate;
+					}
+
+					if ((maxDays > 0) && expiredDate.after(activeDate))
+					{
+						activeDate = expiredDate;
+					}
+
+					double amount = product.getParameters().getDouble(prefix + ".amount");
+
+					BalanceCreditAccount modifyBalance = new BalanceCreditAccount();
+
+					modifyBalance.setBalanceName(balanceName);
+
+					// Need to check accumulate or reset account DuyMB.
+					String accumulateFlg = product.getParameters().getString(prefix + ".accumulate", "false");
+					if (accumulateFlg.equals("true"))
+					{
+						modifyBalance.setCreditValue(amount);
+					}
+					else
+					{
+						modifyBalance.setCreditValue(amount - balance.getBalance());
+					}
+
+					modifyBalance.setExpirationDate(expiredDate);
+
+					// Add response value for writing log file
+					result.setResponseValue(modifyBalance.getBalanceName() + ".amount", StringUtil.format(modifyBalance.getCreditValue(), "#"));
+
+					result.setResponseValue(modifyBalance.getBalanceName() + ".expireDate",
+							StringUtil.format(modifyBalance.getExpirationDate().getTime(), Constants.DATE_FORMAT));
+
+					balances.add(modifyBalance);
+					
+					chargedBalance = chargedBalance + StringPool.COMMA + balanceName;
+				}
+
+				// String comment = product.getIndexKey();
+
+				String comment = product.getParameter("mtrComment." + product.getAlias() + "." + request.getActionType(),
+						"Comment MTR" + product.getAlias());
+
+				// modify balances
+				if (balances.size() > 0)
+				{
+					connection = (CCWSConnection) instance.getProvisioningConnection();
+
+					// BalanceEntityBase[] balancesModify = new
+					// BalanceEntityBase[balances.length + 1];
+					// Sync expire Core with expire GPRS of some COS
+					boolean syncCOSList = product.getParameter("SyncCOSList", "false").equalsIgnoreCase("true");
+					String[] blackCOSList = product.getParameter("BlackCOS", "").split(",");
+					boolean isBlackList = false;
+					for (int i = 0; i < blackCOSList.length; i++)
+					{
+						if (cosName.equalsIgnoreCase(blackCOSList[i]))
+						{
+							isBlackList = true;
+						}
+					}
+
+					if (syncCOSList && !isBlackList)
+					{
+						for (int j = 0; j < balances.size(); j++)
+						{
+							BalanceEntity core = CCWSConnection.getBalance(connection.getSubscriberInfor(isdn), CCWSConnection.CORE_BALANCE);
+
+							if (balances.get(j).getBalanceName().equals("GPRS")
+									&& balances.get(j).getExpirationDate().after(core.getAccountExpiration()))
+							{
+								BalanceCreditAccount coreBalance = new BalanceCreditAccount();
+								coreBalance.setBalanceName("Core");
+								coreBalance.setCreditValue(0);
+								coreBalance.setExpirationDate(balances.get(j).getExpirationDate());
+
+								balances.add(coreBalance);
+								
+								chargedBalance = chargedBalance + StringPool.COMMA + CCWSConnection.CORE_BALANCE;
+							}
+						}
+					}
+					// else
+					// {
+					// for (int j=0; j<balances.length; j++)
+					// {
+					// balancesModify[j] = balances[j];
+					// }
+					// }
+
+					if (result.getCampaignId() != Constants.DEFAULT_ID)
+					{
+						CampaignEntry campaign = CampaignFactory.getCache().getCampaign(result.getCampaignId());
+						if (campaign != null && campaign.isCampaignGift())
+						{
+							String balanceName = campaign.getParameters().getString("BalanceName");
+							double giftAmount = campaign.getParameters().getDouble("GiftAmount");
+							
+							BalanceEntity balance = CCWSConnection.getBalance(subscriber, balanceName);
+							
+							Calendar expire = balance.getAccountExpiration();
+							expire.add(Calendar.DATE, campaign.getSchedulePeriod());
+							
+							BalanceCreditAccount giftBalance = new BalanceCreditAccount();
+							giftBalance.setBalanceName(balanceName);
+							giftBalance.setCreditValue(giftAmount);
+							giftBalance.setExpirationDate(expire);
+
+							balances.add(giftBalance);
+							
+							chargedBalance = chargedBalance + StringPool.COMMA + balanceName;
+						}
+					}
+					
+					BalanceCreditAccount[] modifyBalances = new BalanceCreditAccount[balances.size()];
+
+					for (int i = 0; i < balances.size(); i++)
+					{
+						modifyBalances[i] = balances.get(i);
+					}
+
+					long sessionId = setRequest(instance, result,
+							"com.comverse_in.prepaid.ccws.ServiceSoapStub.creditAccount:" + getLogBalances(modifyBalances, isdn));
+					try
+					{
+						connection.creditAccount(isdn, modifyBalances, comment);
+						setResponse(instance, result, Constants.SUCCESS, sessionId);
+						
+						result.getParameters().setString("ChargedBalance", chargedBalance);
+					}
+					catch (AxisFault error)
+					{
+						error.printStackTrace();
+						String errorCode = getErrorCode(instance, request, error);
+						if (!errorCode.equals(""))
+						{
+							setResponse(instance, result, "CCWS." + errorCode, sessionId);
+							result.setStatus(Constants.ORDER_STATUS_DENIED);
+							result.setCause(Constants.ERROR);
+						}
+						else
+						{
+							throw error;
+						}
+					}
+				}
+			}
+			catch (Exception error)
+			{
+				processError(instance, provisioningCommand, result, error);
+			}
+			finally
+			{
+				instance.closeProvisioningConnection(connection);
+			}
+		}
+
+		return result;
+	}
+
+	public VNMMessage creditBalance(CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request) throws Exception
 	{
 		CCWSConnection connection = null;
 
@@ -1115,43 +1304,40 @@ public class CCWSCommandImpl extends CommandImpl
 			try
 			{
 				ProductEntry product = ProductFactory.getCache().getProduct(result.getProductId());
-				
+
 				connection = (CCWSConnection) instance.getProvisioningConnection();
-				
+
 				subscriberRetrieve = connection.getSubscriber(request.getIsdn(), 1);
 				if (subscriberRetrieve != null)
 				{
 					subscriber = subscriberRetrieve.getSubscriberData();
 				}
-				
+
 				balances = new BalanceEntityBase[1];
-				
+
 				Calendar activeDate = Calendar.getInstance();
 
-				result.setRequestValue("balances.premodified.activeDate",
-						subscriber.getDateEnterActive().getTime());
-				
+				result.setRequestValue("balances.premodified.activeDate", subscriber.getDateEnterActive().getTime());
+
 				// get current balance
-				BalanceEntity balance = CCWSConnection.getBalance(
-						subscriber, result.getBalanceType());
+				BalanceEntity balance = CCWSConnection.getBalance(subscriber, result.getBalanceType());
 
 				balances[0] = new BalanceEntityBase();
 				balances[0].setBalanceName(result.getBalanceType());
 				balances[0].setBalance(balance.getBalance() + result.getAmount());
 				balances[0].setAccountExpiration(balance.getAccountExpiration());
 
-				String comment = product.getParameter(
-						"mtrComment." + product.getAlias() + "."
-								+ request.getActionType(), "Comment MTR"
-								+ product.getAlias());
-	
+				String comment = product.getParameter("mtrComment." + product.getAlias() + "." + request.getActionType(),
+						"Comment MTR" + product.getAlias());
+
 				// modify balances
 				if (balances.length > 0)
 				{
-					long sessionId = setRequest(instance, result,
-							"com.comverse_in.prepaid.ccws.ServiceSoapStub.modifySubscriber:"
-									+ getLogBalances(balances, isdn) 
-									+ " - Before modify:{" + balance.getBalance() + ";" 
+					long sessionId = setRequest(
+							instance,
+							result,
+							"com.comverse_in.prepaid.ccws.ServiceSoapStub.modifySubscriber:" + getLogBalances(balances, isdn) + " - Before modify:{"
+									+ balance.getBalance() + ";"
 									+ new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(balance.getAccountExpiration().getTime()) + "}");
 					try
 					{
@@ -1186,19 +1372,19 @@ public class CCWSCommandImpl extends CommandImpl
 
 		return result;
 	}
-	//2013-08-01 MinhDT Add end for CR charge promotion
-	
-	public VNMMessage debitBalanceWhenInvite(CommandInstance instance,
-			ProvisioningCommand provisioningCommand, CommandMessage request)
+
+	// 2013-08-01 MinhDT Add end for CR charge promotion
+
+	public VNMMessage debitBalanceWhenInvite(CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request)
 			throws Exception
 	{
 		CCWSConnection connection = null;
 
 		BalanceEntityBase[] balances = null;
-		
+
 		SubscriberRetrieve subscriberRetrieve = null;
 		SubscriberEntity subscriber = null;
-				
+
 		String isdn = CommandUtil.addCountryCode(request.getParameters().getString("INVITER_ISDN"));
 		request.setIsdn(isdn);
 
@@ -1217,35 +1403,30 @@ public class CCWSCommandImpl extends CommandImpl
 		{
 			try
 			{
-				ProductEntry product = ProductFactory.getCache().getProduct(
-						result.getProductId());
-				
+				ProductEntry product = ProductFactory.getCache().getProduct(result.getProductId());
+
 				connection = (CCWSConnection) instance.getProvisioningConnection();
-				
+
 				subscriberRetrieve = connection.getSubscriber(result.getIsdn(), 1);
 				if (subscriberRetrieve != null)
 				{
 					subscriber = subscriberRetrieve.getSubscriberData();
 				}
-				
+
 				balances = new BalanceEntityBase[1];
-				
+
 				Calendar activeDate = Calendar.getInstance();
 
-				result.setRequestValue("balances.premodified.activeDate",
-						subscriber.getDateEnterActive().getTime());
-				
+				result.setRequestValue("balances.premodified.activeDate", subscriber.getDateEnterActive().getTime());
+
 				// get current balance
-				BalanceEntity balance = CCWSConnection.getBalance(
-						subscriber, result.getBalanceType());
+				BalanceEntity balance = CCWSConnection.getBalance(subscriber, result.getBalanceType());
 
 				// save original balance status before add
-				result.setRequestValue("balances." + result.getBalanceType()
-						+ ".premodified.expirationDate", balance
-						.getAccountExpiration().getTime());
-				result.setRequestValue("balances." + result.getBalanceType()
-						+ ".premodified.amount", balance.getBalance());
-				
+				result.setRequestValue("balances." + result.getBalanceType() + ".premodified.expirationDate", balance.getAccountExpiration()
+						.getTime());
+				result.setRequestValue("balances." + result.getBalanceType() + ".premodified.amount", balance.getBalance());
+
 				Calendar expiredDate = balance.getAccountExpiration();
 
 				balances[0] = new BalanceEntityBase();
@@ -1254,32 +1435,27 @@ public class CCWSCommandImpl extends CommandImpl
 				balances[0].setAccountExpiration(expiredDate);
 
 				// Add response value for writing log file
-				result.setResponseValue(balances[0].getBalanceName()
-						+ ".amount",
-						StringUtil.format(balances[0].getBalance(), "#"));
+				result.setResponseValue(balances[0].getBalanceName() + ".amount", StringUtil.format(balances[0].getBalance(), "#"));
 
-				result.setResponseValue(balances[0].getBalanceName()
-						+ ".expireDate", StringUtil.format(balances[0]
-						.getAccountExpiration().getTime(),
-						Constants.DATE_FORMAT));
+				result.setResponseValue(balances[0].getBalanceName() + ".expireDate",
+						StringUtil.format(balances[0].getAccountExpiration().getTime(), Constants.DATE_FORMAT));
 
 				// String comment = product.getIndexKey();
 
-				String comment = product.getParameter(
-						"mtrComment." + product.getAlias() + "."
-								+ request.getActionType(), "Comment MTR"
-								+ product.getAlias());
+				String comment = product.getParameter("mtrComment." + product.getAlias() + "." + request.getActionType(),
+						"Comment MTR" + product.getAlias());
 
-				long sessionId = setRequest(instance, result,
-						"com.comverse_in.prepaid.ccws.ServiceSoapStub.modifySubscriber:"
-								+ getLogBalances(balances, isdn)
-								+ " - Before modify:{" + balance.getBalance() + ";" 
+				long sessionId = setRequest(
+						instance,
+						result,
+						"com.comverse_in.prepaid.ccws.ServiceSoapStub.modifySubscriber:" + getLogBalances(balances, isdn) + " - Before modify:{"
+								+ balance.getBalance() + ";"
 								+ new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(balance.getAccountExpiration().getTime()) + "}");
 				try
 				{
 					connection.setBalance(isdn, balances, activeDate, comment);
 					setResponse(instance, result, Constants.SUCCESS, sessionId);
-					
+
 					result.setPaid(true);
 				}
 				catch (AxisFault error)
@@ -1309,9 +1485,8 @@ public class CCWSCommandImpl extends CommandImpl
 
 		return result;
 	}
-	
-	public VNMMessage creditBalanceWhenInvite(CommandInstance instance,
-			ProvisioningCommand provisioningCommand, CommandMessage request)
+
+	public VNMMessage creditBalanceWhenInvite(CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request)
 			throws Exception
 	{
 		CCWSConnection connection = null;
@@ -1322,7 +1497,7 @@ public class CCWSCommandImpl extends CommandImpl
 
 		String isdn = CommandUtil.addCountryCode(request.getParameters().getString("INVITER_ISDN"));
 		request.setIsdn(isdn);
-		
+
 		VNMMessage result = CommandUtil.createVNMMessage(request);
 
 		if (instance.getDebugMode().equals("depend"))
@@ -1334,43 +1509,40 @@ public class CCWSCommandImpl extends CommandImpl
 			try
 			{
 				ProductEntry product = ProductFactory.getCache().getProduct(result.getProductId());
-				
+
 				connection = (CCWSConnection) instance.getProvisioningConnection();
-				
+
 				subscriberRetrieve = connection.getSubscriber(request.getIsdn(), 1);
 				if (subscriberRetrieve != null)
 				{
 					subscriber = subscriberRetrieve.getSubscriberData();
 				}
-				
+
 				balances = new BalanceEntityBase[1];
-				
+
 				Calendar activeDate = Calendar.getInstance();
 
-				result.setRequestValue("balances.premodified.activeDate",
-						subscriber.getDateEnterActive().getTime());
-				
+				result.setRequestValue("balances.premodified.activeDate", subscriber.getDateEnterActive().getTime());
+
 				// get current balance
-				BalanceEntity balance = CCWSConnection.getBalance(
-						subscriber, result.getBalanceType());
+				BalanceEntity balance = CCWSConnection.getBalance(subscriber, result.getBalanceType());
 
 				balances[0] = new BalanceEntityBase();
 				balances[0].setBalanceName(result.getBalanceType());
 				balances[0].setBalance(balance.getBalance() + result.getAmount());
 				balances[0].setAccountExpiration(balance.getAccountExpiration());
 
-				String comment = product.getParameter(
-						"mtrComment." + product.getAlias() + "."
-								+ request.getActionType(), "Comment MTR"
-								+ product.getAlias());
-	
+				String comment = product.getParameter("mtrComment." + product.getAlias() + "." + request.getActionType(),
+						"Comment MTR" + product.getAlias());
+
 				// modify balances
 				if (balances.length > 0)
 				{
-					long sessionId = setRequest(instance, result,
-							"com.comverse_in.prepaid.ccws.ServiceSoapStub.modifySubscriber:"
-									+ getLogBalances(balances, isdn) 
-									+ " - Before modify:{" + balance.getBalance() + ";" 
+					long sessionId = setRequest(
+							instance,
+							result,
+							"com.comverse_in.prepaid.ccws.ServiceSoapStub.modifySubscriber:" + getLogBalances(balances, isdn) + " - Before modify:{"
+									+ balance.getBalance() + ";"
 									+ new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(balance.getAccountExpiration().getTime()) + "}");
 					try
 					{
@@ -1405,14 +1577,13 @@ public class CCWSCommandImpl extends CommandImpl
 
 		return result;
 	}
-	
+
 	// //////////////////////////////////////////////////////
 	// check class of service and compare with list of denied COS
 	// Author : ThangPV
 	// Created Date : 16/09/2004
 	// //////////////////////////////////////////////////////
-	public VNMMessage modifyBalanceForLuckySimProduct(CommandInstance instance,
-			ProvisioningCommand provisioningCommand, CommandMessage request)
+	public VNMMessage modifyBalanceForLuckySimProduct(CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request)
 			throws Exception
 	{
 
@@ -1432,13 +1603,11 @@ public class CCWSCommandImpl extends CommandImpl
 		{
 			try
 			{
-				ProductEntry product = ProductFactory.getCache().getProduct(
-						result.getProductId());
+				ProductEntry product = ProductFactory.getCache().getProduct(result.getProductId());
 
 				SubscriberEntity subscriber = getSubscriber(instance, result);
 
-				String[] addBalances = StringUtil.toStringArray(
-						product.getParameter("balances", ""), StringPool.COMMA);
+				String[] addBalances = StringUtil.toStringArray(product.getParameter("balances", ""), StringPool.COMMA);
 
 				Date now = new Date();
 
@@ -1446,25 +1615,19 @@ public class CCWSCommandImpl extends CommandImpl
 
 				Calendar activeDate = Calendar.getInstance();
 
-				result.setRequestValue("balances.premodified.activeDate",
-						subscriber.getDateEnterActive().getTime());
+				result.setRequestValue("balances.premodified.activeDate", subscriber.getDateEnterActive().getTime());
 				for (int j = 0; j < addBalances.length; j++)
 				{
 					String balanceName = addBalances[j];
 
-					String prefix = "balance." + result.getActionType() + "."
-							+ balanceName;
+					String prefix = "balance." + result.getActionType() + "." + balanceName;
 
 					// get current balance
-					BalanceEntity balance = CCWSConnection.getBalance(
-							subscriber, balanceName);
+					BalanceEntity balance = CCWSConnection.getBalance(subscriber, balanceName);
 
 					// save original balance status before add
-					result.setRequestValue("balances." + balanceName
-							+ ".premodified.expirationDate", balance
-							.getAccountExpiration().getTime());
-					result.setRequestValue("balances." + balanceName
-							+ ".premodified.amount", balance.getBalance());
+					result.setRequestValue("balances." + balanceName + ".premodified.expirationDate", balance.getAccountExpiration().getTime());
+					result.setRequestValue("balances." + balanceName + ".premodified.amount", balance.getBalance());
 
 					// calculate expiration date for this balance
 					Calendar maxExpiredDate = Calendar.getInstance();
@@ -1474,21 +1637,17 @@ public class CCWSCommandImpl extends CommandImpl
 					maxExpiredDate.set(Calendar.MINUTE, 59);
 					maxExpiredDate.set(Calendar.SECOND, 59);
 
-					int maxDays = product.getParameters().getInteger(
-							prefix + ".maxDays");
+					int maxDays = product.getParameters().getInteger(prefix + ".maxDays");
 
 					maxExpiredDate.add(Calendar.DATE, maxDays);
 
 					Calendar expiredDate = balance.getAccountExpiration();
 
-					int expireTime = product.getParameters().getInteger(
-							prefix + ".days");
+					int expireTime = product.getParameters().getInteger(prefix + ".days");
 
-					String setExpFlg = product.getParameters().getString(
-							prefix + ".resetexpiredate", "false");
+					String setExpFlg = product.getParameters().getString(prefix + ".resetexpiredate", "false");
 
-					if (expiredDate.getTimeInMillis() < now.getTime()
-							|| setExpFlg.equals("true"))
+					if (expiredDate.getTimeInMillis() < now.getTime() || setExpFlg.equals("true"))
 					{
 						expireTime--;
 						expiredDate.setTime(now);
@@ -1516,18 +1675,12 @@ public class CCWSCommandImpl extends CommandImpl
 					double amount = 0;
 
 					// Check balance core
-					double dAmountMoreThanCondition = product.getParameters()
-							.getDouble(prefix + ".amountMoreThanCondition");
-					double dAmountLessThanCondition = product.getParameters()
-							.getDouble(prefix + ".amountLessThanCondition");
-					SubscriberEntity subscriberEntity = result
-							.getSubscriberEntity();
-					BalanceEntity balanceCore = CCWSConnection.getBalance(
-							subscriberEntity, CCWSConnection.CORE_BALANCE);
-					double dAvailableBalacen = balanceCore
-							.getAvailableBalance();
-					int iAmount = Integer.parseInt(product.getParameter(
-							"amountCondition", "0"));
+					double dAmountMoreThanCondition = product.getParameters().getDouble(prefix + ".amountMoreThanCondition");
+					double dAmountLessThanCondition = product.getParameters().getDouble(prefix + ".amountLessThanCondition");
+					SubscriberEntity subscriberEntity = result.getSubscriberEntity();
+					BalanceEntity balanceCore = CCWSConnection.getBalance(subscriberEntity, CCWSConnection.CORE_BALANCE);
+					double dAvailableBalacen = balanceCore.getAvailableBalance();
+					int iAmount = Integer.parseInt(product.getParameter("amountCondition", "0"));
 					if (dAvailableBalacen >= iAmount)
 					{
 						amount = dAmountMoreThanCondition;
@@ -1542,8 +1695,7 @@ public class CCWSCommandImpl extends CommandImpl
 					balances[j].setBalanceName(balanceName);
 
 					// Need to check accumulate or reset account DuyMB.
-					String accumulateFlg = product.getParameters().getString(
-							prefix + ".accumulate", "false");
+					String accumulateFlg = product.getParameters().getString(prefix + ".accumulate", "false");
 					if (accumulateFlg.equals("true"))
 					{
 						balances[j].setBalance(balance.getBalance() + amount);
@@ -1556,32 +1708,24 @@ public class CCWSCommandImpl extends CommandImpl
 					balances[j].setAccountExpiration(expiredDate);
 
 					// Add response value for writing log file
-					result.setResponseValue(balances[j].getBalanceName()
-							+ ".amount",
-							StringUtil.format(balances[j].getBalance(), "#"));
+					result.setResponseValue(balances[j].getBalanceName() + ".amount", StringUtil.format(balances[j].getBalance(), "#"));
 
-					result.setResponseValue(balances[j].getBalanceName()
-							+ ".expireDate", StringUtil.format(balances[j]
-							.getAccountExpiration().getTime(),
-							Constants.DATE_FORMAT));
+					result.setResponseValue(balances[j].getBalanceName() + ".expireDate",
+							StringUtil.format(balances[j].getAccountExpiration().getTime(), Constants.DATE_FORMAT));
 				}
 
 				// String comment = product.getIndexKey();
 
-				String comment = product.getParameter(
-						"mtrComment." + product.getAlias() + "."
-								+ request.getActionType(), "Comment MTR"
-								+ product.getAlias());
+				String comment = product.getParameter("mtrComment." + product.getAlias() + "." + request.getActionType(),
+						"Comment MTR" + product.getAlias());
 
 				// modify balances
 				if (balances.length > 0)
 				{
-					connection = (CCWSConnection) instance
-							.getProvisioningConnection();
+					connection = (CCWSConnection) instance.getProvisioningConnection();
 
 					long sessionId = setRequest(instance, result,
-							"com.comverse_in.prepaid.ccws.ServiceSoapStub.modifySubscriber:"
-									+ getLogBalances(balances, isdn));
+							"com.comverse_in.prepaid.ccws.ServiceSoapStub.modifySubscriber:" + getLogBalances(balances, isdn));
 
 					connection.setBalance(isdn, balances, activeDate, comment);
 					setResponse(instance, result, Constants.SUCCESS, sessionId);
@@ -1609,8 +1753,7 @@ public class CCWSCommandImpl extends CommandImpl
 	 * @return
 	 * @throws Exception
 	 */
-	public VNMMessage rollbackModifyBalance(CommandInstance instance,
-			ProvisioningCommand provisioningCommand, CommandMessage request)
+	public VNMMessage rollbackModifyBalance(CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request)
 			throws Exception
 	{
 		CCWSConnection connection = null;
@@ -1629,43 +1772,41 @@ public class CCWSCommandImpl extends CommandImpl
 		{
 			try
 			{
-				ProductEntry product = ProductFactory.getCache().getProduct(
-						result.getProductId());
+				ProductEntry product = ProductFactory.getCache().getProduct(result.getProductId());
 
-				String[] addBalances = StringUtil.toStringArray(
-						product.getParameter("balances", ""), StringPool.COMMA);
+				String[] addBalances = StringUtil.toStringArray(result.getParameters().getString("ChargedBalance", ""), StringPool.COMMA);
 
-//				Date now = new Date();
+				// Date now = new Date();
 
 				balances = new BalanceEntityBase[addBalances.length];
 
 				SubscriberEntity subEntity = result.getSubscriberEntity();
-				
+
 				if (subEntity == null)
 					throw new AppException(Constants.ERROR_INVALID_REQUEST);
-	
+
 				Calendar activeDate = subEntity.getDateEnterActive();
-//				DateFormat sdf = new SimpleDateFormat(Constants.DATE_FORMAT);
-//				Date activeTime = sdf.parse(result
-//						.getRequestValue("balances.premodified.activeDate"));
-//				Calendar activeDate = Calendar.getInstance();
-//				activeDate.setTime(activeTime);
+				// DateFormat sdf = new SimpleDateFormat(Constants.DATE_FORMAT);
+				// Date activeTime = sdf.parse(result
+				// .getRequestValue("balances.premodified.activeDate"));
+				// Calendar activeDate = Calendar.getInstance();
+				// activeDate.setTime(activeTime);
 				for (int j = 0; j < addBalances.length; j++)
 				{
 					String balanceName = addBalances[j];
 
 					BalanceEntity originalBalance = CCWSConnection.getBalance(subEntity, balanceName);
-//					String prefix = "balance." + result.getActionType() + "."
-//							+ balanceName;
-//
-//					double amount = Double.parseDouble(result
-//							.getRequestValue("balances." + balanceName
-//									+ ".premodified.amount"));
-//					Date expirationTime = sdf.parse(result
-//							.getRequestValue("balances." + balanceName
-//									+ ".premodified.expirationDate"));
-//					Calendar expiredDate = Calendar.getInstance();
-//					expiredDate.setTime(expirationTime);
+					// String prefix = "balance." + result.getActionType() + "."
+					// + balanceName;
+					//
+					// double amount = Double.parseDouble(result
+					// .getRequestValue("balances." + balanceName
+					// + ".premodified.amount"));
+					// Date expirationTime = sdf.parse(result
+					// .getRequestValue("balances." + balanceName
+					// + ".premodified.expirationDate"));
+					// Calendar expiredDate = Calendar.getInstance();
+					// expiredDate.setTime(expirationTime);
 
 					balances[j] = new BalanceEntityBase();
 
@@ -1675,33 +1816,29 @@ public class CCWSCommandImpl extends CommandImpl
 
 					balances[j].setAccountExpiration(originalBalance.getAccountExpiration());
 
-//					// Add response value for writing log file
-//					result.setResponseValue(balances[j].getBalanceName()
-//							+ ".amount",
-//							StringUtil.format(balances[j].getBalance(), "#"));
-//
-//					result.setResponseValue(balances[j].getBalanceName()
-//							+ ".expireDate", StringUtil.format(balances[j]
-//							.getAccountExpiration().getTime(),
-//							Constants.DATE_FORMAT));
+					// // Add response value for writing log file
+					// result.setResponseValue(balances[j].getBalanceName()
+					// + ".amount",
+					// StringUtil.format(balances[j].getBalance(), "#"));
+					//
+					// result.setResponseValue(balances[j].getBalanceName()
+					// + ".expireDate", StringUtil.format(balances[j]
+					// .getAccountExpiration().getTime(),
+					// Constants.DATE_FORMAT));
 				}
 
 				// String comment = product.getIndexKey();
 
-				String comment = product.getParameter(
-						"mtrComment." + product.getAlias() + "."
-								+ request.getActionType(), "Comment MTR"
-								+ product.getAlias());
+				String comment = product.getParameter("mtrComment." + product.getAlias() + "." + request.getActionType(),
+						"Comment MTR" + product.getAlias());
 
 				// modify balances
 				if (balances.length > 0)
 				{
-					connection = (CCWSConnection) instance
-							.getProvisioningConnection();
+					connection = (CCWSConnection) instance.getProvisioningConnection();
 
 					long sessionId = setRequest(instance, result,
-							"com.comverse_in.prepaid.ccws.ServiceSoapStub.modifySubscriber:"
-									+ getLogBalances(balances, isdn));
+							"com.comverse_in.prepaid.ccws.ServiceSoapStub.modifySubscriber:" + getLogBalances(balances, isdn));
 					try
 					{
 						connection.setBalance(isdn, balances, activeDate, comment);
@@ -1735,9 +1872,8 @@ public class CCWSCommandImpl extends CommandImpl
 
 		return result;
 	}
-	
-	public VNMMessage rollbackModifyWhenInvite(CommandInstance instance,
-			ProvisioningCommand provisioningCommand, CommandMessage request)
+
+	public VNMMessage rollbackModifyWhenInvite(CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request)
 			throws Exception
 	{
 		CCWSConnection connection = null;
@@ -1745,10 +1881,10 @@ public class CCWSCommandImpl extends CommandImpl
 		BalanceEntityBase[] balances = null;
 
 		VNMMessage result = CommandUtil.createVNMMessage(request);
-		
+
 		String isdn = CommandUtil.addCountryCode(request.getParameters().getString("INVITEE_ISDN"));
 		result.setIsdn(isdn);
-		
+
 		if (instance.getDebugMode().equals("depend"))
 		{
 			simulation(instance, provisioningCommand, result);
@@ -1757,21 +1893,19 @@ public class CCWSCommandImpl extends CommandImpl
 		{
 			try
 			{
-				ProductEntry product = ProductFactory.getCache().getProduct(
-						result.getProductId());
+				ProductEntry product = ProductFactory.getCache().getProduct(result.getProductId());
 
-				String[] addBalances = StringUtil.toStringArray(
-						product.getParameter("balances", ""), StringPool.COMMA);
+				String[] addBalances = StringUtil.toStringArray(product.getParameter("balances", ""), StringPool.COMMA);
 
-//				Date now = new Date();
+				// Date now = new Date();
 
 				balances = new BalanceEntityBase[addBalances.length];
 
 				SubscriberEntity subEntity = result.getSubscriberEntity();
-				
+
 				if (subEntity == null)
 					throw new AppException(Constants.ERROR_INVALID_REQUEST);
-	
+
 				Calendar activeDate = subEntity.getDateEnterActive();
 
 				for (int j = 0; j < addBalances.length; j++)
@@ -1789,20 +1923,16 @@ public class CCWSCommandImpl extends CommandImpl
 					balances[j].setAccountExpiration(originalBalance.getAccountExpiration());
 				}
 
-				String comment = product.getParameter(
-						"mtrComment." + product.getAlias() + "."
-								+ request.getActionType(), "Comment MTR"
-								+ product.getAlias());
+				String comment = product.getParameter("mtrComment." + product.getAlias() + "." + request.getActionType(),
+						"Comment MTR" + product.getAlias());
 
 				// modify balances
 				if (balances.length > 0)
 				{
-					connection = (CCWSConnection) instance
-							.getProvisioningConnection();
+					connection = (CCWSConnection) instance.getProvisioningConnection();
 
 					long sessionId = setRequest(instance, result,
-							"com.comverse_in.prepaid.ccws.ServiceSoapStub.modifySubscriber:"
-									+ getLogBalances(balances, isdn));
+							"com.comverse_in.prepaid.ccws.ServiceSoapStub.modifySubscriber:" + getLogBalances(balances, isdn));
 					try
 					{
 						connection.setBalance(isdn, balances, activeDate, comment);
@@ -1810,8 +1940,8 @@ public class CCWSCommandImpl extends CommandImpl
 					}
 					catch (AxisFault error)
 					{
-//						result.setIsdn(request.getParameters().getString("INVITER_ISDN"));
-						
+						// result.setIsdn(request.getParameters().getString("INVITER_ISDN"));
+
 						String errorCode = getErrorCode(instance, request, error);
 						if (!errorCode.equals(""))
 						{
@@ -1828,8 +1958,8 @@ public class CCWSCommandImpl extends CommandImpl
 			}
 			catch (Exception error)
 			{
-//				result.setIsdn(request.getParameters().getString("INVITER_ISDN"));
-				
+				// result.setIsdn(request.getParameters().getString("INVITER_ISDN"));
+
 				processError(instance, provisioningCommand, result, error);
 			}
 			finally
@@ -1850,9 +1980,7 @@ public class CCWSCommandImpl extends CommandImpl
 	 * @return
 	 * @throws Exception
 	 */
-	public VNMMessage suspendSubscriberS1(CommandInstance instance,
-			ProvisioningCommand provisioningCommand, CommandMessage request)
-			throws Exception
+	public VNMMessage suspendSubscriberS1(CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request) throws Exception
 	{
 		CCWSConnection connection = null;
 		String isdn = CommandUtil.addCountryCode(request.getIsdn());
@@ -1867,10 +1995,8 @@ public class CCWSCommandImpl extends CommandImpl
 		{
 			try
 			{
-				connection = (CCWSConnection) instance
-						.getProvisioningConnection();
-				connection.setSubscriberState(isdn,
-						Constants.BALANCE_STATE_SUSPEND_S1);
+				connection = (CCWSConnection) instance.getProvisioningConnection();
+				connection.setSubscriberState(isdn, Constants.BALANCE_STATE_SUSPEND_S1);
 			}
 			catch (Exception e)
 			{
@@ -1893,9 +2019,7 @@ public class CCWSCommandImpl extends CommandImpl
 	 * @return
 	 * @throws Exception
 	 */
-	public VNMMessage suspendSubscriberS2(CommandInstance instance,
-			ProvisioningCommand provisioningCommand, CommandMessage request)
-			throws Exception
+	public VNMMessage suspendSubscriberS2(CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request) throws Exception
 	{
 		CCWSConnection connection = null;
 		String isdn = CommandUtil.addCountryCode(request.getIsdn());
@@ -1910,10 +2034,8 @@ public class CCWSCommandImpl extends CommandImpl
 		{
 			try
 			{
-				connection = (CCWSConnection) instance
-						.getProvisioningConnection();
-				connection.setSubscriberState(isdn,
-						Constants.BALANCE_STATE_SUSPEND_S2);
+				connection = (CCWSConnection) instance.getProvisioningConnection();
+				connection.setSubscriberState(isdn, Constants.BALANCE_STATE_SUSPEND_S2);
 			}
 			catch (Exception e)
 			{
@@ -1936,9 +2058,7 @@ public class CCWSCommandImpl extends CommandImpl
 	 * @return
 	 * @throws Exception
 	 */
-	public VNMMessage activeSubscriber(CommandInstance instance,
-			ProvisioningCommand provisioningCommand, CommandMessage request)
-			throws Exception
+	public VNMMessage activeSubscriber(CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request) throws Exception
 	{
 		CCWSConnection connection = null;
 		String isdn = CommandUtil.addCountryCode(request.getIsdn());
@@ -1953,10 +2073,8 @@ public class CCWSCommandImpl extends CommandImpl
 		{
 			try
 			{
-				connection = (CCWSConnection) instance
-						.getProvisioningConnection();
-				connection.setSubscriberState(isdn,
-						Constants.BALANCE_STATE_ACTIVE);
+				connection = (CCWSConnection) instance.getProvisioningConnection();
+				connection.setSubscriberState(isdn, Constants.BALANCE_STATE_ACTIVE);
 			}
 			catch (Exception e)
 			{
@@ -1970,8 +2088,7 @@ public class CCWSCommandImpl extends CommandImpl
 		return result;
 	}
 
-	public VNMMessage rollbackSetSubscriberState(CommandInstance instance,
-			ProvisioningCommand provisioningCommand, CommandMessage request)
+	public VNMMessage rollbackSetSubscriberState(CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request)
 			throws Exception
 	{
 		CCWSConnection connection = null;
@@ -1990,10 +2107,8 @@ public class CCWSCommandImpl extends CommandImpl
 				try
 				{
 
-					connection = (CCWSConnection) instance
-							.getProvisioningConnection();
-					connection.setSubscriberState(isdn, result
-							.getSubscriberEntity().getCurrentState());
+					connection = (CCWSConnection) instance.getProvisioningConnection();
+					connection.setSubscriberState(isdn, result.getSubscriberEntity().getCurrentState());
 				}
 				catch (Exception e)
 				{
@@ -2013,9 +2128,7 @@ public class CCWSCommandImpl extends CommandImpl
 	// Author : ThangPV
 	// Created Date : 16/09/2004
 	// //////////////////////////////////////////////////////
-	public VNMMessage modifySubscriber(CommandInstance instance,
-			ProvisioningCommand provisioningCommand, CommandMessage request)
-			throws Exception
+	public VNMMessage modifySubscriber(CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request) throws Exception
 	{
 		CCWSConnection connection = null;
 
@@ -2033,13 +2146,11 @@ public class CCWSCommandImpl extends CommandImpl
 		{
 			try
 			{
-				ProductEntry product = ProductFactory.getCache().getProduct(
-						result.getProductId());
+				ProductEntry product = ProductFactory.getCache().getProduct(result.getProductId());
 
 				SubscriberEntity subscriber = getSubscriber(instance, result);
 
-				String[] addBalances = StringUtil.toStringArray(
-						product.getParameter("balances", ""), StringPool.COMMA);
+				String[] addBalances = StringUtil.toStringArray(product.getParameter("balances", ""), StringPool.COMMA);
 
 				Date now = new Date();
 
@@ -2051,12 +2162,10 @@ public class CCWSCommandImpl extends CommandImpl
 				{
 					String balanceName = addBalances[j];
 
-					String prefix = "balance." + result.getActionType() + "."
-							+ balanceName;
+					String prefix = "balance." + result.getActionType() + "." + balanceName;
 
 					// get current balance
-					BalanceEntity balance = CCWSConnection.getBalance(
-							subscriber, balanceName);
+					BalanceEntity balance = CCWSConnection.getBalance(subscriber, balanceName);
 
 					// calculate expiration date for this balance
 					Calendar maxExpiredDate = Calendar.getInstance();
@@ -2066,8 +2175,7 @@ public class CCWSCommandImpl extends CommandImpl
 					maxExpiredDate.set(Calendar.MINUTE, 59);
 					maxExpiredDate.set(Calendar.SECOND, 59);
 
-					int maxDays = product.getParameters().getInteger(
-							prefix + ".maxDays");
+					int maxDays = product.getParameters().getInteger(prefix + ".maxDays");
 
 					maxExpiredDate.add(Calendar.DATE, maxDays);
 
@@ -2082,8 +2190,7 @@ public class CCWSCommandImpl extends CommandImpl
 					expiredDate.set(Calendar.MINUTE, 59);
 					expiredDate.set(Calendar.SECOND, 59);
 
-					int expireTime = product.getParameters().getInteger(
-							prefix + ".days");
+					int expireTime = product.getParameters().getInteger(prefix + ".days");
 
 					expireTime--;
 
@@ -2102,8 +2209,7 @@ public class CCWSCommandImpl extends CommandImpl
 						activeDate = expiredDate;
 					}
 
-					int amount = product.getParameters().getInteger(
-							prefix + ".amount");
+					int amount = product.getParameters().getInteger(prefix + ".amount");
 
 					balances[j] = new BalanceEntityBase();
 
@@ -2112,13 +2218,9 @@ public class CCWSCommandImpl extends CommandImpl
 					balances[j].setAccountExpiration(expiredDate);
 
 					// Add response value
-					result.setResponseValue(balances[j].getBalanceName()
-							+ ".amount",
-							StringUtil.format(balances[j].getBalance(), "#"));
-					result.setResponseValue(balances[j].getBalanceName()
-							+ ".expireDate", StringUtil.format(balances[j]
-							.getAccountExpiration().getTime(),
-							Constants.DATE_FORMAT));
+					result.setResponseValue(balances[j].getBalanceName() + ".amount", StringUtil.format(balances[j].getBalance(), "#"));
+					result.setResponseValue(balances[j].getBalanceName() + ".expireDate",
+							StringUtil.format(balances[j].getAccountExpiration().getTime(), Constants.DATE_FORMAT));
 				}
 
 				String comment = product.getIndexKey();
@@ -2126,8 +2228,7 @@ public class CCWSCommandImpl extends CommandImpl
 				// modify balances
 				if (balances.length > 0)
 				{
-					connection = (CCWSConnection) instance
-							.getProvisioningConnection();
+					connection = (CCWSConnection) instance.getProvisioningConnection();
 
 					connection.setBalance(isdn, balances, activeDate, comment);
 				}
@@ -2150,9 +2251,7 @@ public class CCWSCommandImpl extends CommandImpl
 	// Author : ThangPV
 	// Created Date : 16/09/2004
 	// //////////////////////////////////////////////////////
-	public VNMMessage resetBalance(CommandInstance instance,
-			ProvisioningCommand provisioningCommand, CommandMessage request)
-			throws Exception
+	public VNMMessage resetBalance(CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request) throws Exception
 	{
 		CCWSConnection connection = null;
 
@@ -2170,13 +2269,11 @@ public class CCWSCommandImpl extends CommandImpl
 		{
 			try
 			{
-				ProductEntry product = ProductFactory.getCache().getProduct(
-						result.getProductId());
+				ProductEntry product = ProductFactory.getCache().getProduct(result.getProductId());
 
 				SubscriberEntity subscriber = getSubscriber(instance, result);
 
-				String[] addBalances = StringUtil.toStringArray(
-						product.getParameter("balances", ""), StringPool.COMMA);
+				String[] addBalances = StringUtil.toStringArray(product.getParameter("balances", ""), StringPool.COMMA);
 
 				Date now = new Date();
 
@@ -2188,80 +2285,44 @@ public class CCWSCommandImpl extends CommandImpl
 				{
 					String balanceName = addBalances[j];
 
-					String prefix = "balance." + result.getActionType() + "."
-							+ balanceName;
+					String prefix = "balance." + result.getActionType() + "." + balanceName;
 
 					// get current balance
-					BalanceEntity balance = CCWSConnection.getBalance(
-							subscriber, balanceName);
+					BalanceEntity balance = CCWSConnection.getBalance(subscriber, balanceName);
 
 					// calculate expiration date for this balance
 					Calendar expiredDate = balance.getAccountExpiration();
 
-					expiredDate.setTime(now);
+					if (expiredDate.getTime().after(now))
+					{
+						expiredDate.setTime(now);
+					}
 
-					boolean clearBalance = product.getParameters().getBoolean(
-							prefix + ".clear", false);
+					boolean clearBalance = product.getParameters().getBoolean(prefix + ".clear", false);
 
 					balances[j] = new BalanceEntityBase();
 					balances[j].setBalanceName(balanceName);
-					balances[j].setBalance(clearBalance ? 0 : balance
-							.getBalance());
+					balances[j].setBalance(clearBalance ? 0 : balance.getBalance());
 					balances[j].setAccountExpiration(expiredDate);
 
-					result.setResponseValue(balances[j].getBalanceName()
-							+ ".amount",
-							StringUtil.format(balances[j].getBalance(), "#"));
-					result.setResponseValue(balances[j].getBalanceName()
-							+ ".expireDate", StringUtil.format(balances[j]
-							.getAccountExpiration().getTime(),
-							Constants.DATE_FORMAT));
+					result.setResponseValue(balances[j].getBalanceName() + ".amount", StringUtil.format(balances[j].getBalance(), "#"));
+					result.setResponseValue(balances[j].getBalanceName() + ".expireDate",
+							StringUtil.format(balances[j].getAccountExpiration().getTime(), Constants.DATE_FORMAT));
 				}
 
-//				String comment = product.getIndexKey();
-				String comment = product.getParameter(
-						"mtrComment." + product.getAlias() + "." + request.getActionType(), 
+				// String comment = product.getIndexKey();
+				String comment = product.getParameter("mtrComment." + product.getAlias() + "." + request.getActionType(),
 						"Comment MTR" + product.getAlias());
 
 				// modify balances
 				if (balances.length > 0)
 				{
-					connection = (CCWSConnection) instance
-							.getProvisioningConnection();
-					
+					connection = (CCWSConnection) instance.getProvisioningConnection();
+
 					long sessionId = setRequest(instance, result,
-							"com.comverse_in.prepaid.ccws.ServiceSoapStub.modifySubscriber:"
-									+ getLogBalances(balances, isdn));
-//					connection.setBalance(isdn, balances, activeDate, comment);
-//					setResponse(instance, result, Constants.SUCCESS, sessionId);
-					
-					try
-					{
-						connection.setBalance(isdn, balances, activeDate, comment);
-						setResponse(instance, result, Constants.SUCCESS, sessionId);
-					}
-					catch (AxisFault error)
-					{
-						error.printStackTrace();
-						String errorCode = getErrorCode(instance, request, error);
-						if (!errorCode.equals(""))
-						{
-							setResponse(instance, result, "CCWS." + errorCode, sessionId);
-							result.setStatus(Constants.ORDER_STATUS_DENIED);
-							if (errorCode.equals("4072"))
-							{
-								result.setCause(Constants.ERROR_BALANCE_IN_USED);
-							}
-							else
-							{
-								result.setCause(Constants.ERROR);
-							}
-						}
-						else
-						{
-							throw error;
-						}
-					}
+							"com.comverse_in.prepaid.ccws.ServiceSoapStub.modifySubscriber:" + getLogBalances(balances, isdn));
+					connection.setBalance(isdn, balances, activeDate, comment);
+					setResponse(instance, result, Constants.SUCCESS, sessionId);
 				}
 			}
 			catch (Exception error)
@@ -2282,9 +2343,7 @@ public class CCWSCommandImpl extends CommandImpl
 	// Author : ThangPV
 	// Created Date : 16/09/2004
 	// //////////////////////////////////////////////////////
-	public VNMMessage createCircle(CommandInstance instance,
-			ProvisioningCommand provisioningCommand, CommandMessage request)
-			throws Exception
+	public VNMMessage createCircle(CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request) throws Exception
 	{
 		CCWSConnection connection = null;
 
@@ -2300,24 +2359,18 @@ public class CCWSCommandImpl extends CommandImpl
 		{
 			try
 			{
-				ProductEntry product = ProductFactory.getCache().getProduct(
-						result.getProductId());
+				ProductEntry product = ProductFactory.getCache().getProduct(result.getProductId());
 
 				// Calling circle
 				String prefix = "circle." + request.getActionType() + ".";
 
-				String serviceProvider = product.getParameters()
-						.getString(prefix + "serviceProvider",
-								product.getCircleProvider());
+				String serviceProvider = product.getParameters().getString(prefix + "serviceProvider", product.getCircleProvider());
 
-				String circleGroup = product.getParameters().getString(
-						prefix + "group", product.getCircleGroup());
+				String circleGroup = product.getParameters().getString(prefix + "group", product.getCircleGroup());
 
-				String circleName = product.getParameters().getString(
-						prefix + "name", product.getCircleName());
+				String circleName = product.getParameters().getString(prefix + "name", product.getCircleName());
 
-				if (product.getParameters().getString(prefix + "align", "left")
-						.equalsIgnoreCase("left"))
+				if (product.getParameters().getString(prefix + "align", "left").equalsIgnoreCase("left"))
 				{
 					circleName = circleName + "_" + isdn;
 				}
@@ -2327,22 +2380,15 @@ public class CCWSCommandImpl extends CommandImpl
 				}
 
 				// modify balances
-				connection = (CCWSConnection) instance
-						.getProvisioningConnection();
+				connection = (CCWSConnection) instance.getProvisioningConnection();
 
 				long sessionId = setRequest(
 						instance,
 						result,
-						getLogRequest(
-								"com.comverse_in.prepaid.ccws.ServiceSoapStub.changeCallingCircle",
-								result.getIsdn()
-										+ "," + circleGroup
-										+ "," + circleName
-										+ "," + serviceProvider
-										+ "," + product.getMaxMembers()));
+						getLogRequest("com.comverse_in.prepaid.ccws.ServiceSoapStub.changeCallingCircle", result.getIsdn() + "," + circleGroup + ","
+								+ circleName + "," + serviceProvider + "," + product.getMaxMembers()));
 
-				if (connection.createCallingCircle(circleName, circleGroup,
-						serviceProvider, product.getMaxMembers()))
+				if (connection.createCallingCircle(circleName, circleGroup, serviceProvider, product.getMaxMembers()))
 					setResponse(instance, result, Constants.SUCCESS, sessionId);
 				else
 					setResponse(instance, result, Constants.ERROR, sessionId);
@@ -2371,9 +2417,7 @@ public class CCWSCommandImpl extends CommandImpl
 	// Author : ThangPV
 	// Created Date : 16/09/2004
 	// //////////////////////////////////////////////////////
-	public VNMMessage removeCircle(CommandInstance instance,
-			ProvisioningCommand provisioningCommand, CommandMessage request)
-			throws Exception
+	public VNMMessage removeCircle(CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request) throws Exception
 	{
 		CCWSConnection connection = null;
 
@@ -2389,17 +2433,14 @@ public class CCWSCommandImpl extends CommandImpl
 		{
 			try
 			{
-				ProductEntry product = ProductFactory.getCache().getProduct(
-						result.getProductId());
+				ProductEntry product = ProductFactory.getCache().getProduct(result.getProductId());
 
 				// Calling circle
 				String prefix = "circle." + request.getActionType() + ".";
 
-				String circleName = product.getParameters().getString(
-						prefix + "name", product.getCircleName());
+				String circleName = product.getParameters().getString(prefix + "name", product.getCircleName());
 
-				if (product.getParameters().getString(prefix + "align", "left")
-						.equalsIgnoreCase("left"))
+				if (product.getParameters().getString(prefix + "align", "left").equalsIgnoreCase("left"))
 				{
 					circleName = circleName + "_" + isdn;
 				}
@@ -2409,16 +2450,10 @@ public class CCWSCommandImpl extends CommandImpl
 				}
 
 				// modify balances
-				connection = (CCWSConnection) instance
-						.getProvisioningConnection();
+				connection = (CCWSConnection) instance.getProvisioningConnection();
 
-				long sessionId = setRequest(
-						instance,
-						result,
-						getLogRequest(
-								"com.comverse_in.prepaid.ccws.ServiceSoapStub.deleteCallingCircle",
-								result.getIsdn()
-										+ "," + circleName));
+				long sessionId = setRequest(instance, result,
+						getLogRequest("com.comverse_in.prepaid.ccws.ServiceSoapStub.deleteCallingCircle", result.getIsdn() + "," + circleName));
 
 				if (connection.deleteCC(circleName))
 					setResponse(instance, result, Constants.SUCCESS, sessionId);
@@ -2442,9 +2477,7 @@ public class CCWSCommandImpl extends CommandImpl
 	// Author : ThangPV
 	// Created Date : 16/09/2004
 	// //////////////////////////////////////////////////////
-	public VNMMessage modifyCircle(CommandInstance instance,
-			ProvisioningCommand provisioningCommand, CommandMessage request)
-			throws Exception
+	public VNMMessage modifyCircle(CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request) throws Exception
 	{
 		CCWSConnection connection = null;
 
@@ -2460,23 +2493,15 @@ public class CCWSCommandImpl extends CommandImpl
 		{
 			try
 			{
-				ProductEntry product = ProductFactory.getCache().getProduct(
-						request.getProductId());
+				ProductEntry product = ProductFactory.getCache().getProduct(request.getProductId());
 
-				String circleName = isdn + "_"
-						+ product.getParameter("circle.name", "");
+				String circleName = isdn + "_" + product.getParameter("circle.name", "");
 
 				// modify balances
-				connection = (CCWSConnection) instance
-						.getProvisioningConnection();
+				connection = (CCWSConnection) instance.getProvisioningConnection();
 
-				long sessionId = setRequest(
-						instance,
-						result,
-						getLogRequest(
-								"com.comverse_in.prepaid.ccws.ServiceSoapStub.deleteCallingCircle",
-								result.getIsdn()
-										+ "," + circleName));
+				long sessionId = setRequest(instance, result,
+						getLogRequest("com.comverse_in.prepaid.ccws.ServiceSoapStub.deleteCallingCircle", result.getIsdn() + "," + circleName));
 
 				if (connection.deleteCC(circleName))
 					setResponse(instance, result, Constants.SUCCESS, sessionId);
@@ -2501,9 +2526,7 @@ public class CCWSCommandImpl extends CommandImpl
 	// Author : ThangPV
 	// Created Date : 16/09/2004
 	// //////////////////////////////////////////////////////
-	public VNMMessage addOffer(CommandInstance instance,
-			ProvisioningCommand provisioningCommand, CommandMessage request)
-			throws Exception
+	public VNMMessage addOffer(CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request) throws Exception
 	{
 		CCWSConnection connection = null;
 
@@ -2518,56 +2541,49 @@ public class CCWSCommandImpl extends CommandImpl
 		{
 			try
 			{
-				ProductEntry product = ProductFactory.getCache().getProduct(
-						request.getProductId());
+				ProductEntry product = ProductFactory.getCache().getProduct(request.getProductId());
 
 				Date now = new Date();
-				
-				String offerName = product.getParameter(
-						Constants.PARM_OFFER_NAME, product.getOfferName());
-				
+
+				String offerName = product.getParameter(Constants.PARM_OFFER_NAME, product.getOfferName());
+
 				String prefix = "offer." + result.getActionType() + "." + offerName;
 
-//				int alcoDuration = Integer.parseInt(product.getParameter(
-//						Constants.PARM_OFFER_DURATION,
-//						Constants.PARM_OFFER_DURATION_VALUE));
+				// int alcoDuration = Integer.parseInt(product.getParameter(
+				// Constants.PARM_OFFER_DURATION,
+				// Constants.PARM_OFFER_DURATION_VALUE));
 
 				Calendar serviceStart = Calendar.getInstance();
 				Calendar serviceEnd = Calendar.getInstance();
-				
+
 				if (product.isSubscription())
 				{
-					SubscriberProduct subProduct = SubscriberProductImpl.getUnterminated(
-							request.getIsdn(), request.getProductId());
+					SubscriberProduct subProduct = SubscriberProductImpl.getUnterminated(request.getIsdn(), request.getProductId());
 					if (subProduct != null)
 					{
 						serviceEnd.setTime(subProduct.getExpirationDate());
 					}
 				}
-				
+
 				int alcoDuration = product.getSubscriptionPeriod();
 				if (result.getCampaignId() != Constants.DEFAULT_ID)
 				{
-					CampaignEntry campaign = CampaignFactory.getCache()
-							.getCampaign(result.getCampaignId());
+					CampaignEntry campaign = CampaignFactory.getCache().getCampaign(result.getCampaignId());
 
 					if ((campaign != null))
 					{
 						alcoDuration = campaign.getSchedulePeriod();
 					}
 				}
-				
-				String setExpFlg = product.getParameters().getString(
-						prefix + ".resetexpiredate", "false");
 
-				if (serviceEnd.getTimeInMillis() < now.getTime()
-						|| setExpFlg.equals("true"))
+				String setExpFlg = product.getParameters().getString(prefix + ".resetexpiredate", "false");
+
+				if (serviceEnd.getTimeInMillis() < now.getTime() || setExpFlg.equals("true"))
 				{
 					alcoDuration--;
 					serviceEnd.setTime(now);
 				}
-				else if (serviceEnd.getTimeInMillis() >= now.getTime()
-						&& result.getActionType().equals(Constants.ACTION_SUBSCRIPTION))
+				else if (serviceEnd.getTimeInMillis() >= now.getTime() && result.getActionType().equals(Constants.ACTION_SUBSCRIPTION))
 				{
 					alcoDuration--;
 				}
@@ -2575,12 +2591,9 @@ public class CCWSCommandImpl extends CommandImpl
 				boolean truncExpire = Boolean.parseBoolean(product.getParameter("TruncExpireDate", "true"));
 				if (truncExpire)
 				{
-					int expireHour = product.getParameters().getInteger(
-							prefix + ".expire.hour", 23);
-					int expireMinute = product.getParameters().getInteger(
-							prefix + ".expire.minute", 59);
-					int expireSecond = product.getParameters().getInteger(
-							prefix + ".expire.second", 59);
+					int expireHour = product.getParameters().getInteger(prefix + ".expire.hour", 23);
+					int expireMinute = product.getParameters().getInteger(prefix + ".expire.minute", 59);
+					int expireSecond = product.getParameters().getInteger(prefix + ".expire.second", 59);
 
 					serviceEnd.set(Calendar.HOUR_OF_DAY, expireHour);
 					serviceEnd.set(Calendar.MINUTE, expireMinute);
@@ -2591,22 +2604,17 @@ public class CCWSCommandImpl extends CommandImpl
 				{
 					serviceEnd.add(Calendar.DATE, alcoDuration);
 				}
-				
+
 				DateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 
 				// modify balances
-				connection = (CCWSConnection) instance
-						.getProvisioningConnection();
+				connection = (CCWSConnection) instance.getProvisioningConnection();
 
 				long sessionId = setRequest(
 						instance,
 						result,
-						getLogRequest(
-								"com.comverse_in.prepaid.ccws.ServiceSoapStub.subscribeOffer",
-								result.getIsdn()
-										+ "," + offerName
-										+ "," + df.format(serviceStart.getTime())
-										+ "," + df.format(serviceEnd.getTime())));
+						getLogRequest("com.comverse_in.prepaid.ccws.ServiceSoapStub.subscribeOffer",
+								result.getIsdn() + "," + offerName + "," + df.format(serviceStart.getTime()) + "," + df.format(serviceEnd.getTime())));
 				try
 				{
 					connection.createAlco(offerName, isdn, serviceEnd, serviceStart);
@@ -2645,9 +2653,7 @@ public class CCWSCommandImpl extends CommandImpl
 	// Author : ThangPV
 	// Created Date : 16/09/2004
 	// //////////////////////////////////////////////////////
-	public VNMMessage removeOffer(CommandInstance instance,
-			ProvisioningCommand provisioningCommand, CommandMessage request)
-			throws Exception
+	public VNMMessage removeOffer(CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request) throws Exception
 	{
 		CCWSConnection connection = null;
 
@@ -2660,26 +2666,19 @@ public class CCWSCommandImpl extends CommandImpl
 		}
 		try
 		{
-			ProductEntry product = ProductFactory.getCache().getProduct(
-					request.getProductId());
+			ProductEntry product = ProductFactory.getCache().getProduct(request.getProductId());
 
-			String offerName = product.getParameter(Constants.PARM_OFFER_NAME,
-					product.getOfferName());
+			String offerName = product.getParameter(Constants.PARM_OFFER_NAME, product.getOfferName());
 
 			// modify balances
 
 			connection = (CCWSConnection) instance.getProvisioningConnection();
 
-			long sessionId = setRequest(
-					instance,
-					result,
-					getLogRequest(
-							"com.comverse_in.prepaid.ccws.ServiceSoapStub.unsubscribeOffer",
-							result.getIsdn()
-									+ "," + offerName));
+			long sessionId = setRequest(instance, result,
+					getLogRequest("com.comverse_in.prepaid.ccws.ServiceSoapStub.unsubscribeOffer", result.getIsdn() + "," + offerName));
 			try
 			{
-				connection.deleteAlco(offerName, isdn);	
+				connection.deleteAlco(offerName, isdn);
 				setResponse(instance, result, Constants.SUCCESS, sessionId);
 			}
 			catch (AxisFault error)
@@ -2708,9 +2707,7 @@ public class CCWSCommandImpl extends CommandImpl
 		return result;
 	}
 
-	public VNMMessage addPhoneBook(CommandInstance instance,
-			ProvisioningCommand provisioningCommand, CommandMessage request)
-			throws Exception
+	public VNMMessage addPhoneBook(CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request) throws Exception
 	{
 		CCWSConnection connection = null;
 
@@ -2725,73 +2722,52 @@ public class CCWSCommandImpl extends CommandImpl
 		{
 			try
 			{
-				ProductEntry product = ProductFactory.getCache().getProduct(
-						request.getProductId());
+				ProductEntry product = ProductFactory.getCache().getProduct(request.getProductId());
 
-//				ProductRoute productRoute = ProductFactory.getCache()
-//						.getProductRoute(request.getRouteId());
+				// ProductRoute productRoute = ProductFactory.getCache()
+				// .getProductRoute(request.getRouteId());
 
-				int intMaxMember = Integer.parseInt(product.getParameter(
-						Constants.PARM_MAX_MEMBER, "5"));
+				int intMaxMember = Integer.parseInt(product.getParameter(Constants.PARM_MAX_MEMBER, "5"));
 
 				String[] phoneBookList = request.getRequestValue("f5-member", "").split(",");
-				
+
 				// Modify phone book before update.
 				SubscriberPB subPhoneBookList = new SubscriberPB();
 				for (int i = 0; i < intMaxMember; i++)
 				{
 					switch (i)
 					{
-					case 0:
-						subPhoneBookList
-								.setDestNumber1(i < phoneBookList.length ? CommandUtil
-										.addCountryCode(phoneBookList[i]) : "");
-						break;
-					case 1:
-						subPhoneBookList
-								.setDestNumber2(i < phoneBookList.length ? CommandUtil
-										.addCountryCode(phoneBookList[i]) : "");
-						break;
-					case 2:
-						subPhoneBookList
-								.setDestNumber3(i < phoneBookList.length ? CommandUtil
-										.addCountryCode(phoneBookList[i]) : "");
-						break;
-					case 3:
-						subPhoneBookList
-								.setDestNumber4(i < phoneBookList.length ? CommandUtil
-										.addCountryCode(phoneBookList[i]) : "");
-						break;
-					case 4:
-						subPhoneBookList
-								.setDestNumber5(i < phoneBookList.length ? CommandUtil
-										.addCountryCode(phoneBookList[i]) : "");
-						break;
-					case 5:
-						subPhoneBookList
-								.setDestNumber6(i < phoneBookList.length ? CommandUtil
-										.addCountryCode(phoneBookList[i]) : "");
-						break;
-					case 6:
-						subPhoneBookList
-								.setDestNumber7(i < phoneBookList.length ? CommandUtil
-										.addCountryCode(phoneBookList[i]) : "");
-						break;
-					case 7:
-						subPhoneBookList
-								.setDestNumber8(i < phoneBookList.length ? CommandUtil
-										.addCountryCode(phoneBookList[i]) : "");
-						break;
-					case 8:
-						subPhoneBookList
-								.setDestNumber9(i < phoneBookList.length ? CommandUtil
-										.addCountryCode(phoneBookList[i]) : "");
-						break;
-					default:
+						case 0:
+							subPhoneBookList.setDestNumber1(i < phoneBookList.length ? CommandUtil.addCountryCode(phoneBookList[i]) : "");
+							break;
+						case 1:
+							subPhoneBookList.setDestNumber2(i < phoneBookList.length ? CommandUtil.addCountryCode(phoneBookList[i]) : "");
+							break;
+						case 2:
+							subPhoneBookList.setDestNumber3(i < phoneBookList.length ? CommandUtil.addCountryCode(phoneBookList[i]) : "");
+							break;
+						case 3:
+							subPhoneBookList.setDestNumber4(i < phoneBookList.length ? CommandUtil.addCountryCode(phoneBookList[i]) : "");
+							break;
+						case 4:
+							subPhoneBookList.setDestNumber5(i < phoneBookList.length ? CommandUtil.addCountryCode(phoneBookList[i]) : "");
+							break;
+						case 5:
+							subPhoneBookList.setDestNumber6(i < phoneBookList.length ? CommandUtil.addCountryCode(phoneBookList[i]) : "");
+							break;
+						case 6:
+							subPhoneBookList.setDestNumber7(i < phoneBookList.length ? CommandUtil.addCountryCode(phoneBookList[i]) : "");
+							break;
+						case 7:
+							subPhoneBookList.setDestNumber8(i < phoneBookList.length ? CommandUtil.addCountryCode(phoneBookList[i]) : "");
+							break;
+						case 8:
+							subPhoneBookList.setDestNumber9(i < phoneBookList.length ? CommandUtil.addCountryCode(phoneBookList[i]) : "");
+							break;
+						default:
 					}
 				}
-				connection = (CCWSConnection) instance
-						.getProvisioningConnection();
+				connection = (CCWSConnection) instance.getProvisioningConnection();
 				connection.setPhoneBook(isdn, subPhoneBookList);
 			}
 			catch (Exception error)
@@ -2806,9 +2782,7 @@ public class CCWSCommandImpl extends CommandImpl
 		return result;
 	}
 
-	public VNMMessage removePhoneBook(CommandInstance instance,
-			ProvisioningCommand provisioningCommand, CommandMessage request)
-			throws Exception
+	public VNMMessage removePhoneBook(CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request) throws Exception
 	{
 		CCWSConnection connection = null;
 
@@ -2823,95 +2797,69 @@ public class CCWSCommandImpl extends CommandImpl
 		{
 			try
 			{
-				ProductEntry product = ProductFactory.getCache().getProduct(
-						request.getProductId());
+				ProductEntry product = ProductFactory.getCache().getProduct(request.getProductId());
 
-				ProductRoute productRoute = ProductFactory.getCache()
-						.getProductRoute(request.getRouteId());
-				String removeMemList = request.getKeyword().replaceFirst(
-						productRoute.getKeyword(), "");
+				ProductRoute productRoute = ProductFactory.getCache().getProductRoute(request.getRouteId());
+				String removeMemList = request.getKeyword().replaceFirst(productRoute.getKeyword(), "");
 				removeMemList = removeMemList.trim();
 				String[] arrayRemoveMemList = removeMemList.split(",");
 				// Validate member
 				if (!isValidateSub(arrayRemoveMemList))
 				{
-					AppException error = new AppException(
-							Constants.ERROR_SUBSCRIBER_NOT_FOUND);
+					AppException error = new AppException(Constants.ERROR_SUBSCRIBER_NOT_FOUND);
 					processError(instance, provisioningCommand, result, error);
 					return result;
 				}
 				// Get member
-				String currentPhoneBookList = SubscriberProductImpl
-						.getMemberList(isdn, "", request.getProductId(), false);
+				String currentPhoneBookList = SubscriberProductImpl.getMemberList(isdn, "", request.getProductId(), false);
 
 				for (int i = 0; i < arrayRemoveMemList.length; i++)
 				{
 					if (currentPhoneBookList.contains(arrayRemoveMemList[i]))
 					{
-						currentPhoneBookList = currentPhoneBookList.replaceAll(
-								arrayRemoveMemList[i], "");
+						currentPhoneBookList = currentPhoneBookList.replaceAll(arrayRemoveMemList[i], "");
 					}
 				}
 
-				int intMaxMember = Integer.parseInt(product.getParameter(
-						Constants.PARM_MAX_MEMBER, "5"));
+				int intMaxMember = Integer.parseInt(product.getParameter(Constants.PARM_MAX_MEMBER, "5"));
 				String[] PhoneBookList = currentPhoneBookList.split(",");
 				SubscriberPB subPhoneBookList = new SubscriberPB();
 				for (int i = 0; i < intMaxMember; i++)
 				{
 					switch (i)
 					{
-					case 0:
-						subPhoneBookList
-								.setDestNumber1(i < PhoneBookList.length ? CommandUtil
-										.addCountryCode(PhoneBookList[i]) : "");
-						break;
-					case 1:
-						subPhoneBookList
-								.setDestNumber2(i < PhoneBookList.length ? CommandUtil
-										.addCountryCode(PhoneBookList[i]) : "");
-						break;
-					case 2:
-						subPhoneBookList
-								.setDestNumber3(i < PhoneBookList.length ? CommandUtil
-										.addCountryCode(PhoneBookList[i]) : "");
-						break;
-					case 3:
-						subPhoneBookList
-								.setDestNumber4(i < PhoneBookList.length ? CommandUtil
-										.addCountryCode(PhoneBookList[i]) : "");
-						break;
-					case 4:
-						subPhoneBookList
-								.setDestNumber5(i < PhoneBookList.length ? CommandUtil
-										.addCountryCode(PhoneBookList[i]) : "");
-						break;
-					case 5:
-						subPhoneBookList
-								.setDestNumber6(i < PhoneBookList.length ? CommandUtil
-										.addCountryCode(PhoneBookList[i]) : "");
-						break;
-					case 6:
-						subPhoneBookList
-								.setDestNumber7(i < PhoneBookList.length ? CommandUtil
-										.addCountryCode(PhoneBookList[i]) : "");
-						break;
-					case 7:
-						subPhoneBookList
-								.setDestNumber8(i < PhoneBookList.length ? CommandUtil
-										.addCountryCode(PhoneBookList[i]) : "");
-						break;
-					case 8:
-						subPhoneBookList
-								.setDestNumber9(i < PhoneBookList.length ? CommandUtil
-										.addCountryCode(PhoneBookList[i]) : "");
-						break;
-					default:
+						case 0:
+							subPhoneBookList.setDestNumber1(i < PhoneBookList.length ? CommandUtil.addCountryCode(PhoneBookList[i]) : "");
+							break;
+						case 1:
+							subPhoneBookList.setDestNumber2(i < PhoneBookList.length ? CommandUtil.addCountryCode(PhoneBookList[i]) : "");
+							break;
+						case 2:
+							subPhoneBookList.setDestNumber3(i < PhoneBookList.length ? CommandUtil.addCountryCode(PhoneBookList[i]) : "");
+							break;
+						case 3:
+							subPhoneBookList.setDestNumber4(i < PhoneBookList.length ? CommandUtil.addCountryCode(PhoneBookList[i]) : "");
+							break;
+						case 4:
+							subPhoneBookList.setDestNumber5(i < PhoneBookList.length ? CommandUtil.addCountryCode(PhoneBookList[i]) : "");
+							break;
+						case 5:
+							subPhoneBookList.setDestNumber6(i < PhoneBookList.length ? CommandUtil.addCountryCode(PhoneBookList[i]) : "");
+							break;
+						case 6:
+							subPhoneBookList.setDestNumber7(i < PhoneBookList.length ? CommandUtil.addCountryCode(PhoneBookList[i]) : "");
+							break;
+						case 7:
+							subPhoneBookList.setDestNumber8(i < PhoneBookList.length ? CommandUtil.addCountryCode(PhoneBookList[i]) : "");
+							break;
+						case 8:
+							subPhoneBookList.setDestNumber9(i < PhoneBookList.length ? CommandUtil.addCountryCode(PhoneBookList[i]) : "");
+							break;
+						default:
 					}
 				}
 				// modify balances
-				connection = (CCWSConnection) instance
-						.getProvisioningConnection();
+				connection = (CCWSConnection) instance.getProvisioningConnection();
 				connection.setPhoneBook(isdn, subPhoneBookList);
 				result.setRequestValue("f5-remove-member", removeMemList);
 			}
@@ -2927,9 +2875,7 @@ public class CCWSCommandImpl extends CommandImpl
 		return result;
 	}
 
-	public VNMMessage deletePhoneBook(CommandInstance instance,
-			ProvisioningCommand provisioningCommand, CommandMessage request)
-			throws Exception
+	public VNMMessage deletePhoneBook(CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request) throws Exception
 	{
 		CCWSConnection connection = null;
 
@@ -2944,45 +2890,41 @@ public class CCWSCommandImpl extends CommandImpl
 		{
 			try
 			{
-				ProductEntry product = ProductFactory.getCache().getProduct(
-						request.getProductId());
+				ProductEntry product = ProductFactory.getCache().getProduct(request.getProductId());
 
 				// Get member
-				String currentPhoneBookList = SubscriberProductImpl
-						.getMemberList(isdn, "", request.getProductId(), false);
+				String currentPhoneBookList = SubscriberProductImpl.getMemberList(isdn, "", request.getProductId(), false);
 
-				int intMaxMember = Integer.parseInt(product.getParameter(
-						Constants.PARM_MAX_MEMBER, "5"));
+				int intMaxMember = Integer.parseInt(product.getParameter(Constants.PARM_MAX_MEMBER, "5"));
 				SubscriberPB subPhoneBookList = new SubscriberPB();
 				for (int i = 0; i < intMaxMember; i++)
 				{
 					switch (i)
 					{
-					case 0:
-						subPhoneBookList.setDestNumber1("");
-					case 1:
-						subPhoneBookList.setDestNumber2("");
-					case 2:
-						subPhoneBookList.setDestNumber3("");
-					case 3:
-						subPhoneBookList.setDestNumber4("");
-					case 4:
-						subPhoneBookList.setDestNumber5("");
-					case 5:
-						subPhoneBookList.setDestNumber6("");
-					case 6:
-						subPhoneBookList.setDestNumber7("");
-					case 7:
-						subPhoneBookList.setDestNumber8("");
-					case 8:
-						subPhoneBookList.setDestNumber9("");
+						case 0:
+							subPhoneBookList.setDestNumber1("");
+						case 1:
+							subPhoneBookList.setDestNumber2("");
+						case 2:
+							subPhoneBookList.setDestNumber3("");
+						case 3:
+							subPhoneBookList.setDestNumber4("");
+						case 4:
+							subPhoneBookList.setDestNumber5("");
+						case 5:
+							subPhoneBookList.setDestNumber6("");
+						case 6:
+							subPhoneBookList.setDestNumber7("");
+						case 7:
+							subPhoneBookList.setDestNumber8("");
+						case 8:
+							subPhoneBookList.setDestNumber9("");
 
-					default:
+						default:
 					}
 				}
 				// modify balances
-				connection = (CCWSConnection) instance
-						.getProvisioningConnection();
+				connection = (CCWSConnection) instance.getProvisioningConnection();
 				connection.setPhoneBook(isdn, subPhoneBookList);
 				AppProperties properties = result.getParameters();
 				properties.setString("f5-remove-member", currentPhoneBookList);
@@ -3005,12 +2947,8 @@ public class CCWSCommandImpl extends CommandImpl
 		for (int i = 0; i < array.length; i++)
 		{
 
-			if (!array[i].startsWith("092") 
-					&& !array[i].startsWith("0188")
-					&& !array[i].startsWith("0186")
-					&& !array[i].startsWith("8492") 
-					&& !array[i].startsWith("84188")
-					&& !array[i].startsWith("84186"))
+			if (!array[i].startsWith("092") && !array[i].startsWith("0188") && !array[i].startsWith("0186") && !array[i].startsWith("8492")
+					&& !array[i].startsWith("84188") && !array[i].startsWith("84186"))
 			{
 				return false;
 			}
@@ -3027,9 +2965,7 @@ public class CCWSCommandImpl extends CommandImpl
 	 * @return
 	 * @throws Exception
 	 */
-	public VNMMessage addToCallingCircle(CommandInstance instance,
-			ProvisioningCommand provisioningCommand, CommandMessage request)
-			throws Exception
+	public VNMMessage addToCallingCircle(CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request) throws Exception
 	{
 		CCWSConnection connection = null;
 
@@ -3046,24 +2982,20 @@ public class CCWSCommandImpl extends CommandImpl
 		{
 			try
 			{
-				ProductEntry product = ProductFactory.getCache().getProduct(
-						result.getProductId());
+				ProductEntry product = ProductFactory.getCache().getProduct(result.getProductId());
 
 				// Calling circle
 				String prefix = "circle." + request.getActionType() + ".";
 
-//				String serviceProvider = product.getParameters()
-//						.getString(prefix + "serviceProvider",
-//								product.getCircleProvider());
+				// String serviceProvider = product.getParameters()
+				// .getString(prefix + "serviceProvider",
+				// product.getCircleProvider());
 
-				String circleGroup = product.getParameters().getString(
-						prefix + "group", product.getCircleGroup());
+				String circleGroup = product.getParameters().getString(prefix + "group", product.getCircleGroup());
 
-				String circleName = product.getParameters().getString(
-						prefix + "name", product.getCircleName());
+				String circleName = product.getParameters().getString(prefix + "name", product.getCircleName());
 
-				if (product.getParameters().getString(prefix + "align", "left")
-						.equalsIgnoreCase("left"))
+				if (product.getParameters().getString(prefix + "align", "left").equalsIgnoreCase("left"))
 				{
 					circleName = circleName + "_" + isdn;
 				}
@@ -3076,15 +3008,9 @@ public class CCWSCommandImpl extends CommandImpl
 				long sessionId = setRequest(
 						instance,
 						result,
-						getLogRequest(
-								"com.comverse_in.prepaid.ccws.ServiceSoapStub.modifyCallingCircleMembers",
-								result.getIsdn()
-										+ "," + circleGroup
-										+ "," + circleName
-										+ "," + request.getIsdn() + " - " + request.getShipTo()
-										+ ",JOIN"));
-				connection = (CCWSConnection) instance
-						.getProvisioningConnection();
+						getLogRequest("com.comverse_in.prepaid.ccws.ServiceSoapStub.modifyCallingCircleMembers", result.getIsdn() + "," + circleGroup
+								+ "," + circleName + "," + request.getIsdn() + " - " + request.getShipTo() + ",JOIN"));
+				connection = (CCWSConnection) instance.getProvisioningConnection();
 				if (connection.addMemberToCC(arrayOfMem, circleName, "JOIN"))
 					setResponse(instance, result, Constants.SUCCESS, sessionId);
 				else
@@ -3111,8 +3037,7 @@ public class CCWSCommandImpl extends CommandImpl
 	 * @return
 	 * @throws Exception
 	 */
-	public VNMMessage removeFromCallingCircle(CommandInstance instance,
-			ProvisioningCommand provisioningCommand, CommandMessage request)
+	public VNMMessage removeFromCallingCircle(CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request)
 			throws Exception
 	{
 		CCWSConnection connection = null;
@@ -3129,17 +3054,14 @@ public class CCWSCommandImpl extends CommandImpl
 		{
 			try
 			{
-				ProductEntry product = ProductFactory.getCache().getProduct(
-						result.getProductId());
+				ProductEntry product = ProductFactory.getCache().getProduct(result.getProductId());
 
 				// Calling circle
 				String prefix = "circle." + request.getActionType() + ".";
 
-				String circleName = product.getParameters().getString(
-						prefix + "name", product.getCircleName());
+				String circleName = product.getParameters().getString(prefix + "name", product.getCircleName());
 
-				if (product.getParameters().getString(prefix + "align", "left")
-						.equalsIgnoreCase("left"))
+				if (product.getParameters().getString(prefix + "align", "left").equalsIgnoreCase("left"))
 				{
 					circleName = circleName + "_" + isdn;
 				}
@@ -3148,24 +3070,17 @@ public class CCWSCommandImpl extends CommandImpl
 					circleName = isdn + "_" + circleName;
 				}
 				// Remove member From Calling Circle
-				String memberList = SubscriberProductImpl.getMemberList(
-						request.getIsdn(), request.getUserName(),
-						request.getProductId(), true);
+				String memberList = SubscriberProductImpl.getMemberList(request.getIsdn(), request.getUserName(), request.getProductId(), true);
 				memberList = request.getIsdn() + "," + memberList;
 				String[] arrayOfMem = memberList.split(",");
 
 				long sessionId = setRequest(
 						instance,
 						result,
-						getLogRequest(
-								"com.comverse_in.prepaid.ccws.ServiceSoapStub.modifyCallingCircleMembers",
-								result.getIsdn()
-										+ "," + circleName
-										+ "," + memberList
-										+ ",LEAVE"));
+						getLogRequest("com.comverse_in.prepaid.ccws.ServiceSoapStub.modifyCallingCircleMembers", result.getIsdn() + "," + circleName
+								+ "," + memberList + ",LEAVE"));
 
-				connection = (CCWSConnection) instance
-						.getProvisioningConnection();
+				connection = (CCWSConnection) instance.getProvisioningConnection();
 				if (connection.addMemberToCC(arrayOfMem, circleName, "LEAVE"))
 					setResponse(instance, result, Constants.SUCCESS, sessionId);
 				else
@@ -3183,9 +3098,7 @@ public class CCWSCommandImpl extends CommandImpl
 		return result;
 	}
 
-	public boolean voucherTopup(CommandInstance instance,
-			ProvisioningCommand provisioningCommand, CommandMessage request)
-			throws Exception
+	public boolean voucherTopup(CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request) throws Exception
 	{
 		boolean success = false;
 
@@ -3195,8 +3108,7 @@ public class CCWSCommandImpl extends CommandImpl
 
 		double amount = -1;
 
-		String isdn = CommandUtil.addCountryCode(StringUtil.nvl(
-				request.getIsdn(), ""));
+		String isdn = CommandUtil.addCountryCode(StringUtil.nvl(request.getIsdn(), ""));
 
 		if (isdn.equals(""))
 		{
@@ -3211,17 +3123,13 @@ public class CCWSCommandImpl extends CommandImpl
 
 			secretCode = request.getParameters().getProperty("secretCode", "");
 
-			String description = "Postpaid payment for " + request.getIsdn()
-					+ " - " + request.getShipTo();
+			String description = "Postpaid payment for " + request.getIsdn() + " - " + request.getShipTo();
 
-			ArrayOfDeltaBalance balances = connection
-					.rechargeAccountBySubscriber(topupISDN, secretCode,
-							description);
+			ArrayOfDeltaBalance balances = connection.rechargeAccountBySubscriber(topupISDN, secretCode, description);
 
 			for (int j = 0; j < balances.getDeltaBalance().length; j++)
 			{
-				if (balances.getDeltaBalance(j).getBalanceName().toUpperCase()
-						.equals("CORE"))
+				if (balances.getDeltaBalance(j).getBalanceName().toUpperCase().equals("CORE"))
 				{
 					amount = balances.getDeltaBalance(j).getDelta();
 
@@ -3238,8 +3146,7 @@ public class CCWSCommandImpl extends CommandImpl
 				responseCode = "postpaid-payment";
 
 				request.getParameters().setProperty("topup", topupISDN);
-				request.getParameters().setProperty("amount",
-						String.valueOf(amount));
+				request.getParameters().setProperty("amount", String.valueOf(amount));
 			}
 			else
 			{
@@ -3272,23 +3179,20 @@ public class CCWSCommandImpl extends CommandImpl
 		return success;
 	}
 
-	public boolean setAccountBalance(CommandInstance instance,
-			CommandMessage request) throws Exception
+	public boolean setAccountBalance(CommandInstance instance, CommandMessage request) throws Exception
 	{
 		CCWSConnection connection = null;
 
 		String cause = "";
 
-		String isdn = CommandUtil.addCountryCode(StringUtil.nvl(
-				request.getIsdn(), ""));
+		String isdn = CommandUtil.addCountryCode(StringUtil.nvl(request.getIsdn(), ""));
 		try
 		{
 			double amount = 0;
 			String balanceType = "";
 			BalanceEntityBase[] balances = new BalanceEntityBase[1];
 
-			ProductEntry product = ProductFactory.getCache().getProduct(
-					request.getProductId());
+			ProductEntry product = ProductFactory.getCache().getProduct(request.getProductId());
 
 			if (product == null)
 			{
@@ -3296,8 +3200,7 @@ public class CCWSCommandImpl extends CommandImpl
 			}
 			else
 			{
-				balanceType = product.getParameter("loyalty.balance.prepaid",
-						"");
+				balanceType = product.getParameter("loyalty.balance.prepaid", "");
 				if ("".equals(balanceType))
 				{
 					throw new AppException(Constants.ERROR_BALANCE_NOT_FOUND);
@@ -3390,8 +3293,7 @@ public class CCWSCommandImpl extends CommandImpl
 			}
 			else
 			{
-				expireTime = Integer.valueOf(product.getParameter(
-						"loyalty.balance.days", "0"));
+				expireTime = Integer.valueOf(product.getParameter("loyalty.balance.days", "0"));
 			}
 
 			expiredDate.add(Calendar.DATE, expireTime);
@@ -3431,17 +3333,14 @@ public class CCWSCommandImpl extends CommandImpl
 		return true;
 	}
 
-	public boolean redeem(CommandInstance instance,
-			ProvisioningCommand provisioningCommand, CommandMessage request)
-			throws Exception
+	public boolean redeem(CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request) throws Exception
 	{
 		try
 		{
 			if (!setAccountBalance(instance, request))
 			{
-				SubscriberBalanceImpl.adjustment(request.getUserId(),
-						request.getUserName(), request.getSubscriberId(),
-						request.getIsdn(), "LOYALTY", request.getQuantity());
+				SubscriberBalanceImpl.adjustment(request.getUserId(), request.getUserName(), request.getSubscriberId(), request.getIsdn(), "LOYALTY",
+						request.getQuantity());
 
 				return false;
 			}
@@ -3458,9 +3357,7 @@ public class CCWSCommandImpl extends CommandImpl
 			String smsContent = ProductFactory
 					.getCache()
 					.getProduct(request.getProductId())
-					.getMessage(request.getActionType(),
-							request.getCampaignId(),
-							Constants.DEFAULT_LANGUAGE, request.getChannel(),
+					.getMessage(request.getActionType(), request.getCampaignId(), Constants.DEFAULT_LANGUAGE, request.getChannel(),
 							request.getCause());
 
 			if (smsContent.equals(""))
@@ -3468,8 +3365,7 @@ public class CCWSCommandImpl extends CommandImpl
 				return true;
 			}
 
-			smsContent = smsContent.replaceAll("<score>",
-					String.valueOf(request.getQuantity()));
+			smsContent = smsContent.replaceAll("<score>", String.valueOf(request.getQuantity()));
 
 			CommandUtil.sendSMS(instance, request, smsContent);
 		}
@@ -3492,10 +3388,25 @@ public class CCWSCommandImpl extends CommandImpl
 			{
 				if (balance != null)
 				{
-					log += balance.getBalanceName() + "{" + balance.getBalance()
-							+ ";"
-							+ df.format(balance.getAccountExpiration().getTime())
-							+ "},";
+					log += balance.getBalanceName() + "{" + balance.getBalance() + ";" + df.format(balance.getAccountExpiration().getTime()) + "},";
+				}
+			}
+		}
+		return log;
+	}
+	
+	public String getLogBalances(BalanceCreditAccount[] balances, String isdn)
+	{
+		String log = isdn + "";
+		if (balances.length > 0)
+		{
+			DateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+			log += ":";
+			for (BalanceCreditAccount balance : balances)
+			{
+				if (balance != null)
+				{
+					log += balance.getBalanceName() + "{" + balance.getCreditValue() + ";" + df.format(balance.getExpirationDate().getTime()) + "},";
 				}
 			}
 		}
@@ -3518,33 +3429,26 @@ public class CCWSCommandImpl extends CommandImpl
 		{
 			if (data[i].getBalance() > 0)
 			{
-				balance = balance + data[i].getBalanceName() + "{"
-						+ data[i].getAvailableBalance() + ";"
-						+ df.format(data[i].getAccountExpiration().getTime())
-						+ "},";
+				balance = balance + data[i].getBalanceName() + "{" + data[i].getAvailableBalance() + ";"
+						+ df.format(data[i].getAccountExpiration().getTime()) + "},";
 			}
 		}
 
-		String log = "cosname=" + infor.getCOSName() + "," + "status="
-				+ infor.getCurrentState() + "," + "active_date="
-				+ df.format(infor.getDateEnterActive().getTime()) + ","
-				+ balance;
+		String log = "cosname=" + infor.getCOSName() + "," + "status=" + infor.getCurrentState() + "," + "active_date="
+				+ df.format(infor.getDateEnterActive().getTime()) + "," + balance;
 
 		return log;
 	}
-	
+
 	// 2012-09-25 MinhDT ADD_END: add for product VB600 & VB220
-	public VNMMessage checkOverdueIDDBuffet(CommandInstance instance,
-			ProvisioningCommand provisioningCommand, CommandMessage request)
+	public VNMMessage checkOverdueIDDBuffet(CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request)
 			throws Exception
 	{
 		VNMMessage vnmMessage = CommandUtil.createVNMMessage(request);
 
-		ProductEntry product = ProductFactory.getCache().getProduct(
-				vnmMessage.getProductId());
+		ProductEntry product = ProductFactory.getCache().getProduct(vnmMessage.getProductId());
 
-		SubscriberProduct subProduct = SubscriberProductImpl.getActive(
-				vnmMessage.getIsdn(), vnmMessage.getProductId());
+		SubscriberProduct subProduct = SubscriberProductImpl.getActive(vnmMessage.getIsdn(), vnmMessage.getProductId());
 
 		CCWSConnection connection = null;
 
@@ -3559,8 +3463,7 @@ public class CCWSCommandImpl extends CommandImpl
 			{
 				Date registerDate = subProduct.getRegisterDate();
 				Date currentDate = new Date();
-				double dayBetween = (double) ((currentDate.getTime() - registerDate
-						.getTime()) / (1000 * 60 * 60 * 24));
+				double dayBetween = (double) ((currentDate.getTime() - registerDate.getTime()) / (1000 * 60 * 60 * 24));
 
 				connection = (CCWSConnection) instance.getProvisioningConnection();
 
@@ -3572,31 +3475,31 @@ public class CCWSCommandImpl extends CommandImpl
 				catch (Exception e)
 				{
 				}
-				String strRequest = (new CCWSCommandImpl())
-						.getLogRequest("com.comverse_in.prepaid.ccws.ServiceSoapStub.retrieveSubscriberWithIdentityNoHistory", vnmMessage.getIsdn());
+				String strRequest = (new CCWSCommandImpl()).getLogRequest(
+						"com.comverse_in.prepaid.ccws.ServiceSoapStub.retrieveSubscriberWithIdentityNoHistory", vnmMessage.getIsdn());
 				instance.logMonitor("SEND: " + strRequest + ". ID=" + sessionId);
 				vnmMessage.setRequest("SEND: " + strRequest + ". ID=" + sessionId);
-				
+
 				Date startTime = new Date();
 				vnmMessage.setRequestTime(new Date());
-				
+
 				SubscriberRetrieve subscriberRetrieve = connection.getSubscriber(vnmMessage.getIsdn(), 1);
 				Date endTime = new Date();
-				
+
 				SubscriberEntity subEntity = null;
 				long costTime = CommandUtil.calculateCostTime(startTime, endTime);
 				if (subscriberRetrieve != null)
 				{
 					subEntity = subscriberRetrieve.getSubscriberData();
 					String strResponse = (new CCWSCommandImpl()).getLogResponse(subEntity, vnmMessage.getIsdn());
-					
+
 					vnmMessage.setSubscriberType(Constants.PREPAID_SUB_TYPE);
-					
+
 					vnmMessage.setResponseTime(new Date());
 					instance.logMonitor("RECEIVE:" + strResponse + ". ID=" + sessionId + ". costTime=" + costTime);
 					vnmMessage.setResponse("RECEIVE:" + strResponse + ". ID=" + sessionId + ". costTime=" + costTime);
 				}
-				
+
 				long balance = (long) CCWSConnection.getBalance(subEntity, "VB600_M").getAvailableBalance();
 
 				long minBalance = Long.parseLong(product.getParameter("MinBalance", "1000"));
@@ -3607,26 +3510,21 @@ public class CCWSCommandImpl extends CommandImpl
 					notEnough = true;
 				}
 
-//				double maxExpired = Double.parseDouble(product.getParameter(
-//						"MaxExpired", "30"));
-				double maxTopUp = Double.parseDouble(product.getParameter(
-						"MaxTopUp", "3"));
+				// double maxExpired = Double.parseDouble(product.getParameter(
+				// "MaxExpired", "30"));
+				double maxTopUp = Double.parseDouble(product.getParameter("MaxTopUp", "3"));
 
-				int sendNotify = IDDServiceImpl.checkSendNotify(
-						vnmMessage.getIsdn(), dayBetween,
-						vnmMessage.getProductId(), notEnough, maxTopUp);
+				int sendNotify = IDDServiceImpl.checkSendNotify(vnmMessage.getIsdn(), dayBetween, vnmMessage.getProductId(), notEnough, maxTopUp);
 
 				if (sendNotify == 0)
 				{
 					responseCode = "";
-					int dayNotify = Integer.parseInt(product.getParameter(
-							"DayNotify", "25"));
+					int dayNotify = Integer.parseInt(product.getParameter("DayNotify", "25"));
 					if (dayBetween < dayNotify)
 					{
 						if (notEnough && request.getStatus() == 1)
 						{
-							IDDServiceImpl.notifyOverdue(vnmMessage.getIsdn(),
-									-1, 0, vnmMessage.getProductId());
+							IDDServiceImpl.notifyOverdue(vnmMessage.getIsdn(), -1, 0, vnmMessage.getProductId());
 
 							responseCode = Constants.ERROR_NOTIFY_OVER_BALANCE;
 							vnmMessage.setCause(responseCode);
@@ -3635,8 +3533,7 @@ public class CCWSCommandImpl extends CommandImpl
 					}
 					else
 					{
-						IDDServiceImpl.notifyOverdue(vnmMessage.getIsdn(), 0,
-								0, request.getProductId());
+						IDDServiceImpl.notifyOverdue(vnmMessage.getIsdn(), 0, 0, request.getProductId());
 
 						responseCode = Constants.ERROR_NOTIFY_OVER_EXPIRED;
 						vnmMessage.setCause(responseCode);
@@ -3647,21 +3544,19 @@ public class CCWSCommandImpl extends CommandImpl
 				{
 					vnmMessage.setCause(Constants.ACTION_UNREGISTER);
 				}
-				else if ((sendNotify == 1 && dayBetween == product
-						.getSubscriptionPeriod())
-						|| (sendNotify == 1 && notEnough))
+				else if ((sendNotify == 1 && dayBetween == product.getSubscriptionPeriod()) || (sendNotify == 1 && notEnough))
 				{
 					ProductRoute orderRoute = ProductFactory.getCache().getProductRoute(vnmMessage.getRouteId());
-					
+
 					boolean isNotEnoughMoney = false;
-					
+
 					try
 					{
 						validateBalance(instance, orderRoute, product, vnmMessage);
 					}
-					catch (AppException e) {
-						if (e.getMessage().equals(
-								Constants.ERROR_NOT_ENOUGH_MONEY))
+					catch (AppException e)
+					{
+						if (e.getMessage().equals(Constants.ERROR_NOT_ENOUGH_MONEY))
 						{
 							isNotEnoughMoney = true;
 						}
@@ -3670,23 +3565,21 @@ public class CCWSCommandImpl extends CommandImpl
 							throw e;
 						}
 					}
-					
+
 					if (isNotEnoughMoney)
 					{
-						if (!IDDServiceImpl.checkNotifyNotEnough(request
-								.getIsdn()))
+						if (!IDDServiceImpl.checkNotifyNotEnough(request.getIsdn()))
 						{
-//								IDDServiceImpl.updateMessageNotify(
-//										request.getIsdn(), 4,
-//										request.getProductId(), 1);
-	
+							// IDDServiceImpl.updateMessageNotify(
+							// request.getIsdn(), 4,
+							// request.getProductId(), 1);
+
 							vnmMessage.setCause(Constants.ERROR_NOT_ENOUGH_MONEY);
 							vnmMessage.setStatus(Constants.ORDER_STATUS_DENIED);
 						}
 						else
 						{
-							vnmMessage.setCause(Constants.ACTION_SUPPLIER_REACTIVE
-											+ "." + Constants.ERROR_NOT_ENOUGH_MONEY);
+							vnmMessage.setCause(Constants.ACTION_SUPPLIER_REACTIVE + "." + Constants.ERROR_NOT_ENOUGH_MONEY);
 							vnmMessage.setStatus(Constants.ORDER_STATUS_DENIED);
 						}
 					}
@@ -3705,9 +3598,7 @@ public class CCWSCommandImpl extends CommandImpl
 		return vnmMessage;
 	}
 
-	public VNMMessage checkBalanceVB(CommandInstance instance,
-			ProvisioningCommand provisioningCommand, CommandMessage request)
-			throws Exception
+	public VNMMessage checkBalanceVB(CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request) throws Exception
 	{
 		VNMMessage vnmMessage = CommandUtil.createVNMMessage(request);
 
@@ -3723,11 +3614,9 @@ public class CCWSCommandImpl extends CommandImpl
 			{
 				long productId = vnmMessage.getProductId();
 
-				ProductEntry product = ProductFactory.getCache().getProduct(
-						productId);
+				ProductEntry product = ProductFactory.getCache().getProduct(productId);
 
-				ProductRoute orderRoute = ProductFactory.getCache()
-						.getProductRoute(vnmMessage.getRouteId());
+				ProductRoute orderRoute = ProductFactory.getCache().getProductRoute(vnmMessage.getRouteId());
 
 				subscriber = getSubscriber(instance, vnmMessage);
 
@@ -3741,13 +3630,11 @@ public class CCWSCommandImpl extends CommandImpl
 
 						validateCOS(instance, vnmMessage, subscriber);
 
-						validateBalance(instance, orderRoute, product,
-								vnmMessage);
+						validateBalance(instance, orderRoute, product, vnmMessage);
 					}
 					catch (AppException e)
 					{
-						if (e.getMessage().equals(
-								Constants.ERROR_NOT_ENOUGH_MONEY))
+						if (e.getMessage().equals(Constants.ERROR_NOT_ENOUGH_MONEY))
 						{
 							isNotEnoughMoney = true;
 						}
@@ -3769,33 +3656,26 @@ public class CCWSCommandImpl extends CommandImpl
 
 					vnmMessage.setActionType(actionType);
 
-					if (request.getActionType().toLowerCase()
-							.equals(Constants.ACTION_SUPPLIER_REACTIVE))
+					if (request.getActionType().toLowerCase().equals(Constants.ACTION_SUPPLIER_REACTIVE))
 					{
-						if (!IDDServiceImpl.checkNotifyNotEnough(request
-								.getIsdn()))
+						if (!IDDServiceImpl.checkNotifyNotEnough(request.getIsdn()))
 						{
-//								IDDServiceImpl.updateMessageNotify(
-//										request.getIsdn(), 4,
-//										request.getProductId(), 1);
+							// IDDServiceImpl.updateMessageNotify(
+							// request.getIsdn(), 4,
+							// request.getProductId(), 1);
 
 							vnmMessage.setCause(cause);
 						}
 						else
 						{
-							vnmMessage
-									.setCause(Constants.ACTION_SUPPLIER_REACTIVE
-											+ "."
-											+ Constants.ERROR_NOT_ENOUGH_MONEY);
+							vnmMessage.setCause(Constants.ACTION_SUPPLIER_REACTIVE + "." + Constants.ERROR_NOT_ENOUGH_MONEY);
 
 							// clone one object for sending sms.
 							CommandMessage object = vnmMessage.clone();
-							object.setCause(Constants.ACTION_SUPPLIER_REACTIVE
-									+ "." + Constants.ERROR_NOT_ENOUGH_MONEY);
+							object.setCause(Constants.ACTION_SUPPLIER_REACTIVE + "." + Constants.ERROR_NOT_ENOUGH_MONEY);
 							object.setChannel(Constants.CHANNEL_SMS);
 
-							ResponseUtil.notifyOwner(instance, orderRoute,
-									object);
+							ResponseUtil.notifyOwner(instance, orderRoute, object);
 						}
 					}
 					else

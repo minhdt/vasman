@@ -36,6 +36,8 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 	{
 		Date now = new Date();
 
+		order.setRequestValue("first-action-type", order.getActionType());
+		
 		try
 		{
 			if (subscriberProduct != null)
@@ -62,15 +64,45 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 
 			String actionType = order.getActionType();
 
-			if (actionType.equals(Constants.ACTION_REGISTER) && (subscriberProduct != null))
+//			if (actionType.equals(Constants.ACTION_REGISTER) && (subscriberProduct != null))
+//			{
+//				if (orderRoute.isTopupEnable())
+//				{
+//					actionType = Constants.ACTION_TOPUP;
+//				}
+//				else
+//				{
+//					actionType = Constants.ACTION_REGISTER;
+//				}
+//			}
+			
+			if (actionType.equals(Constants.ACTION_REGISTER)
+					&& (subscriberProduct != null))
 			{
-				if (orderRoute.isTopupEnable())
+				if (subscriberProduct.getStatus() == Constants.SUBSCRIBER_SUBSCRIPTION_STATUS
+						|| subscriberProduct.getStatus() == Constants.SUBSCRIBER_TERMINATE_FREE_STATUS)
 				{
-					actionType = Constants.ACTION_TOPUP;
+					throw new AppException(Constants.ERROR_PENDING_COMMANDREQUEST);
 				}
 				else
 				{
-					actionType = Constants.ACTION_REGISTER;
+					/**
+					 * Check if isTopupEnable() and (subscriberproduct.isBarring or
+					 * subscriberProduct.expirationDate < sysDate)
+					 */
+					if (orderRoute.isTopupEnable() &&
+							(subscriberProduct.isBarring() || 
+									(subscriberProduct.isPrepaid() && subscriberProduct.getExpirationDate().before(new Date()))))
+					{
+						actionType = Constants.ACTION_TOPUP;
+					}
+					else
+					{
+						if (subscriberProduct.isBarring() || subscriberProduct.isActive())
+						{
+							throw new AppException(Constants.ERROR_REGISTERED);
+						}
+					}
 				}
 			}
 
@@ -105,7 +137,8 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 				}
 				else if (subscriberProduct != null)
 				{
-					if (orderRoute.isTopupEnable())
+					if (orderRoute.isTopupEnable()
+							&& subscriberProduct.isBarring())
 					{
 						actionType = Constants.ACTION_TOPUP;
 					}
@@ -206,9 +239,32 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 
 			// check action type
 			checkActionType(instance, orderRoute, product, order, subscriberProduct);
-
+			
+			if (order.getActionType().equals(Constants.ACTION_TOPUP))
+			{
+				order.setCampaignId(Constants.DEFAULT_ID);
+				
+				if (order.getRequestValue("first-action-type", "").equals(Constants.ACTION_SUBSCRIPTION))
+				{
+					Date currentDate = new Date();
+					
+					if (subscriberProduct.getGraceDate() != null
+									&& subscriberProduct.getGraceDate().before(currentDate)
+									&& subscriberProduct.isBarring())
+					{
+						order.setActionType(Constants.ACTION_CANCEL);
+					}
+//					else
+//					{
+//						order.setActionType(Constants.ACTION_SUBSCRIPTION);
+//					}
+				}
+			}
+			
 			// validate
-			if (orderRoute.isCheckBalance())
+			if (orderRoute.isCheckBalance() 
+					&& !order.getActionType().equals(Constants.ACTION_UNREGISTER)
+					&& !order.getActionType().equals(Constants.ACTION_CANCEL))
 			{
 				order = checkBalance(instance, orderRoute, order);
 				order.getParameters().setProperty("IsQueryRTBS", "true");
@@ -223,6 +279,8 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 				order.setAmount(order.getQuantity() * order.getPrice());
 			}
 
+			Date currentDate = new Date();
+			
 			if ((order.getStatus() == Constants.ORDER_STATUS_DENIED) && order.getCause().equals(Constants.ERROR_NOT_ENOUGH_MONEY))
 			{
 				if (order.getActionType().equals(Constants.ACTION_SUBSCRIPTION))
@@ -246,7 +304,15 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 						SubscriberProductImpl.insertSendSMS(product.getParameter("ProductShotCode", ""), order.getIsdn(), content);
 					}
 
-					order.setActionType(Constants.ACTION_UNREGISTER);
+					boolean unregister = order.getParameters().getBoolean("UnregisterWhenNotMoney", false);
+					if (unregister)
+					{
+						order.setActionType(Constants.ACTION_UNREGISTER);
+					}
+					else
+					{
+						order.setActionType(Constants.ACTION_SUPPLIER_DEACTIVE);
+					}
 
 					order.setCause("");
 
@@ -270,6 +336,38 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 			else
 			{
 				checkSubscriberType(instance, product, order);
+			}
+			
+			if (order.getActionType().equals(Constants.ACTION_SUBSCRIPTION)
+					|| order.getActionType().equals(Constants.ACTION_SUPPLIER_DEACTIVE)
+					|| order.getActionType().equals(Constants.ACTION_UNREGISTER)
+					|| (order.getActionType().equals(Constants.ACTION_TOPUP)
+							&& order.getChannel().equals(Constants.CHANNEL_CORE)))
+			{
+				if (subscriberProduct == null)
+					throw new AppException(Constants.ERROR_SUBSCRIPTION_NOT_FOUND);
+				if ((subscriberProduct.getGraceDate() == null
+						&& order.getActionType().equals(Constants.ACTION_SUPPLIER_DEACTIVE))
+						|| (subscriberProduct.getGraceDate() != null
+								&& subscriberProduct.getGraceDate().before(currentDate)
+								&& (order.getActionType().equals(Constants.ACTION_SUPPLIER_DEACTIVE)
+										|| subscriberProduct.isBarring())
+										))
+				{
+					order.setActionType(Constants.ACTION_CANCEL);
+
+					order.setCause("");
+
+					order.setStatus(Constants.ORDER_STATUS_PENDING);
+				}
+				else if (subscriberProduct.isBarring() && !orderRoute.isTopupEnable()
+						&& (order.getActionType().equals(Constants.ACTION_SUBSCRIPTION)
+								|| order.getActionType().equals(Constants.ACTION_TOPUP)))
+				{
+					order.setCause(Constants.ERROR_REGISTERED);
+
+					order.setStatus(Constants.ORDER_STATUS_DENIED);
+				}
 			}
 
 			if (order.getStatus() != Constants.ORDER_STATUS_DENIED)
@@ -471,13 +569,40 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 
 		if (vnmMessage.getStatus() != Constants.ORDER_STATUS_DENIED)
 		{
+			ProductEntry product = ProductFactory.getCache().getProduct(vnmMessage.getProductId());
+
+			if (vnmMessage.getChannel().equals(Constants.CHANNEL_SMS))
+			{
+				boolean isRequest = DataPackageImpl.isConfirm(vnmMessage.getIsdn(), vnmMessage.getProductId(), Constants.ACTION_CONFIRM_UNREGISTER,
+						Constants.ACTION_CLEAR_DATA, product.getParameters().getInteger("ConfirmTime", 600));
+				if (isRequest)
+				{
+					if (vnmMessage.getActionType().equals(Constants.ACTION_CONFIRM_UNREGISTER))
+					{
+						vnmMessage.setCause(Constants.ERROR_INVALID_REQUEST);
+						vnmMessage.setStatus(Constants.ORDER_STATUS_DENIED);
+
+						return vnmMessage;
+					}
+				}
+				else
+				{
+					if (!vnmMessage.getActionType().equals(Constants.ACTION_CONFIRM_UNREGISTER))
+					{
+						vnmMessage.setCause(Constants.ERROR_INVALID_REQUEST);
+						vnmMessage.setStatus(Constants.ORDER_STATUS_DENIED);
+
+						return vnmMessage;
+					}
+				}
+			}
+
 			CCWSConnection connection = null;
 
 			SubscriberRetrieve subscriberRetrieve = null;
 
 			SubscriberEntity subscriberEntity = null;
 
-			ProductEntry product = ProductFactory.getCache().getProduct(vnmMessage.getProductId());
 			try
 			{
 				connection = (CCWSConnection) instance.getProvisioningConnection();
@@ -513,6 +638,8 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 						vnmMessage.setResponseTime(new Date());
 						instance.logMonitor("RECEIVE:" + strResponse + ". ID=" + sessionId + ". costTime=" + costTime);
 						vnmMessage.setResponse("RECEIVE:" + strResponse + ". ID=" + sessionId + ". costTime=" + costTime);
+
+						vnmMessage.getParameters().setProperty("IsQueryRTBS", "true");
 					}
 				}
 				catch (Exception e)
@@ -536,7 +663,7 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 					vnmMessage.setSubscriberRetrieve(subscriberRetrieve);
 					vnmMessage.setSubscriberType(Constants.PREPAID_SUB_TYPE);
 
-//					validateState(instance, orderRoute, product, vnmMessage);
+					// validateState(instance, orderRoute, product, vnmMessage);
 				}
 
 				BalanceEntity balance = CCWSConnection.getBalance(subscriberEntity, "GPRS");
@@ -557,28 +684,6 @@ public class DataOrderRoutingImpl extends VNMOrderRoutingImpl
 			finally
 			{
 				instance.closeProvisioningConnection(connection);
-			}
-
-			if (vnmMessage.getChannel().equals(Constants.CHANNEL_SMS))
-			{
-				boolean isRequest = DataPackageImpl.isConfirm(vnmMessage.getIsdn(), vnmMessage.getProductId(), Constants.ACTION_CONFIRM_UNREGISTER,
-						Constants.ACTION_CLEAR_DATA, product.getParameters().getInteger("ConfirmTime", 600));
-				if (isRequest)
-				{
-					if (vnmMessage.getActionType().equals(Constants.ACTION_CONFIRM_UNREGISTER))
-					{
-						vnmMessage.setCause(Constants.ERROR_INVALID_REQUEST);
-						vnmMessage.setStatus(Constants.ORDER_STATUS_DENIED);
-					}
-				}
-				else
-				{
-					if (!vnmMessage.getActionType().equals(Constants.ACTION_CONFIRM_UNREGISTER))
-					{
-						vnmMessage.setCause(Constants.ERROR_INVALID_REQUEST);
-						vnmMessage.setStatus(Constants.ORDER_STATUS_DENIED);
-					}
-				}
 			}
 		}
 

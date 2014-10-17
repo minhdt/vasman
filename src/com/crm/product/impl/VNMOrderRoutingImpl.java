@@ -15,6 +15,8 @@ import com.crm.product.cache.ProductFactory;
 import com.crm.product.cache.ProductPrice;
 import com.crm.product.cache.ProductRoute;
 import com.crm.kernel.message.Constants;
+import com.crm.marketing.cache.CampaignEntry;
+import com.crm.marketing.cache.CampaignFactory;
 import com.crm.util.GeneratorSeq;
 import com.crm.util.StringUtil;
 import com.crm.provisioning.impl.ccws.CCWSCommandImpl;
@@ -137,8 +139,12 @@ public class VNMOrderRoutingImpl extends OrderRoutingImpl
 				if (vnmMessage.getCampaignId() != Constants.DEFAULT_ID
 						&& vnmMessage.getActionType().equals(Constants.ACTION_REGISTER))
 				{
-					fullOfCharge = 0;
-					baseOfCharge = 0;
+					CampaignEntry campaign = CampaignFactory.getCache().getCampaign(vnmMessage.getCampaignId());
+					if (campaign != null && !campaign.isCampaignGift())
+					{
+						fullOfCharge = 0;
+						baseOfCharge = 0;
+					}
 				}
 				else
 				{

@@ -10,12 +10,14 @@ import org.apache.ws.security.WSConstants;
 import org.apache.ws.security.handler.WSHandlerConstants;
 
 import com.comverse_in.prepaid.ccws.AccumulatorEntity;
+import com.comverse_in.prepaid.ccws.ArrayOfBalanceCreditAccount;
 import com.comverse_in.prepaid.ccws.ArrayOfBalanceEntityBase;
 import com.comverse_in.prepaid.ccws.ArrayOfCircleMemberOperation;
 import com.comverse_in.prepaid.ccws.ArrayOfCircleMembership;
 import com.comverse_in.prepaid.ccws.ArrayOfCircleOperationResponse;
 import com.comverse_in.prepaid.ccws.ArrayOfDeltaBalance;
 import com.comverse_in.prepaid.ccws.ArrayOfOSAHistory;
+import com.comverse_in.prepaid.ccws.BalanceCreditAccount;
 import com.comverse_in.prepaid.ccws.BalanceEntity;
 import com.comverse_in.prepaid.ccws.BalanceEntityBase;
 import com.comverse_in.prepaid.ccws.CallingCircle;
@@ -51,15 +53,12 @@ import com.fss.util.AppException;
  * <p>
  * Title:
  * </p>
- * 
  * <p>
  * Description:
  * </p>
- * 
  * <p>
  * Copyright: Copyright (c) 2009
  * </p>
- * 
  * <p>
  * Company:
  * </p>
@@ -146,8 +145,9 @@ public class CCWSConnection extends ProvisioningConnection
 
 	public SubscriberRetrieve getSubscriber(String isdn, int queryLevel) throws Exception
 	{
-		return CCWSHttpQuery.getSubscriber(isdn, getHost(), getUserName(), getPassword(), (int)getTimeout(), queryLevel, getDispatcher());
-		//return binding.retrieveSubscriberWithIdentityNoHistory(isdn, null, queryLevel);
+		return CCWSHttpQuery.getSubscriber(isdn, getHost(), getUserName(), getPassword(), (int) getTimeout(), queryLevel, getDispatcher());
+		// return binding.retrieveSubscriberWithIdentityNoHistory(isdn, null,
+		// queryLevel);
 	}
 
 	public SubscriberEntity getSubscriberInfor(String isdn, int queryLevel) throws Exception
@@ -160,8 +160,7 @@ public class CCWSConnection extends ProvisioningConnection
 		return getSubscriberInfor(isdn, 1);
 	}
 
-	public ArrayOfDeltaBalance rechargeAccountBySubscriber(String strIsdn, String secretCode, String rechargeComment)
-			throws Exception
+	public ArrayOfDeltaBalance rechargeAccountBySubscriber(String strIsdn, String secretCode, String rechargeComment) throws Exception
 	{
 		ArrayOfDeltaBalance LBalance = binding.rechargeAccountBySubscriber(strIsdn, null, secretCode, rechargeComment);
 
@@ -191,7 +190,7 @@ public class CCWSConnection extends ProvisioningConnection
 				PasswordCallback pwCallback = new PasswordCallback(getUserName(), getPassword());
 
 				binding._setProperty(WSHandlerConstants.PW_CALLBACK_REF, pwCallback);
-				binding.setTimeout((int)timeout);
+				binding.setTimeout((int) timeout);
 			}
 			catch (javax.xml.rpc.ServiceException jre)
 			{
@@ -265,6 +264,21 @@ public class CCWSConnection extends ProvisioningConnection
 		}
 	}
 
+	public void creditAccount(String isdn, BalanceCreditAccount[] balances, String comment) throws RemoteException
+	{
+		try
+		{
+			ArrayOfBalanceCreditAccount balanceEntities = new ArrayOfBalanceCreditAccount();
+			balanceEntities.setBalanceCreditAccount(balances);
+			
+			binding.creditAccount(isdn, null, balanceEntities, null, comment);
+		}
+		catch (RemoteException e)
+		{
+			throw e;
+		}
+	}
+
 	/**
 	 * Purpose: set value into IDD buffet account.
 	 * 
@@ -283,8 +297,7 @@ public class CCWSConnection extends ProvisioningConnection
 	 * @date 25/05/2011
 	 * @author DuyMB
 	 */
-	public boolean setIDDBuffetAccount(
-			String strIsdn, double dBalance, String strBalanceName, Calendar expiredDate, String strNMSComment)
+	public boolean setIDDBuffetAccount(String strIsdn, double dBalance, String strBalanceName, Calendar expiredDate, String strNMSComment)
 			throws RemoteException
 	{
 		boolean success = true;
@@ -383,8 +396,7 @@ public class CCWSConnection extends ProvisioningConnection
 
 		try
 		{
-			SubscriberRetrieve objSubRetri =
-					binding.retrieveSubscriberWithIdentityNoHistory(strIsdn, null, informationToRetrieve);
+			SubscriberRetrieve objSubRetri = binding.retrieveSubscriberWithIdentityNoHistory(strIsdn, null, informationToRetrieve);
 
 			result = objSubRetri.getSubscriberData().getDateEnterActive();
 		}
@@ -402,21 +414,14 @@ public class CCWSConnection extends ProvisioningConnection
 
 		try
 		{
-			SubscriberRetrieve objSubRetrieve =
-					binding.retrieveSubscriberWithIdentityNoHistory(strMasterIsdn, null, 8);
+			SubscriberRetrieve objSubRetrieve = binding.retrieveSubscriberWithIdentityNoHistory(strMasterIsdn, null, 8);
 
 			SubscriberPB subscriberPB = objSubRetrieve.getSubscriberPhoneBook();
 
-			result = subscriberPB.getDestNumber1() + "," +
-					subscriberPB.getDestNumber2() + "," +
-					subscriberPB.getDestNumber3() + "," +
-					subscriberPB.getDestNumber4() + "," +
-					subscriberPB.getDestNumber5() + "," +
-					subscriberPB.getDestNumber6() + "," +
-					subscriberPB.getDestNumber7() + "," +
-					subscriberPB.getDestNumber8() + "," +
-					subscriberPB.getDestNumber9() + "," +
-					subscriberPB.getDestNumber10();
+			result = subscriberPB.getDestNumber1() + "," + subscriberPB.getDestNumber2() + "," + subscriberPB.getDestNumber3() + ","
+					+ subscriberPB.getDestNumber4() + "," + subscriberPB.getDestNumber5() + "," + subscriberPB.getDestNumber6() + ","
+					+ subscriberPB.getDestNumber7() + "," + subscriberPB.getDestNumber8() + "," + subscriberPB.getDestNumber9() + ","
+					+ subscriberPB.getDestNumber10();
 		}
 		catch (Exception ex)
 		{
@@ -440,8 +445,7 @@ public class CCWSConnection extends ProvisioningConnection
 
 		try
 		{
-			SubscriberRetrieve objSubRetrieve =
-					binding.retrieveSubscriberWithIdentityNoHistory(isdn, null, 8192);
+			SubscriberRetrieve objSubRetrieve = binding.retrieveSubscriberWithIdentityNoHistory(isdn, null, 8192);
 
 			ArrayOfCircleMembership arrCircleMembership = objSubRetrieve.getCircles();
 
@@ -493,7 +497,6 @@ public class CCWSConnection extends ProvisioningConnection
 	}
 
 	/**
-	 * 
 	 * @return
 	 */
 	public String getStudentGroupMember(String circle, String isdn) throws Exception
@@ -698,8 +701,7 @@ public class CCWSConnection extends ProvisioningConnection
 	 * @return true: success fail: Failure.
 	 * @author hoang duc cuong - 15/07/2011 MGM project.
 	 */
-	public boolean createCallingCircle(String circleName, String circleGroup, String serviceProvider, int maxMember)
-			throws Exception
+	public boolean createCallingCircle(String circleName, String circleGroup, String serviceProvider, int maxMember) throws Exception
 	{
 		boolean success = false;
 
@@ -707,8 +709,7 @@ public class CCWSConnection extends ProvisioningConnection
 
 		try
 		{
-			CallingCircle callingCircle =
-					new CallingCircle(circleName, circleGroup, serviceProvider, String.valueOf(maxMember), "", "");
+			CallingCircle callingCircle = new CallingCircle(circleName, circleGroup, serviceProvider, String.valueOf(maxMember), "", "");
 
 			CallingCircleOperation callingCircleOperation = CallingCircleOperation.CREATE;
 
@@ -760,8 +761,7 @@ public class CCWSConnection extends ProvisioningConnection
 				CircleOperationResponse obj = response.getCircleOperationResponse(i);
 				if (obj != null)
 				{
-					success = obj.getCircleName().equals(circleName) &&
-							obj.getSubscriber().getSubscriberID().equals(arrayOfMem[i]);
+					success = obj.getCircleName().equals(circleName) && obj.getSubscriber().getSubscriberID().equals(arrayOfMem[i]);
 				}
 			}
 		}
@@ -777,8 +777,7 @@ public class CCWSConnection extends ProvisioningConnection
 		String result = "";
 		try
 		{
-			SubscriberRetrieve objSubRetrieve =
-					binding.retrieveSubscriberWithIdentityNoHistory(isdn, null, 8192);
+			SubscriberRetrieve objSubRetrieve = binding.retrieveSubscriberWithIdentityNoHistory(isdn, null, 8192);
 
 			ArrayOfCircleMembership arrCircleMembership = objSubRetrieve.getCircles();
 
@@ -789,8 +788,7 @@ public class CCWSConnection extends ProvisioningConnection
 			}
 			for (int i = 0; i < arrayOfMS.length; i++)
 			{
-				result = result + "Circle name: " + arrayOfMS[i].getCircleName() + " Position:" + arrayOfMS[i].getPosition()
-						+ "\n";
+				result = result + "Circle name: " + arrayOfMS[i].getCircleName() + " Position:" + arrayOfMS[i].getPosition() + "\n";
 				// arrayOfMS[i].getCircleName() +" Position:" +
 				// arrayOfMS[i].getPosition());
 			}
@@ -849,10 +847,8 @@ public class CCWSConnection extends ProvisioningConnection
 					// arrayOfAcc[i].getAmount() + " giay, con lai " + (1200 -
 					// Integer.valueOf(arrayOfAcc[i].getAmount())) + " giay.";
 					// j++;
-					result = result + "Thue bao " + isdn + " gioi thieu <referral>: " + arrayOfAcc[i].getAccumulatorName()
-							+ " da goi " +
-							arrayOfAcc[i].getAmount() + " giay, con lai " + (1200 - Integer.valueOf(arrayOfAcc[i].getAmount()))
-							+ " giay." + "\n";
+					result = result + "Thue bao " + isdn + " gioi thieu <referral>: " + arrayOfAcc[i].getAccumulatorName() + " da goi "
+							+ arrayOfAcc[i].getAmount() + " giay, con lai " + (1200 - Integer.valueOf(arrayOfAcc[i].getAmount())) + " giay." + "\n";
 				}
 			}
 		}
@@ -862,7 +858,7 @@ public class CCWSConnection extends ProvisioningConnection
 		}
 		return result;
 	}
-	
+
 	public void setSubscriberState(String isdn, String state) throws Exception
 	{
 		try
@@ -872,12 +868,12 @@ public class CCWSConnection extends ProvisioningConnection
 			objSubModify.setSubscriberID(isdn);
 
 			SubscriberPPS subscriber = new SubscriberPPS();
-			subscriber.setCurrentState(state);		
-			
+			subscriber.setCurrentState(state);
+
 			Calendar activeDate = Calendar.getInstance();
 			activeDate.setTime(new Date());
 			subscriber.setSubscriberDateEnterActive(activeDate);
-			
+
 			objSubModify.setSubscriber(subscriber);
 
 			binding.modifySubscriber(objSubModify);
@@ -894,9 +890,8 @@ public class CCWSConnection extends ProvisioningConnection
 
 		try
 		{
-			SubscriberRetrieve subRetrieve =
-					binding.retrieveSubscriberWithIdentityWithHistoryForMultipleIdentities(isdn, null, InformationToRetrieve,
-							startDate, endDate, true);
+			SubscriberRetrieve subRetrieve = binding.retrieveSubscriberWithIdentityWithHistoryForMultipleIdentities(isdn, null,
+					InformationToRetrieve, startDate, endDate, true);
 
 			arrayOfOSAHistory = subRetrieve.getOSAHistories();
 		}
@@ -910,12 +905,12 @@ public class CCWSConnection extends ProvisioningConnection
 
 	public static void main(String[] arr)
 	{
-//		String strUrl, strUser, strPassword, isdn;
-//		isdn = "84922000512";
-//		strUser = "NMS";
-//		strUrl = "http:///ccws/ccws.asmx";
-//		// strPassword="Abcd1234%";
-//		strPassword = "nms!23";
-//		// Test
+		// String strUrl, strUser, strPassword, isdn;
+		// isdn = "84922000512";
+		// strUser = "NMS";
+		// strUrl = "http:///ccws/ccws.asmx";
+		// // strPassword="Abcd1234%";
+		// strPassword = "nms!23";
+		// // Test
 	}
 }

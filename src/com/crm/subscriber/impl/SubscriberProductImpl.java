@@ -22,37 +22,30 @@ import com.crm.util.DateUtil;
 import com.fss.util.AppException;
 
 /**
- * 
  * @author ?? <br>
  *         Modified by NamTA Modified Date: 07/06/2012
- * 
  */
 public class SubscriberProductImpl
 {
-	public final static String CONDITION_ACTIVE = " (supplierStatus = "
-			+ Constants.SUPPLIER_ACTIVE_STATUS + ") ";
+	public final static String	CONDITION_ACTIVE		= " (supplierStatus = " + Constants.SUPPLIER_ACTIVE_STATUS + ") ";
 
-	public final static String CONDITION_BARRING = " (supplierStatus = "
-			+ Constants.SUPPLIER_BARRING_STATUS + ") ";
+	public final static String	CONDITION_BARRING		= " (supplierStatus = " + Constants.SUPPLIER_BARRING_STATUS + ") ";
 
-	public final static String CONDITION_TERMINATED = " (supplierStatus = "
-			+ Constants.SUPPLIER_CANCEL_STATUS + ") ";
+	public final static String	CONDITION_TERMINATED	= " (supplierStatus = " + Constants.SUPPLIER_CANCEL_STATUS + ") ";
 
-	public final static String CONDITION_UNTERMINATED = " (supplierStatus in ("
-			+ Constants.SUPPLIER_ACTIVE_STATUS + "," + Constants.SUPPLIER_BARRING_STATUS + ")) ";
+	public final static String	CONDITION_UNTERMINATED	= " (supplierStatus in (" + Constants.SUPPLIER_ACTIVE_STATUS + ","
+																+ Constants.SUPPLIER_BARRING_STATUS + ")) ";
 
-	private static long DEFAULT_ID = 0;
-	private static String ERROR_REGISTER_FLEXI = "error-register-flexi";
-	private static String ERROR_UPDATE_FLEXI = "error-update-flexi";
+	private static long			DEFAULT_ID				= 0;
+	private static String		ERROR_REGISTER_FLEXI	= "error-register-flexi";
+	private static String		ERROR_UPDATE_FLEXI		= "error-update-flexi";
 
 	/**
 	 * TODO: Performance test
 	 */
 	// private static long sleepTime = 1000L;
 
-	public static Date calculateExpirationDate(Date startDate,
-			String subscriptionType, int period, int quantity,
-			boolean truncExpire)
+	public static Date calculateExpirationDate(Date startDate, String subscriptionType, int period, int quantity, boolean truncExpire)
 	{
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(startDate);
@@ -61,18 +54,15 @@ public class SubscriberProductImpl
 			return null;
 		}
 
-		if (subscriptionType.equalsIgnoreCase("monthly")
-				|| subscriptionType.equalsIgnoreCase("month"))
+		if (subscriptionType.equalsIgnoreCase("monthly") || subscriptionType.equalsIgnoreCase("month"))
 		{
 			calendar.add(Calendar.DATE, 30 * period * quantity);
 		}
-		else if (subscriptionType.equalsIgnoreCase("weekly")
-				|| subscriptionType.equalsIgnoreCase("week"))
+		else if (subscriptionType.equalsIgnoreCase("weekly") || subscriptionType.equalsIgnoreCase("week"))
 		{
 			calendar.add(Calendar.DATE, 7 * period * quantity);
 		}
-		else if (subscriptionType.equalsIgnoreCase("daily")
-				|| subscriptionType.equalsIgnoreCase("day"))
+		else if (subscriptionType.equalsIgnoreCase("daily") || subscriptionType.equalsIgnoreCase("day"))
 		{
 			calendar.add(Calendar.DATE, 1 * period * quantity);
 		}
@@ -88,21 +78,18 @@ public class SubscriberProductImpl
 		return calendar.getTime();
 	}
 
-	public static Date calculateGraceDate(Date startDate, String graceDateUnit,
-			int graceDatePeriod) throws Exception
+	public static Date calculateGraceDate(Date startDate, String graceDateUnit, int graceDatePeriod) throws Exception
 	{
 		Date graceDate = null;
 		if (graceDatePeriod > 0)
 		{
-			graceDate = DateUtil.addDate(startDate, graceDateUnit,
-					graceDatePeriod);
+			graceDate = DateUtil.addDate(startDate, graceDateUnit, graceDatePeriod);
 		}
 
 		return graceDate;
 	}
 
-	public static SubscriberProduct getProduct(ResultSet rsProduct)
-			throws Exception
+	public static SubscriberProduct getProduct(ResultSet rsProduct) throws Exception
 	{
 		SubscriberProduct result = new SubscriberProduct();
 
@@ -147,8 +134,7 @@ public class SubscriberProductImpl
 	 * @return
 	 * @throws Exception
 	 */
-	public static SubscriberProduct getProduct(ResultSet rsProduct, long temp)
-			throws Exception
+	public static SubscriberProduct getProduct(ResultSet rsProduct, long temp) throws Exception
 	{
 		SubscriberProduct result = new SubscriberProduct();
 
@@ -175,8 +161,7 @@ public class SubscriberProductImpl
 		return result;
 	}
 
-	public static SubscriberProduct getProduct(Connection connection,
-			long subProductId) throws Exception
+	public static SubscriberProduct getProduct(Connection connection, long subProductId) throws Exception
 	{
 		PreparedStatement stmtProduct = null;
 		ResultSet rsProduct = null;
@@ -210,8 +195,7 @@ public class SubscriberProductImpl
 		return result;
 	}
 
-	public static SubscriberProduct getProduct(long subProductId)
-			throws Exception
+	public static SubscriberProduct getProduct(long subProductId) throws Exception
 	{
 		Connection connection = null;
 
@@ -236,8 +220,7 @@ public class SubscriberProductImpl
 	 * @return
 	 * @throws Exception
 	 */
-	public static SubscriberProduct getUnterminated(String isdn, long productId)
-			throws Exception
+	public static SubscriberProduct getUnterminated(String isdn, long productId) throws Exception
 	{
 		Connection connection = null;
 
@@ -270,8 +253,7 @@ public class SubscriberProductImpl
 	 * @return
 	 * @throws Exception
 	 */
-	public static SubscriberProduct getUnterminated(Connection connection,
-			String isdn, long productId) throws Exception
+	public static SubscriberProduct getUnterminated(Connection connection, String isdn, long productId) throws Exception
 	{
 		PreparedStatement stmtActive = null;
 		ResultSet rsActive = null;
@@ -280,9 +262,8 @@ public class SubscriberProductImpl
 
 		try
 		{
-			String SQL = "Select * " + "From SubscriberProduct "
-					+ "Where isdn = ? and productId = ? and "
-					+ CONDITION_UNTERMINATED + "Order by registerDate desc";
+			String SQL = "Select * " + "From SubscriberProduct " + "Where isdn = ? and productId = ? and " + CONDITION_UNTERMINATED
+					+ "Order by registerDate desc";
 
 			stmtActive = connection.prepareStatement(SQL);
 			stmtActive.setString(1, isdn);
@@ -318,8 +299,7 @@ public class SubscriberProductImpl
 	 * @return
 	 * @throws Exception
 	 */
-	public static SubscriberProduct getBarring(Connection connection,
-			String isdn, long productId) throws Exception
+	public static SubscriberProduct getBarring(Connection connection, String isdn, long productId) throws Exception
 	{
 		PreparedStatement stmtActive = null;
 		ResultSet rsActive = null;
@@ -328,9 +308,8 @@ public class SubscriberProductImpl
 
 		try
 		{
-			String SQL = "Select * " + "From SubscriberProduct "
-					+ "Where isdn = ? and productId = ? and "
-					+ CONDITION_BARRING + "Order by registerDate desc";
+			String SQL = "Select * " + "From SubscriberProduct " + "Where isdn = ? and productId = ? and " + CONDITION_BARRING
+					+ "Order by registerDate desc";
 
 			stmtActive = connection.prepareStatement(SQL);
 			stmtActive.setString(1, isdn);
@@ -365,8 +344,7 @@ public class SubscriberProductImpl
 	 * @return
 	 * @throws Exception
 	 */
-	public static SubscriberProduct getBarring(String isdn, long productId)
-			throws Exception
+	public static SubscriberProduct getBarring(String isdn, long productId) throws Exception
 	{
 		Connection connection = null;
 
@@ -382,8 +360,7 @@ public class SubscriberProductImpl
 		}
 	}
 
-	public static SubscriberProduct getActive(Connection connection,
-			String isdn, long productId) throws Exception
+	public static SubscriberProduct getActive(Connection connection, String isdn, long productId) throws Exception
 	{
 		PreparedStatement stmtActive = null;
 		ResultSet rsActive = null;
@@ -392,9 +369,8 @@ public class SubscriberProductImpl
 
 		try
 		{
-			String SQL = "Select * From SubscriberProduct "
-					+ "Where isdn = ? and productId = ? and "
-					+ CONDITION_ACTIVE + "Order by registerDate desc";
+			String SQL = "Select * From SubscriberProduct " + "Where isdn = ? and productId = ? and " + CONDITION_ACTIVE
+					+ "Order by registerDate desc";
 
 			stmtActive = connection.prepareStatement(SQL);
 			stmtActive.setString(1, isdn);
@@ -420,8 +396,7 @@ public class SubscriberProductImpl
 		return result;
 	}
 
-	public static SubscriberProduct getActive(String isdn, long productId)
-			throws Exception
+	public static SubscriberProduct getActive(String isdn, long productId) throws Exception
 	{
 		Connection connection = null;
 
@@ -436,9 +411,8 @@ public class SubscriberProductImpl
 			Database.closeObject(connection);
 		}
 	}
-	
-	public static ArrayList<SubscriberProduct> getActive(String isdn, String listProductId)
-			throws Exception
+
+	public static ArrayList<SubscriberProduct> getActive(String isdn, String listProductId) throws Exception
 	{
 		Connection connection = null;
 
@@ -453,9 +427,8 @@ public class SubscriberProductImpl
 			Database.closeObject(connection);
 		}
 	}
-	
-	public static ArrayList<SubscriberProduct> getActive(Connection connection,
-			String isdn, String listProductId) throws Exception
+
+	public static ArrayList<SubscriberProduct> getActive(Connection connection, String isdn, String listProductId) throws Exception
 	{
 		PreparedStatement stmtActive = null;
 		ResultSet rsActive = null;
@@ -464,9 +437,8 @@ public class SubscriberProductImpl
 
 		try
 		{
-			String SQL = "Select * " + "From SubscriberProduct "
-					+ "Where isdn = ? and productId in (" + listProductId + ") and "
-					+ CONDITION_ACTIVE + "Order by registerDate desc";
+			String SQL = "Select * " + "From SubscriberProduct " + "Where isdn = ? and productId in (" + listProductId + ") and " + CONDITION_ACTIVE
+					+ "Order by registerDate desc";
 
 			stmtActive = connection.prepareStatement(SQL);
 			stmtActive.setString(1, isdn);
@@ -491,8 +463,7 @@ public class SubscriberProductImpl
 		return result;
 	}
 
-	public static SubscriberProduct getActive(Connection connection,
-			long subscriberId, long productId) throws Exception
+	public static SubscriberProduct getActive(Connection connection, long subscriberId, long productId) throws Exception
 	{
 		PreparedStatement stmtActive = null;
 		ResultSet rsActive = null;
@@ -501,9 +472,8 @@ public class SubscriberProductImpl
 
 		try
 		{
-			String SQL = "Select * " + "From SubscriberProduct "
-					+ "Where subscriberId = ? and productId = ? and "
-					+ CONDITION_ACTIVE + "Order by registerDate desc";
+			String SQL = "Select * " + "From SubscriberProduct " + "Where subscriberId = ? and productId = ? and " + CONDITION_ACTIVE
+					+ "Order by registerDate desc";
 
 			stmtActive = connection.prepareStatement(SQL);
 			stmtActive.setLong(1, subscriberId);
@@ -529,8 +499,7 @@ public class SubscriberProductImpl
 		return result;
 	}
 
-	public static SubscriberProduct getActive(long subscriberId, long productId)
-			throws Exception
+	public static SubscriberProduct getActive(long subscriberId, long productId) throws Exception
 	{
 		Connection connection = null;
 
@@ -546,8 +515,7 @@ public class SubscriberProductImpl
 		}
 	}
 
-	public static SubscriberProduct getActive(Connection connection,
-			long subscriberId, String isdn, long productId) throws Exception
+	public static SubscriberProduct getActive(Connection connection, long subscriberId, String isdn, long productId) throws Exception
 	{
 		if (subscriberId != DEFAULT_ID)
 		{
@@ -559,8 +527,7 @@ public class SubscriberProductImpl
 		}
 	}
 
-	public static SubscriberProduct getActiveX(String isdn, long productId,
-			Date orderDate) throws Exception
+	public static SubscriberProduct getActiveX(String isdn, long productId, Date orderDate) throws Exception
 	{
 		Connection connection = null;
 
@@ -576,8 +543,7 @@ public class SubscriberProductImpl
 		}
 	}
 
-	public static SubscriberProduct getActiveX(Connection connection,
-			String isdn, long productId, Date orderDate) throws Exception
+	public static SubscriberProduct getActiveX(Connection connection, String isdn, long productId, Date orderDate) throws Exception
 	{
 		PreparedStatement stmtActive = null;
 		ResultSet rsActive = null;
@@ -586,11 +552,8 @@ public class SubscriberProductImpl
 
 		try
 		{
-			String SQL = "Select * "
-					+ "From SubscriberOrder "
-					+ "Where isdn = ? and productId = ? and status = ? "
-					+ "and orderDate >= trunc(sysdate) and orderDate < (trunc(sysdate) + 1)"
-					+ "Order by createdate desc";
+			String SQL = "Select * " + "From SubscriberOrder " + "Where isdn = ? and productId = ? and status = ? "
+					+ "and orderDate >= trunc(sysdate) and orderDate < (trunc(sysdate) + 1)" + "Order by createdate desc";
 
 			stmtActive = connection.prepareStatement(SQL);
 			stmtActive.setString(1, isdn);
@@ -618,8 +581,7 @@ public class SubscriberProductImpl
 
 	}
 
-	public static List<SubscriberProduct> getActive(Connection connection,
-			long subscriberId, String isdn) throws Exception
+	public static List<SubscriberProduct> getActive(Connection connection, long subscriberId, String isdn) throws Exception
 	{
 		PreparedStatement stmtActive = null;
 		ResultSet rsActive = null;
@@ -630,16 +592,14 @@ public class SubscriberProductImpl
 		{
 			if (subscriberId != Constants.DEFAULT_ID)
 			{
-				String SQL = "Select * From SubscriberProduct Where isdn = ? and "
-						+ CONDITION_ACTIVE;
+				String SQL = "Select * From SubscriberProduct Where isdn = ? and " + CONDITION_ACTIVE;
 
 				stmtActive = connection.prepareStatement(SQL);
 				stmtActive.setString(1, isdn);
 			}
 			else
 			{
-				String SQL = "Select * From SubscriberProduct Where subscriberId = ? and "
-						+ CONDITION_ACTIVE;
+				String SQL = "Select * From SubscriberProduct Where subscriberId = ? and " + CONDITION_ACTIVE;
 
 				stmtActive = connection.prepareStatement(SQL);
 				stmtActive.setLong(1, subscriberId);
@@ -682,10 +642,9 @@ public class SubscriberProductImpl
 	 * @return
 	 * @throws Exception
 	 */
-	public static SubscriberProduct register(Connection connection,
-			long userId, String userName, long subscriberId, String isdn,
-			int subscriberType, long productId, long campaignId,
-			String languageId, boolean includeCurrentDay, boolean isPrePaid, int status, String activationDate) throws Exception
+	public static SubscriberProduct register(Connection connection, long userId, String userName, long subscriberId, String isdn, int subscriberType,
+			long productId, long campaignId, String languageId, boolean includeCurrentDay, boolean isPrePaid, int status, String activationDate)
+			throws Exception
 	{
 		SubscriberProduct subscriberProduct = null;
 
@@ -695,16 +654,14 @@ public class SubscriberProductImpl
 		{
 			Date now = new Date();
 
-			ProductEntry product = ProductFactory.getCache().getProduct(
-					productId);
+			ProductEntry product = ProductFactory.getCache().getProduct(productId);
 
 			// calculate term of use date
 			Date termDate = null;
 
 			if (product.getTermPeriod() > 0)
 			{
-				termDate = DateUtil.addDate(now, product.getTermUnit(),
-						product.getTermPeriod());
+				termDate = DateUtil.addDate(now, product.getTermUnit(), product.getTermPeriod());
 			}
 
 			// calculate expire date
@@ -718,17 +675,16 @@ public class SubscriberProductImpl
 				int expirationPeriod = product.getSubscriptionPeriod();
 
 				String expirationUnit = product.getSubscriptionUnit();
-				
+
 				if (product.getParameter("FreeRegisterSMS", "false").equals("true"))
 				{
-					expirationPeriod = Integer.parseInt(product.getParameter("FreeRegisterPeriod","13"));
-					expirationUnit = product.getParameter("FreeRegisterUnit","day");
+					expirationPeriod = Integer.parseInt(product.getParameter("FreeRegisterPeriod", "13"));
+					expirationUnit = product.getParameter("FreeRegisterUnit", "day");
 				}
 
 				if (campaignId != DEFAULT_ID)
 				{
-					CampaignEntry campaign = CampaignFactory.getCache()
-							.getCampaign(campaignId);
+					CampaignEntry campaign = CampaignFactory.getCache().getCampaign(campaignId);
 
 					if ((campaign != null))
 					{
@@ -737,10 +693,8 @@ public class SubscriberProductImpl
 					}
 				}
 
-				boolean truncExpire = Boolean.parseBoolean(product
-						.getParameter("TruncExpireDate", "true"));
-				expirationDate = calculateExpirationDate(now, expirationUnit,
-						expirationPeriod, quantity, truncExpire);
+				boolean truncExpire = Boolean.parseBoolean(product.getParameter("TruncExpireDate", "true"));
+				expirationDate = calculateExpirationDate(now, expirationUnit, expirationPeriod, quantity, truncExpire);
 
 				/**
 				 * remove 1 day if expiration time includes current day
@@ -753,13 +707,11 @@ public class SubscriberProductImpl
 
 					expirationDate = expiration.getTime();
 				}
-				graceDate = calculateGraceDate(expirationDate,
-						product.getGraceUnit(), product.getGracePeriod());
+				graceDate = calculateGraceDate(expirationDate, product.getGraceUnit(), product.getGracePeriod());
 			}
 
 			// check product are registered or not
-			subscriberProduct = getActive(connection, subscriberId, isdn,
-					productId);
+			subscriberProduct = getActive(connection, subscriberId, isdn, productId);
 
 			if (subscriberProduct != null)
 			{
@@ -767,17 +719,15 @@ public class SubscriberProductImpl
 			}
 
 			// register product for subscriber
-			String sql = "Insert into SubscriberProduct "
-					+ "     (subProductId, userId, userName, createDate, modifiedDate "
+			String sql = "Insert into SubscriberProduct " + "     (subProductId, userId, userName, createDate, modifiedDate "
 					+ "     , subscriberId, isdn, subscriberType, productId, languageId "
 					+ "     , registerDate, termDate, expirationDate, graceDate, barringStatus, supplierStatus, CampaignId, Status, ActivationDate) "
-					+ "Values " + "     (?, ?, ?, sysDate, sysDate "
-					+ "     , ?, ?, ?, ?, ? " + "     , ?, ?, ?, ?, ?, ?, ?, ?, to_date(?,'YYYY-MM-DD HH24:MI:SS'))";
+					+ "Values " + "     (?, ?, ?, sysDate, sysDate " + "     , ?, ?, ?, ?, ? "
+					+ "     , ?, ?, ?, ?, ?, ?, ?, ?, to_date(?,'YYYY-MM-DD HH24:MI:SS'))";
 
 			stmtRegister = connection.prepareStatement(sql);
 
-			long subProductId = Database.getSequence(connection,
-					"sub_product_seq");
+			long subProductId = Database.getSequence(connection, "sub_product_seq");
 
 			int barringStatus = Constants.USER_ACTIVE_STATUS;
 			int supplierStatus = Constants.SUPPLIER_ACTIVE_STATUS;
@@ -794,8 +744,7 @@ public class SubscriberProductImpl
 
 			stmtRegister.setTimestamp(9, DateUtil.getTimestampSQL(now));
 			stmtRegister.setTimestamp(10, DateUtil.getTimestampSQL(termDate));
-			stmtRegister.setTimestamp(11,
-					DateUtil.getTimestampSQL(expirationDate));
+			stmtRegister.setTimestamp(11, DateUtil.getTimestampSQL(expirationDate));
 			stmtRegister.setTimestamp(12, DateUtil.getTimestampSQL(graceDate));
 
 			stmtRegister.setInt(13, barringStatus);
@@ -830,11 +779,8 @@ public class SubscriberProductImpl
 
 			if (product.isAuditEnable())
 			{
-				SubscriberActivateImpl.addActivate(connection, userId,
-						userName, subscriberId, isdn, subProductId,
-						subscriberProduct.getRegisterDate(),
-						subscriberProduct.getBarringStatus(),
-						subscriberProduct.getSupplierStatus(), "");
+				SubscriberActivateImpl.addActivate(connection, userId, userName, subscriberId, isdn, subProductId,
+						subscriberProduct.getRegisterDate(), subscriberProduct.getBarringStatus(), subscriberProduct.getSupplierStatus(), "");
 			}
 		}
 		catch (Exception e)
@@ -848,8 +794,6 @@ public class SubscriberProductImpl
 
 		return subscriberProduct;
 	}
-	
-	
 
 	/**
 	 * Edited by NamTA<br>
@@ -867,11 +811,8 @@ public class SubscriberProductImpl
 	 * @return
 	 * @throws Exception
 	 */
-	public static SubscriberProduct register(long userId, String userName,
-			long subscriberId, String isdn, int subscriberType, long productId,
-			long campaignId, String languageId, boolean includeCurrentDay,
-			boolean isPrePaid, int status, String activationDate)
-			throws Exception
+	public static SubscriberProduct register(long userId, String userName, long subscriberId, String isdn, int subscriberType, long productId,
+			long campaignId, String languageId, boolean includeCurrentDay, boolean isPrePaid, int status, String activationDate) throws Exception
 	{
 		Connection connection = null;
 
@@ -889,9 +830,8 @@ public class SubscriberProductImpl
 
 			connection = Database.getConnection();
 
-			return register(connection, userId, userName, subscriberId, isdn,
-					subscriberType, productId, campaignId, languageId,
-					includeCurrentDay, isPrePaid, status, activationDate);
+			return register(connection, userId, userName, subscriberId, isdn, subscriberType, productId, campaignId, languageId, includeCurrentDay,
+					isPrePaid, status, activationDate);
 		}
 		catch (Exception e)
 		{
@@ -903,9 +843,7 @@ public class SubscriberProductImpl
 		}
 	}
 
-	public static void unregister(Connection connection, long userId,
-			String userName, long subProductId, long productId)
-			throws Exception
+	public static void unregister(Connection connection, long userId, String userName, long subProductId, long productId) throws Exception
 	{
 		SubscriberProduct subscriberProduct = null;
 
@@ -913,8 +851,7 @@ public class SubscriberProductImpl
 
 		try
 		{
-			String sql = "Update SubscriberProduct "
-					+ "   Set 	modifiedDate = sysDate "
+			String sql = "Update SubscriberProduct " + "   Set 	modifiedDate = sysDate "
 					+ "   		, unregisterDate = sysDate, barringStatus = ?, supplierStatus = ?, lastrundate = sysdate, status = 0 "
 					+ "	  Where subProductId = ? and " + CONDITION_UNTERMINATED;
 
@@ -931,18 +868,14 @@ public class SubscriberProductImpl
 				throw new AppException(Constants.ERROR_UNREGISTERED);
 			}
 
-			ProductEntry product = ProductFactory.getCache().getProduct(
-					productId);
+			ProductEntry product = ProductFactory.getCache().getProduct(productId);
 
 			if (product.isAuditEnable())
 			{
 				subscriberProduct = getProduct(connection, subProductId);
 
-				SubscriberActivateImpl.unregister(connection, userId, userName,
-						subscriberProduct.getSubscriberId(),
-						subscriberProduct.getIsdn(),
-						subscriberProduct.getProductId(),
-						subscriberProduct.getUnregisterDate(), "");
+				SubscriberActivateImpl.unregister(connection, userId, userName, subscriberProduct.getSubscriberId(), subscriberProduct.getIsdn(),
+						subscriberProduct.getProductId(), subscriberProduct.getUnregisterDate(), "");
 			}
 		}
 		catch (Exception e)
@@ -955,8 +888,7 @@ public class SubscriberProductImpl
 		}
 	}
 
-	public static void unregister(long userId, String userName,
-			long subProductId, long productId) throws Exception
+	public static void unregister(long userId, String userName, long subProductId, long productId) throws Exception
 	{
 		Connection connection = null;
 
@@ -975,9 +907,8 @@ public class SubscriberProductImpl
 			Database.closeObject(connection);
 		}
 	}
-	
-	public static void unregister(Connection connection, long userId,
-			String userName, long subProductId, long productId, boolean byPass)
+
+	public static void unregister(Connection connection, long userId, String userName, long subProductId, long productId, boolean byPass)
 			throws Exception
 	{
 		SubscriberProduct subscriberProduct = null;
@@ -986,8 +917,7 @@ public class SubscriberProductImpl
 
 		try
 		{
-			String sql = "Update SubscriberProduct "
-					+ "   Set 	modifiedDate = sysDate "
+			String sql = "Update SubscriberProduct " + "   Set 	modifiedDate = sysDate "
 					+ "   		, unregisterDate = sysDate, barringStatus = ?, supplierStatus = ?, lastrundate = sysdate, status = 0 "
 					+ "	  Where subProductId = ? and " + CONDITION_UNTERMINATED;
 
@@ -1004,18 +934,14 @@ public class SubscriberProductImpl
 				throw new AppException(Constants.ERROR_UNREGISTERED);
 			}
 
-			ProductEntry product = ProductFactory.getCache().getProduct(
-					productId);
+			ProductEntry product = ProductFactory.getCache().getProduct(productId);
 
 			if (product.isAuditEnable())
 			{
 				subscriberProduct = getProduct(connection, subProductId);
 
-				SubscriberActivateImpl.unregister(connection, userId, userName,
-						subscriberProduct.getSubscriberId(),
-						subscriberProduct.getIsdn(),
-						subscriberProduct.getProductId(),
-						subscriberProduct.getUnregisterDate(), "");
+				SubscriberActivateImpl.unregister(connection, userId, userName, subscriberProduct.getSubscriberId(), subscriberProduct.getIsdn(),
+						subscriberProduct.getProductId(), subscriberProduct.getUnregisterDate(), "");
 			}
 		}
 		catch (Exception e)
@@ -1028,16 +954,14 @@ public class SubscriberProductImpl
 			Database.closeObject(stmtSubscription);
 		}
 	}
-	
-	public static void unregisterMulti(Connection connection, String isdn, String listProductId)
-			throws Exception
+
+	public static void unregisterMulti(Connection connection, String isdn, String listProductId) throws Exception
 	{
 		PreparedStatement stmtSubscription = null;
 
 		try
 		{
-			String sql = "Update SubscriberProduct "
-					+ "   Set 	modifiedDate = sysDate "
+			String sql = "Update SubscriberProduct " + "   Set 	modifiedDate = sysDate "
 					+ "   		, unregisterDate = sysDate, barringStatus = ?, supplierStatus = ?, lastrundate = sysdate, status = 0 "
 					+ "	  Where isdn = ? and productId in (" + listProductId + ") and " + CONDITION_UNTERMINATED;
 
@@ -1049,10 +973,10 @@ public class SubscriberProductImpl
 
 			stmtSubscription.execute();
 
-//			if (stmtSubscription.getUpdateCount() == 0 && !byPass)
-//			{
-//				throw new AppException(Constants.ERROR_UNREGISTERED);
-//			}
+			// if (stmtSubscription.getUpdateCount() == 0 && !byPass)
+			// {
+			// throw new AppException(Constants.ERROR_UNREGISTERED);
+			// }
 		}
 		catch (Exception e)
 		{
@@ -1065,8 +989,26 @@ public class SubscriberProductImpl
 		}
 	}
 
-	public static void barringBySupplier(Connection connection, long userId,
-			String userName, long subProductId) throws Exception
+	public static void unregisterMulti(String isdn, String listProductId) throws Exception
+	{
+		Connection connection = null;
+
+		try
+		{
+			connection = Database.getConnection();
+			unregisterMulti(connection, isdn, listProductId);
+		}
+		catch (Exception e)
+		{
+			throw e;
+		}
+		finally
+		{
+			Database.closeObject(connection);
+		}
+	}
+
+	public static void barringBySupplier(Connection connection, long userId, String userName, long subProductId) throws Exception
 	{
 		SubscriberProduct subscriberProduct = null;
 
@@ -1085,8 +1027,7 @@ public class SubscriberProductImpl
 				return;
 			}
 
-			ProductEntry product = ProductFactory.getCache().getProduct(
-					subscriberProduct.getProductId());
+			ProductEntry product = ProductFactory.getCache().getProduct(subscriberProduct.getProductId());
 
 			String sql = "Update SubscriberProduct "
 					+ "     Set    userId = ?, userName = ?, modifiedDate = sysDate, supplierStatus = ?, lastrundate = sysdate, reservation = null  "
@@ -1105,18 +1046,15 @@ public class SubscriberProductImpl
 			{
 				throw new AppException(Constants.ERROR_UNREGISTERED);
 			}
-			
-			subscriberProduct
-					.setSupplierStatus(Constants.SUPPLIER_BARRING_STATUS);
+
+			subscriberProduct.setSupplierStatus(Constants.SUPPLIER_BARRING_STATUS);
 
 			if (product.isAuditEnable())
 			{
-				SubscriberActivateImpl.updateActivate(connection, userId,
-						userName, subscriberProduct.getSubscriberId(),
-						subscriberProduct.getIsdn(),
-						subscriberProduct.getProductId(), new Date(),
-						subscriberProduct.getBarringStatus(),
-						subscriberProduct.getSupplierStatus(), "");
+				SubscriberActivateImpl
+						.updateActivate(connection, userId, userName, subscriberProduct.getSubscriberId(), subscriberProduct.getIsdn(),
+								subscriberProduct.getProductId(), new Date(), subscriberProduct.getBarringStatus(),
+								subscriberProduct.getSupplierStatus(), "");
 			}
 		}
 		catch (Exception e)
@@ -1129,8 +1067,7 @@ public class SubscriberProductImpl
 		}
 	}
 
-	public static void barringBySupplier(long userId, String userName,
-			long subProductId) throws Exception
+	public static void barringBySupplier(long userId, String userName, long subProductId) throws Exception
 	{
 		Connection connection = null;
 
@@ -1150,9 +1087,8 @@ public class SubscriberProductImpl
 		}
 	}
 
-	public static SubscriberProduct subscription(Connection connection,
-			long userId, String userName, long subProductId,
-			boolean fullOfCharge, int quantity, boolean includeCurrentDay) throws Exception
+	public static SubscriberProduct subscription(Connection connection, long userId, String userName, long subProductId, boolean fullOfCharge,
+			int quantity, boolean includeCurrentDay) throws Exception
 	{
 		SubscriberProduct subscriberProduct = null;
 
@@ -1167,18 +1103,15 @@ public class SubscriberProductImpl
 				throw new AppException(Constants.ERROR_UNREGISTERED);
 			}
 
-			ProductEntry product = ProductFactory.getCache().getProduct(
-					subscriberProduct.getProductId());
+			ProductEntry product = ProductFactory.getCache().getProduct(subscriberProduct.getProductId());
 
 			// if (!product.isSubscription())
 			// {
 			// throw new AppException(Constants.ERROR_SUBSCRIPTION_NOT_FOUND);
 			// }
 
-			String subscriptionUnit = fullOfCharge ? product
-					.getSubscriptionUnit() : "daily";
-			int subscriptionPeriod = fullOfCharge ? product
-					.getSubscriptionPeriod() : quantity;
+			String subscriptionUnit = fullOfCharge ? product.getSubscriptionUnit() : "daily";
+			int subscriptionPeriod = fullOfCharge ? product.getSubscriptionPeriod() : quantity;
 
 			int gracePeriod = product.getGracePeriod();
 			String graceUnit = product.getGraceUnit();
@@ -1190,12 +1123,10 @@ public class SubscriberProductImpl
 			{
 				expirationDate = now;
 			}
-			
-			boolean truncExpire = Boolean.parseBoolean(product
-					.getParameter("TruncExpireDate", "true"));
-			expirationDate = calculateExpirationDate(expirationDate, subscriptionUnit,
-					subscriptionPeriod, 1, truncExpire);
-			
+
+			boolean truncExpire = Boolean.parseBoolean(product.getParameter("TruncExpireDate", "true"));
+			expirationDate = calculateExpirationDate(expirationDate, subscriptionUnit, subscriptionPeriod, 1, truncExpire);
+
 			if (includeCurrentDay)
 			{
 				Calendar expiration = Calendar.getInstance();
@@ -1204,13 +1135,11 @@ public class SubscriberProductImpl
 
 				expirationDate = expiration.getTime();
 			}
-			
-			Date graceDate = DateUtil.addDate(expirationDate, graceUnit,
-					gracePeriod);
+
+			Date graceDate = DateUtil.addDate(expirationDate, graceUnit, gracePeriod);
 
 			// prepare SQL
-			String SQL = "Update SubscriberProduct "
-					+ "   Set userId = ?, userName = ?, modifiedDate = sysDate "
+			String SQL = "Update SubscriberProduct " + "   Set userId = ?, userName = ?, modifiedDate = sysDate "
 					+ "       , supplierStatus = ?, expirationDate = ?, graceDate = ?, lastrundate = sysdate, reservation = null "
 					+ "   Where subProductId = ? and unregisterDate is null ";
 
@@ -1219,10 +1148,8 @@ public class SubscriberProductImpl
 			stmtSubscription.setLong(1, userId);
 			stmtSubscription.setString(2, userName);
 			stmtSubscription.setInt(3, Constants.SUPPLIER_ACTIVE_STATUS);
-			stmtSubscription.setTimestamp(4,
-					DateUtil.getTimestampSQL(expirationDate));
-			stmtSubscription.setTimestamp(5,
-					DateUtil.getTimestampSQL(graceDate));
+			stmtSubscription.setTimestamp(4, DateUtil.getTimestampSQL(expirationDate));
+			stmtSubscription.setTimestamp(5, DateUtil.getTimestampSQL(graceDate));
 			stmtSubscription.setLong(6, subProductId);
 
 			stmtSubscription.execute();
@@ -1232,21 +1159,17 @@ public class SubscriberProductImpl
 				throw new AppException(Constants.ERROR_UNREGISTERED);
 			}
 
-			if (product.isAuditEnable()
-					&& (subscriberProduct.getSupplierStatus() != Constants.SUPPLIER_ACTIVE_STATUS))
+			if (product.isAuditEnable() && (subscriberProduct.getSupplierStatus() != Constants.SUPPLIER_ACTIVE_STATUS))
 			{
-				SubscriberActivateImpl.updateActivate(connection, userId,
-						userName, subscriberProduct.getSubscriberId(),
-						subscriberProduct.getIsdn(),
-						subscriberProduct.getProductId(), new Date(),
-						subscriberProduct.getBarringStatus(),
-						subscriberProduct.getSupplierStatus(), "");
+				SubscriberActivateImpl
+						.updateActivate(connection, userId, userName, subscriberProduct.getSubscriberId(), subscriberProduct.getIsdn(),
+								subscriberProduct.getProductId(), new Date(), subscriberProduct.getBarringStatus(),
+								subscriberProduct.getSupplierStatus(), "");
 			}
 
 			subscriberProduct.setExpirationDate(expirationDate);
 			subscriberProduct.setGraceDate(graceDate);
-			subscriberProduct
-					.setSupplierStatus(Constants.SUPPLIER_ACTIVE_STATUS);
+			subscriberProduct.setSupplierStatus(Constants.SUPPLIER_ACTIVE_STATUS);
 		}
 		catch (Exception e)
 		{
@@ -1260,9 +1183,8 @@ public class SubscriberProductImpl
 		return subscriberProduct;
 	}
 
-	public static SubscriberProduct subscription(long userId, String userName,
-			long subProductId, boolean fullOfCharge, int quantity, boolean includeCurrentDay)
-			throws Exception
+	public static SubscriberProduct subscription(long userId, String userName, long subProductId, boolean fullOfCharge, int quantity,
+			boolean includeCurrentDay) throws Exception
 	{
 		Connection connection = null;
 
@@ -1270,8 +1192,7 @@ public class SubscriberProductImpl
 		{
 			connection = Database.getConnection();
 
-			return subscription(connection, userId, userName, subProductId,
-					fullOfCharge, quantity, includeCurrentDay);
+			return subscription(connection, userId, userName, subProductId, fullOfCharge, quantity, includeCurrentDay);
 		}
 		catch (Exception e)
 		{
@@ -1283,17 +1204,14 @@ public class SubscriberProductImpl
 		}
 	}
 
-	public static void changeLanguage(Connection connection, long userId,
-			String userName, long subProductId, String languageId)
-			throws Exception
+	public static void changeLanguage(Connection connection, long userId, String userName, long subProductId, String languageId) throws Exception
 	{
 		PreparedStatement stmtProduct = null;
 
 		try
 		{
 			// prepare SQL
-			String SQL = "Update 	SubscriberProduct "
-					+ "   Set 		userId = ?, userName = ?, modifiedDate = sysDate, languageId = ? "
+			String SQL = "Update 	SubscriberProduct " + "   Set 		userId = ?, userName = ?, modifiedDate = sysDate, languageId = ? "
 					+ "   Where 	subProductId = ? and unregisterDate is null ";
 
 			stmtProduct = connection.prepareStatement(SQL);
@@ -1319,8 +1237,7 @@ public class SubscriberProductImpl
 		}
 	}
 
-	public static void changeLanguage(long userId, String userName,
-			long subProductId, String languageId) throws Exception
+	public static void changeLanguage(long userId, String userName, long subProductId, String languageId) throws Exception
 	{
 		Connection connection = null;
 
@@ -1328,8 +1245,7 @@ public class SubscriberProductImpl
 		{
 			connection = Database.getConnection();
 
-			changeLanguage(connection, userId, userName, subProductId,
-					languageId);
+			changeLanguage(connection, userId, userName, subProductId, languageId);
 		}
 		catch (Exception e)
 		{
@@ -1341,8 +1257,7 @@ public class SubscriberProductImpl
 		}
 	}
 
-	public static void unbarringBySupplier(Connection connection, long userId,
-			String userName, long subProductId) throws Exception
+	public static void unbarringBySupplier(Connection connection, long userId, String userName, long subProductId) throws Exception
 	{
 		SubscriberProduct subscriberProduct = null;
 
@@ -1361,8 +1276,7 @@ public class SubscriberProductImpl
 				return;
 			}
 
-			ProductEntry product = ProductFactory.getCache().getProduct(
-					subscriberProduct.getProductId());
+			ProductEntry product = ProductFactory.getCache().getProduct(subscriberProduct.getProductId());
 
 			String sql = "Update SubscriberProduct "
 					+ "     Set    userId = ?, userName = ?, modifiedDate = sysDate, supplierStatus = ?, lastrundate = sysdate, reservation = null  "
@@ -1376,23 +1290,20 @@ public class SubscriberProductImpl
 			stmtSubscription.setLong(4, subProductId);
 
 			stmtSubscription.execute();
-			
+
 			if (stmtSubscription.getUpdateCount() == 0)
 			{
 				throw new AppException(Constants.ERROR_UNREGISTERED);
 			}
 
-			subscriberProduct
-					.setSupplierStatus(Constants.SUPPLIER_ACTIVE_STATUS);
+			subscriberProduct.setSupplierStatus(Constants.SUPPLIER_ACTIVE_STATUS);
 
 			if (product.isAuditEnable())
 			{
-				SubscriberActivateImpl.updateActivate(connection, userId,
-						userName, subscriberProduct.getSubscriberId(),
-						subscriberProduct.getIsdn(),
-						subscriberProduct.getProductId(), new Date(),
-						subscriberProduct.getBarringStatus(),
-						subscriberProduct.getSupplierStatus(), "");
+				SubscriberActivateImpl
+						.updateActivate(connection, userId, userName, subscriberProduct.getSubscriberId(), subscriberProduct.getIsdn(),
+								subscriberProduct.getProductId(), new Date(), subscriberProduct.getBarringStatus(),
+								subscriberProduct.getSupplierStatus(), "");
 			}
 		}
 		catch (Exception e)
@@ -1405,8 +1316,7 @@ public class SubscriberProductImpl
 		}
 	}
 
-	public static void unbarringBySupplier(long userId, String userName,
-			long subProductId) throws Exception
+	public static void unbarringBySupplier(long userId, String userName, long subProductId) throws Exception
 	{
 		Connection connection = null;
 
@@ -1427,7 +1337,6 @@ public class SubscriberProductImpl
 	}
 
 	/**
-	 * 
 	 * Created by NamTA <br>
 	 * Created Date: 16/05/2012
 	 * 
@@ -1438,8 +1347,7 @@ public class SubscriberProductImpl
 	 * @return
 	 * @throws Exception
 	 */
-	public static SubscriberProduct extendExpirationDate(Connection connection,
-			long userId, String userName, long subProductId, long campaignId,
+	public static SubscriberProduct extendExpirationDate(Connection connection, long userId, String userName, long subProductId, long campaignId,
 			boolean includeCurrentDay, boolean fullOfCharge, int quantity) throws Exception
 	{
 		SubscriberProduct subscriberProduct = null;
@@ -1455,8 +1363,7 @@ public class SubscriberProductImpl
 				throw new AppException(Constants.ERROR_UNREGISTERED);
 			}
 
-			ProductEntry product = ProductFactory.getCache().getProduct(
-					subscriberProduct.getProductId());
+			ProductEntry product = ProductFactory.getCache().getProduct(subscriberProduct.getProductId());
 
 			Date now = new Date();
 			Date expirationDate = subscriberProduct.getExpirationDate();
@@ -1466,32 +1373,28 @@ public class SubscriberProductImpl
 
 			if (product.isSubscription())
 			{
-//				int quantity = 1;
+				// int quantity = 1;
 
-//				int expirationPeriod = product.getSubscriptionPeriod();
-//				String expirationUnit = product.getSubscriptionUnit();
-				
-				String expirationUnit = fullOfCharge ? product
-						.getSubscriptionUnit() : "daily";
-				int expirationPeriod = fullOfCharge ? product
-						.getSubscriptionPeriod() : quantity;
+				// int expirationPeriod = product.getSubscriptionPeriod();
+				// String expirationUnit = product.getSubscriptionUnit();
 
-//				if (campaignId != DEFAULT_ID)
-//				{
-//					CampaignEntry campaign = CampaignFactory.getCache()
-//							.getCampaign(campaignId);
-//
-//					if ((campaign != null))
-//					{
-//						expirationPeriod = campaign.getSchedulePeriod();
-//						expirationUnit = campaign.getScheduleUnit();
-//					}
-//				}
+				String expirationUnit = fullOfCharge ? product.getSubscriptionUnit() : "daily";
+				int expirationPeriod = fullOfCharge ? product.getSubscriptionPeriod() : quantity;
 
-				boolean truncExpire = Boolean.parseBoolean(product
-						.getParameter("TruncExpireDate", "true"));
-				expirationDate = calculateExpirationDate(expirationDate,
-						expirationUnit, expirationPeriod, 1, truncExpire);
+				// if (campaignId != DEFAULT_ID)
+				// {
+				// CampaignEntry campaign = CampaignFactory.getCache()
+				// .getCampaign(campaignId);
+				//
+				// if ((campaign != null))
+				// {
+				// expirationPeriod = campaign.getSchedulePeriod();
+				// expirationUnit = campaign.getScheduleUnit();
+				// }
+				// }
+
+				boolean truncExpire = Boolean.parseBoolean(product.getParameter("TruncExpireDate", "true"));
+				expirationDate = calculateExpirationDate(expirationDate, expirationUnit, expirationPeriod, 1, truncExpire);
 
 				if (includeCurrentDay)
 				{
@@ -1508,12 +1411,10 @@ public class SubscriberProductImpl
 					}
 				}
 
-				graceDate = DateUtil.addDate(expirationDate,
-						product.getGraceUnit(), product.getGracePeriod());
+				graceDate = DateUtil.addDate(expirationDate, product.getGraceUnit(), product.getGracePeriod());
 			}
 
-			String sql = "Update SubscriberProduct "
-					+ "     Set    userId = ?, userName = ?, modifiedDate = sysDate, supplierStatus = ?, "
+			String sql = "Update SubscriberProduct " + "     Set    userId = ?, userName = ?, modifiedDate = sysDate, supplierStatus = ?, "
 					+ "     expirationDate = ?, graceDate = ?, lastrundate = sysdate, status = ?, reservation = null  "
 					+ "     Where  subProductId = ? and unregisterDate is null ";
 
@@ -1522,33 +1423,28 @@ public class SubscriberProductImpl
 			stmtSubscription.setLong(1, userId);
 			stmtSubscription.setString(2, userName);
 			stmtSubscription.setInt(3, Constants.SUPPLIER_ACTIVE_STATUS);
-			stmtSubscription.setTimestamp(4,
-					DateUtil.getTimestampSQL(expirationDate));
-			stmtSubscription.setTimestamp(5,
-					DateUtil.getTimestampSQL(graceDate));
+			stmtSubscription.setTimestamp(4, DateUtil.getTimestampSQL(expirationDate));
+			stmtSubscription.setTimestamp(5, DateUtil.getTimestampSQL(graceDate));
 			stmtSubscription.setInt(6, Constants.SUBSCRIBER_REGISTER_STATUS);
 			stmtSubscription.setLong(7, subProductId);
 
 			stmtSubscription.execute();
-			
-			if(stmtSubscription.getUpdateCount() == 0)
+
+			if (stmtSubscription.getUpdateCount() == 0)
 			{
 				throw new AppException(Constants.ERROR_UNREGISTERED);
 			}
 
-			subscriberProduct
-					.setSupplierStatus(Constants.SUPPLIER_ACTIVE_STATUS);
+			subscriberProduct.setSupplierStatus(Constants.SUPPLIER_ACTIVE_STATUS);
 			subscriberProduct.setExpirationDate(expirationDate);
 			subscriberProduct.setGraceDate(graceDate);
 
 			if (product.isAuditEnable())
 			{
-				SubscriberActivateImpl.updateActivate(connection, userId,
-						userName, subscriberProduct.getSubscriberId(),
-						subscriberProduct.getIsdn(),
-						subscriberProduct.getProductId(), new Date(),
-						subscriberProduct.getBarringStatus(),
-						subscriberProduct.getSupplierStatus(), "");
+				SubscriberActivateImpl
+						.updateActivate(connection, userId, userName, subscriberProduct.getSubscriberId(), subscriberProduct.getIsdn(),
+								subscriberProduct.getProductId(), new Date(), subscriberProduct.getBarringStatus(),
+								subscriberProduct.getSupplierStatus(), "");
 			}
 
 			return subscriberProduct;
@@ -1562,9 +1458,8 @@ public class SubscriberProductImpl
 			Database.closeObject(stmtSubscription);
 		}
 	}
-	
-	public static SubscriberProduct extendExpirationFree(Connection connection,
-			long userId, String userName, long subProductId, long campaignId,
+
+	public static SubscriberProduct extendExpirationFree(Connection connection, long userId, String userName, long subProductId, long campaignId,
 			boolean includeCurrentDay, boolean fullOfCharge, int quantity) throws Exception
 	{
 		SubscriberProduct subscriberProduct = null;
@@ -1580,8 +1475,7 @@ public class SubscriberProductImpl
 				throw new AppException(Constants.ERROR_UNREGISTERED);
 			}
 
-			ProductEntry product = ProductFactory.getCache().getProduct(
-					subscriberProduct.getProductId());
+			ProductEntry product = ProductFactory.getCache().getProduct(subscriberProduct.getProductId());
 
 			Date now = new Date();
 			Date expirationDate = new Date();
@@ -1591,20 +1485,17 @@ public class SubscriberProductImpl
 
 			if (product.isSubscription())
 			{
-//				int quantity = 1;
+				// int quantity = 1;
 
-//				int expirationPeriod = product.getSubscriptionPeriod();
-//				String expirationUnit = product.getSubscriptionUnit();
-				
-				String expirationUnit = fullOfCharge ? product
-						.getSubscriptionUnit() : "daily";
-				int expirationPeriod = fullOfCharge ? product
-						.getSubscriptionPeriod() : quantity;
+				// int expirationPeriod = product.getSubscriptionPeriod();
+				// String expirationUnit = product.getSubscriptionUnit();
+
+				String expirationUnit = fullOfCharge ? product.getSubscriptionUnit() : "daily";
+				int expirationPeriod = fullOfCharge ? product.getSubscriptionPeriod() : quantity;
 
 				if (campaignId != DEFAULT_ID)
 				{
-					CampaignEntry campaign = CampaignFactory.getCache()
-							.getCampaign(campaignId);
+					CampaignEntry campaign = CampaignFactory.getCache().getCampaign(campaignId);
 
 					if ((campaign != null))
 					{
@@ -1613,10 +1504,8 @@ public class SubscriberProductImpl
 					}
 				}
 
-				boolean truncExpire = Boolean.parseBoolean(product
-						.getParameter("TruncExpireDate", "true"));
-				expirationDate = calculateExpirationDate(expirationDate,
-						expirationUnit, expirationPeriod, 1, truncExpire);
+				boolean truncExpire = Boolean.parseBoolean(product.getParameter("TruncExpireDate", "true"));
+				expirationDate = calculateExpirationDate(expirationDate, expirationUnit, expirationPeriod, 1, truncExpire);
 
 				if (includeCurrentDay)
 				{
@@ -1633,12 +1522,10 @@ public class SubscriberProductImpl
 					}
 				}
 
-				graceDate = DateUtil.addDate(expirationDate,
-						product.getGraceUnit(), product.getGracePeriod());
+				graceDate = DateUtil.addDate(expirationDate, product.getGraceUnit(), product.getGracePeriod());
 			}
 
-			String sql = "Update SubscriberProduct "
-					+ "     Set    userId = ?, userName = ?, modifiedDate = sysDate, supplierStatus = ?, "
+			String sql = "Update SubscriberProduct " + "     Set    userId = ?, userName = ?, modifiedDate = sysDate, supplierStatus = ?, "
 					+ "     registerDate = sysdate, expirationDate = ?, graceDate = ?, lastrundate = sysdate, status = ?, reservation = null  "
 					+ "     Where  subProductId = ? and unregisterDate is null ";
 
@@ -1647,33 +1534,28 @@ public class SubscriberProductImpl
 			stmtSubscription.setLong(1, userId);
 			stmtSubscription.setString(2, userName);
 			stmtSubscription.setInt(3, Constants.SUPPLIER_ACTIVE_STATUS);
-			stmtSubscription.setTimestamp(4,
-					DateUtil.getTimestampSQL(expirationDate));
-			stmtSubscription.setTimestamp(5,
-					DateUtil.getTimestampSQL(graceDate));
+			stmtSubscription.setTimestamp(4, DateUtil.getTimestampSQL(expirationDate));
+			stmtSubscription.setTimestamp(5, DateUtil.getTimestampSQL(graceDate));
 			stmtSubscription.setInt(6, Constants.SUBSCRIBER_REGISTER_STATUS);
 			stmtSubscription.setLong(7, subProductId);
 
 			stmtSubscription.execute();
 
-			if(stmtSubscription.getUpdateCount() == 0)
+			if (stmtSubscription.getUpdateCount() == 0)
 			{
 				throw new AppException(Constants.ERROR_UNREGISTERED);
 			}
 
-			subscriberProduct
-					.setSupplierStatus(Constants.SUPPLIER_ACTIVE_STATUS);
+			subscriberProduct.setSupplierStatus(Constants.SUPPLIER_ACTIVE_STATUS);
 			subscriberProduct.setExpirationDate(expirationDate);
 			subscriberProduct.setGraceDate(graceDate);
 
 			if (product.isAuditEnable())
 			{
-				SubscriberActivateImpl.updateActivate(connection, userId,
-						userName, subscriberProduct.getSubscriberId(),
-						subscriberProduct.getIsdn(),
-						subscriberProduct.getProductId(), new Date(),
-						subscriberProduct.getBarringStatus(),
-						subscriberProduct.getSupplierStatus(), "");
+				SubscriberActivateImpl
+						.updateActivate(connection, userId, userName, subscriberProduct.getSubscriberId(), subscriberProduct.getIsdn(),
+								subscriberProduct.getProductId(), new Date(), subscriberProduct.getBarringStatus(),
+								subscriberProduct.getSupplierStatus(), "");
 			}
 
 			return subscriberProduct;
@@ -1689,7 +1571,6 @@ public class SubscriberProductImpl
 	}
 
 	/**
-	 * 
 	 * Created by NamTA<br>
 	 * Created Date: 16/05/2012
 	 * 
@@ -1699,9 +1580,8 @@ public class SubscriberProductImpl
 	 * @return
 	 * @throws Exception
 	 */
-	public static SubscriberProduct extendExpirationDate(long userId,
-			String userName, long subProductId, long campaignId,
-			boolean includeCurrentDay, boolean fullOfCharge, int quantity) throws Exception
+	public static SubscriberProduct extendExpirationDate(long userId, String userName, long subProductId, long campaignId, boolean includeCurrentDay,
+			boolean fullOfCharge, int quantity) throws Exception
 	{
 		Connection connection = null;
 
@@ -1709,31 +1589,7 @@ public class SubscriberProductImpl
 		{
 			connection = Database.getConnection();
 
-			return extendExpirationDate(connection, userId, userName,
-					subProductId, campaignId, includeCurrentDay, fullOfCharge, quantity);
-		}
-		catch (Exception e)
-		{
-			throw e;
-		}
-		finally
-		{
-			Database.closeObject(connection);
-		}
-	}
-	
-	public static SubscriberProduct extendExpirationFree(long userId,
-			String userName, long subProductId, long campaignId,
-			boolean includeCurrentDay, boolean fullOfCharge, int quantity) throws Exception
-	{
-		Connection connection = null;
-
-		try
-		{
-			connection = Database.getConnection();
-
-			return extendExpirationFree(connection, userId, userName,
-					subProductId, campaignId, includeCurrentDay, fullOfCharge, quantity);
+			return extendExpirationDate(connection, userId, userName, subProductId, campaignId, includeCurrentDay, fullOfCharge, quantity);
 		}
 		catch (Exception e)
 		{
@@ -1745,8 +1601,28 @@ public class SubscriberProductImpl
 		}
 	}
 
-	public static String getMemberList(Connection connection, String isdn,
-			long productId, boolean includeSuspended) throws Exception
+	public static SubscriberProduct extendExpirationFree(long userId, String userName, long subProductId, long campaignId, boolean includeCurrentDay,
+			boolean fullOfCharge, int quantity) throws Exception
+	{
+		Connection connection = null;
+
+		try
+		{
+			connection = Database.getConnection();
+
+			return extendExpirationFree(connection, userId, userName, subProductId, campaignId, includeCurrentDay, fullOfCharge, quantity);
+		}
+		catch (Exception e)
+		{
+			throw e;
+		}
+		finally
+		{
+			Database.closeObject(connection);
+		}
+	}
+
+	public static String getMemberList(Connection connection, String isdn, long productId, boolean includeSuspended) throws Exception
 	{
 		String phoneBookList = "";
 		PreparedStatement stmtSubscription = null;
@@ -1758,14 +1634,11 @@ public class SubscriberProductImpl
 			String sql = "";
 			if (includeSuspended)
 			{
-				sql = "Select * from subscribergroup "
-						+ "Where  isdn = ? and productid = ? "
-						+ " and unregisterdate is null order by createdate";
+				sql = "Select * from subscribergroup " + "Where  isdn = ? and productid = ? " + " and unregisterdate is null order by createdate";
 			}
 			else
 			{
-				sql = "Select * from subscribergroup "
-						+ "Where  isdn = ? and productid = ? and status = ? "
+				sql = "Select * from subscribergroup " + "Where  isdn = ? and productid = ? and status = ? "
 						+ " and unregisterdate is null order by createdate";
 			}
 
@@ -1781,16 +1654,12 @@ public class SubscriberProductImpl
 
 			if (resultSet.next())
 			{
-				phoneBookList = com.fss.util.StringUtil.nvl(
-						resultSet.getString("REFERALISDN"), "");
+				phoneBookList = com.fss.util.StringUtil.nvl(resultSet.getString("REFERALISDN"), "");
 			}
 
 			while (resultSet.next())
 			{
-				phoneBookList = phoneBookList
-						+ ","
-						+ com.fss.util.StringUtil.nvl(
-								resultSet.getString("REFERALISDN"), "");
+				phoneBookList = phoneBookList + "," + com.fss.util.StringUtil.nvl(resultSet.getString("REFERALISDN"), "");
 			}
 		}
 		catch (Exception e)
@@ -1804,8 +1673,7 @@ public class SubscriberProductImpl
 		return phoneBookList;
 	}
 
-	public static String getMemberList(String isdn, String userName,
-			long productId, boolean includeSuspended) throws Exception
+	public static String getMemberList(String isdn, String userName, long productId, boolean includeSuspended) throws Exception
 	{
 		Connection connection = null;
 		String result;
@@ -1813,8 +1681,7 @@ public class SubscriberProductImpl
 		{
 			connection = Database.getConnection();
 
-			result = getMemberList(connection, isdn, productId,
-					includeSuspended);
+			result = getMemberList(connection, isdn, productId, includeSuspended);
 		}
 		catch (Exception e)
 		{
@@ -1827,9 +1694,7 @@ public class SubscriberProductImpl
 		return result;
 	}
 
-	public static boolean withdraw(long userId, String userName,
-			long subscriberId, String isdn, String balanceType, double amount)
-			throws Exception
+	public static boolean withdraw(long userId, String userName, long subscriberId, String isdn, String balanceType, double amount) throws Exception
 	{
 		Connection connection = Database.getConnection();
 		connection.setAutoCommit(false);
@@ -1892,10 +1757,8 @@ public class SubscriberProductImpl
 	 * @throws Exception
 	 */
 
-	public static SubscriberProduct registerProductBypassExisted(
-			Connection connection, long userId, String userName,
-			long subscriberId, String isdn, int subscriberType, long productId,
-			long campaignId, String languageId, boolean includeCurrentDay, int status, String activationDate)
+	public static SubscriberProduct registerProductBypassExisted(Connection connection, long userId, String userName, long subscriberId, String isdn,
+			int subscriberType, long productId, long campaignId, String languageId, boolean includeCurrentDay, int status, String activationDate)
 			throws Exception
 	{
 		SubscriberProduct subscriberProduct = null;
@@ -1906,16 +1769,14 @@ public class SubscriberProductImpl
 		{
 			Date now = new Date();
 
-			ProductEntry product = ProductFactory.getCache().getProduct(
-					productId);
+			ProductEntry product = ProductFactory.getCache().getProduct(productId);
 
 			// calculate term of use date
 			Date termDate = null;
 
 			if (product.getTermPeriod() > 0)
 			{
-				termDate = DateUtil.addDate(now, product.getTermUnit(),
-						product.getTermPeriod());
+				termDate = DateUtil.addDate(now, product.getTermUnit(), product.getTermPeriod());
 			}
 
 			// calculate expire date
@@ -1932,8 +1793,7 @@ public class SubscriberProductImpl
 
 				if (campaignId != DEFAULT_ID)
 				{
-					CampaignEntry campaign = CampaignFactory.getCache()
-							.getCampaign(campaignId);
+					CampaignEntry campaign = CampaignFactory.getCache().getCampaign(campaignId);
 
 					if ((campaign != null))
 					{
@@ -1942,10 +1802,8 @@ public class SubscriberProductImpl
 					}
 				}
 
-				boolean truncExpire = Boolean.parseBoolean(product
-						.getParameter("TruncExpireDate", "true"));
-				expirationDate = calculateExpirationDate(now, expirationUnit,
-						expirationPeriod, quantity, truncExpire);
+				boolean truncExpire = Boolean.parseBoolean(product.getParameter("TruncExpireDate", "true"));
+				expirationDate = calculateExpirationDate(now, expirationUnit, expirationPeriod, quantity, truncExpire);
 
 				/**
 				 * remove 1 day if expiration time includes current day
@@ -1959,44 +1817,42 @@ public class SubscriberProductImpl
 					expirationDate = expiration.getTime();
 				}
 
-				graceDate = DateUtil.addDate(expirationDate,
-						product.getGraceUnit(), product.getGracePeriod());
+				graceDate = DateUtil.addDate(expirationDate, product.getGraceUnit(), product.getGracePeriod());
 			}
 
 			// check product are registered or not
 			unregisterMulti(connection, isdn, product.getParameter("listProductId", ""));
-			
-//			for (int i = 0; i < listProductId.length; i++)
-//			{
-//				subscriberProduct = getActive(connection, subscriberId, isdn,
-//						Long.parseLong(listProductId[i]));
-//				if (subscriberProduct != null)
-//				{
-//					break;
-//				}
-//			}
-//
-//			if (subscriberProduct != null)
-//			{
-//				long subProductId = subscriberProduct.getSubProductId();
-//				
-//				boolean byPass = product.getParameter("ByPassUnregiterResult", "false").equalsIgnoreCase("true");
-//				unregister(connection, userId, userName, subProductId,
-//						productId, byPass);
-//			}
+
+			// for (int i = 0; i < listProductId.length; i++)
+			// {
+			// subscriberProduct = getActive(connection, subscriberId, isdn,
+			// Long.parseLong(listProductId[i]));
+			// if (subscriberProduct != null)
+			// {
+			// break;
+			// }
+			// }
+			//
+			// if (subscriberProduct != null)
+			// {
+			// long subProductId = subscriberProduct.getSubProductId();
+			//
+			// boolean byPass = product.getParameter("ByPassUnregiterResult",
+			// "false").equalsIgnoreCase("true");
+			// unregister(connection, userId, userName, subProductId,
+			// productId, byPass);
+			// }
 
 			// register product for subscriber
-			String sql = "Insert into SubscriberProduct "
-					+ "     (subProductId, userId, userName, createDate, modifiedDate "
+			String sql = "Insert into SubscriberProduct " + "     (subProductId, userId, userName, createDate, modifiedDate "
 					+ "     , subscriberId, isdn, subscriberType, productId, languageId "
 					+ "     , registerDate, termDate, expirationDate, graceDate, barringStatus, supplierStatus, CampaignId, Status, ActivationDate) "
-					+ "Values " + "     (?, ?, ?, sysDate, sysDate "
-					+ "     , ?, ?, ?, ?, ? " + "     , ?, ?, ?, ?, ?, ?, ?, ?, to_date(?,'YYYY-MM-DD HH24:MI:SS'))";
+					+ "Values " + "     (?, ?, ?, sysDate, sysDate " + "     , ?, ?, ?, ?, ? "
+					+ "     , ?, ?, ?, ?, ?, ?, ?, ?, to_date(?,'YYYY-MM-DD HH24:MI:SS'))";
 
 			stmtRegister = connection.prepareStatement(sql);
 
-			long subProductId = Database.getSequence(connection,
-					"sub_product_seq");
+			long subProductId = Database.getSequence(connection, "sub_product_seq");
 
 			int barringStatus = Constants.USER_ACTIVE_STATUS;
 			int supplierStatus = Constants.SUPPLIER_ACTIVE_STATUS;
@@ -2013,8 +1869,7 @@ public class SubscriberProductImpl
 
 			stmtRegister.setTimestamp(9, DateUtil.getTimestampSQL(now));
 			stmtRegister.setTimestamp(10, DateUtil.getTimestampSQL(termDate));
-			stmtRegister.setTimestamp(11,
-					DateUtil.getTimestampSQL(expirationDate));
+			stmtRegister.setTimestamp(11, DateUtil.getTimestampSQL(expirationDate));
 			stmtRegister.setTimestamp(12, DateUtil.getTimestampSQL(graceDate));
 
 			stmtRegister.setInt(13, barringStatus);
@@ -2049,11 +1904,8 @@ public class SubscriberProductImpl
 
 			if (product.isAuditEnable())
 			{
-				SubscriberActivateImpl.addActivate(connection, userId,
-						userName, subscriberId, isdn, subProductId,
-						subscriberProduct.getRegisterDate(),
-						subscriberProduct.getBarringStatus(),
-						subscriberProduct.getSupplierStatus(), "");
+				SubscriberActivateImpl.addActivate(connection, userId, userName, subscriberId, isdn, subProductId,
+						subscriberProduct.getRegisterDate(), subscriberProduct.getBarringStatus(), subscriberProduct.getSupplierStatus(), "");
 			}
 		}
 		catch (Exception e)
@@ -2068,10 +1920,8 @@ public class SubscriberProductImpl
 		return subscriberProduct;
 	}
 
-	public static SubscriberProduct registerProductBypassExisted(long userId,
-			String userName, long subscriberId, String isdn,
-			int subscriberType, long productId, long campaignId,
-			String languageId, boolean includeCurrentDay, int status, String activationDate) throws Exception
+	public static SubscriberProduct registerProductBypassExisted(long userId, String userName, long subscriberId, String isdn, int subscriberType,
+			long productId, long campaignId, String languageId, boolean includeCurrentDay, int status, String activationDate) throws Exception
 	{
 		Connection connection = null;
 
@@ -2079,9 +1929,8 @@ public class SubscriberProductImpl
 		{
 			connection = Database.getConnection();
 
-			return registerProductBypassExisted(connection, userId, userName,
-					subscriberId, isdn, subscriberType, productId, campaignId,
-					languageId, includeCurrentDay, status, activationDate);
+			return registerProductBypassExisted(connection, userId, userName, subscriberId, isdn, subscriberType, productId, campaignId, languageId,
+					includeCurrentDay, status, activationDate);
 		}
 		catch (Exception e)
 		{
@@ -2092,11 +1941,9 @@ public class SubscriberProductImpl
 			Database.closeObject(connection);
 		}
 	}
-	
-	public static SubscriberProduct registerProductInvite(
-			Connection connection, long userId, String userName,
-			long subscriberId, String isdn, int subscriberType, long productId,
-			long campaignId, String languageId, boolean includeCurrentDay, int status, String activationDate)
+
+	public static SubscriberProduct registerProductInvite(Connection connection, long userId, String userName, long subscriberId, String isdn,
+			int subscriberType, long productId, long campaignId, String languageId, boolean includeCurrentDay, int status, String activationDate)
 			throws Exception
 	{
 		SubscriberProduct subscriberProduct = null;
@@ -2107,16 +1954,14 @@ public class SubscriberProductImpl
 		{
 			Date now = new Date();
 
-			ProductEntry product = ProductFactory.getCache().getProduct(
-					productId);
+			ProductEntry product = ProductFactory.getCache().getProduct(productId);
 
 			// calculate term of use date
 			Date termDate = null;
 
 			if (product.getTermPeriod() > 0)
 			{
-				termDate = DateUtil.addDate(now, product.getTermUnit(),
-						product.getTermPeriod());
+				termDate = DateUtil.addDate(now, product.getTermUnit(), product.getTermPeriod());
 			}
 
 			// calculate expire date
@@ -2133,8 +1978,7 @@ public class SubscriberProductImpl
 
 				if (campaignId != DEFAULT_ID)
 				{
-					CampaignEntry campaign = CampaignFactory.getCache()
-							.getCampaign(campaignId);
+					CampaignEntry campaign = CampaignFactory.getCache().getCampaign(campaignId);
 
 					if ((campaign != null))
 					{
@@ -2143,10 +1987,8 @@ public class SubscriberProductImpl
 					}
 				}
 
-				boolean truncExpire = Boolean.parseBoolean(product
-						.getParameter("TruncExpireDate", "true"));
-				expirationDate = calculateExpirationDate(now, expirationUnit,
-						expirationPeriod, quantity, truncExpire);
+				boolean truncExpire = Boolean.parseBoolean(product.getParameter("TruncExpireDate", "true"));
+				expirationDate = calculateExpirationDate(now, expirationUnit, expirationPeriod, quantity, truncExpire);
 
 				/**
 				 * remove 1 day if expiration time includes current day
@@ -2160,41 +2002,39 @@ public class SubscriberProductImpl
 					expirationDate = expiration.getTime();
 				}
 
-				graceDate = DateUtil.addDate(expirationDate,
-						product.getGraceUnit(), product.getGracePeriod());
+				graceDate = DateUtil.addDate(expirationDate, product.getGraceUnit(), product.getGracePeriod());
 			}
 
 			// check product are registered or not
-//			String[] listProductId = product.getParameter("listProductId", "")
-//					.split(",");
-//			for (int i = 0; i < listProductId.length; i++)
-//			{
-//				subscriberProduct = getActive(connection, subscriberId, isdn,
-//						Long.parseLong(listProductId[i]));
-//				if (subscriberProduct != null)
-//				{
-//					break;
-//				}
-//			}
-//
-//			if (subscriberProduct != null)
-//			{
-//				long subProductId = subscriberProduct.getSubProductId();
+			// String[] listProductId = product.getParameter("listProductId",
+			// "")
+			// .split(",");
+			// for (int i = 0; i < listProductId.length; i++)
+			// {
+			// subscriberProduct = getActive(connection, subscriberId, isdn,
+			// Long.parseLong(listProductId[i]));
+			// if (subscriberProduct != null)
+			// {
+			// break;
+			// }
+			// }
+			//
+			// if (subscriberProduct != null)
+			// {
+			// long subProductId = subscriberProduct.getSubProductId();
 			updateExpireWhenInvite(connection, expirationDate, isdn, product.getParameter("listProductId", ""));
-//			}
+			// }
 
 			// register product for subscriber
-			String sql = "Insert into SubscriberProduct "
-					+ "     (subProductId, userId, userName, createDate, modifiedDate "
+			String sql = "Insert into SubscriberProduct " + "     (subProductId, userId, userName, createDate, modifiedDate "
 					+ "     , subscriberId, isdn, subscriberType, productId, languageId "
 					+ "     , registerDate, termDate, expirationDate, graceDate, barringStatus, supplierStatus, CampaignId, Status, ActivationDate) "
-					+ "Values " + "     (?, ?, ?, sysDate, sysDate "
-					+ "     , ?, ?, ?, ?, ? " + "     , ?, ?, ?, ?, ?, ?, ?, ?, to_date(?,'YYYY-MM-DD HH24:MI:SS'))";
+					+ "Values " + "     (?, ?, ?, sysDate, sysDate " + "     , ?, ?, ?, ?, ? "
+					+ "     , ?, ?, ?, ?, ?, ?, ?, ?, to_date(?,'YYYY-MM-DD HH24:MI:SS'))";
 
 			stmtRegister = connection.prepareStatement(sql);
 
-			long subProductId = Database.getSequence(connection,
-					"sub_product_seq");
+			long subProductId = Database.getSequence(connection, "sub_product_seq");
 
 			int barringStatus = Constants.USER_ACTIVE_STATUS;
 			int supplierStatus = Constants.SUPPLIER_ACTIVE_STATUS;
@@ -2211,8 +2051,7 @@ public class SubscriberProductImpl
 
 			stmtRegister.setTimestamp(9, DateUtil.getTimestampSQL(now));
 			stmtRegister.setTimestamp(10, DateUtil.getTimestampSQL(termDate));
-			stmtRegister.setTimestamp(11,
-					DateUtil.getTimestampSQL(expirationDate));
+			stmtRegister.setTimestamp(11, DateUtil.getTimestampSQL(expirationDate));
 			stmtRegister.setTimestamp(12, DateUtil.getTimestampSQL(graceDate));
 
 			stmtRegister.setInt(13, barringStatus);
@@ -2247,11 +2086,8 @@ public class SubscriberProductImpl
 
 			if (product.isAuditEnable())
 			{
-				SubscriberActivateImpl.addActivate(connection, userId,
-						userName, subscriberId, isdn, subProductId,
-						subscriberProduct.getRegisterDate(),
-						subscriberProduct.getBarringStatus(),
-						subscriberProduct.getSupplierStatus(), "");
+				SubscriberActivateImpl.addActivate(connection, userId, userName, subscriberId, isdn, subProductId,
+						subscriberProduct.getRegisterDate(), subscriberProduct.getBarringStatus(), subscriberProduct.getSupplierStatus(), "");
 			}
 		}
 		catch (Exception e)
@@ -2266,10 +2102,8 @@ public class SubscriberProductImpl
 		return subscriberProduct;
 	}
 
-	public static SubscriberProduct registerProductInvite(long userId,
-			String userName, long subscriberId, String isdn,
-			int subscriberType, long productId, long campaignId,
-			String languageId, boolean includeCurrentDay, int status, String activationDate) throws Exception
+	public static SubscriberProduct registerProductInvite(long userId, String userName, long subscriberId, String isdn, int subscriberType,
+			long productId, long campaignId, String languageId, boolean includeCurrentDay, int status, String activationDate) throws Exception
 	{
 		Connection connection = null;
 
@@ -2277,9 +2111,8 @@ public class SubscriberProductImpl
 		{
 			connection = Database.getConnection();
 
-			return registerProductInvite(connection, userId, userName,
-					subscriberId, isdn, subscriberType, productId, campaignId,
-					languageId, includeCurrentDay, status, activationDate);
+			return registerProductInvite(connection, userId, userName, subscriberId, isdn, subscriberType, productId, campaignId, languageId,
+					includeCurrentDay, status, activationDate);
 		}
 		catch (Exception e)
 		{
@@ -2290,16 +2123,14 @@ public class SubscriberProductImpl
 			Database.closeObject(connection);
 		}
 	}
-	
-	public static void updateExpireWhenInvite(Connection connection, Date expirationDate, String isdn, String listProductId)
-			throws Exception
+
+	public static void updateExpireWhenInvite(Connection connection, Date expirationDate, String isdn, String listProductId) throws Exception
 	{
 		PreparedStatement stmtSubscription = null;
 
 		try
 		{
-			String sql = "Update SubscriberProduct "
-					+ "   Set 	modifiedDate = sysDate, lastrundate = sysdate, expirationDate = ?, status = 1 "
+			String sql = "Update SubscriberProduct " + "   Set 	modifiedDate = sysDate, lastrundate = sysdate, expirationDate = ?, status = 1 "
 					+ "	  Where isdn = ? and status not in (8,11) and productid in (" + listProductId + ") and " + CONDITION_UNTERMINATED;
 
 			stmtSubscription = connection.prepareStatement(sql);
@@ -2308,11 +2139,11 @@ public class SubscriberProductImpl
 			stmtSubscription.setString(2, isdn);
 
 			stmtSubscription.execute();
-			
-//			if (stmtSubscription.getUpdateCount() == 0)
-//			{
-//				throw new AppException(Constants.ERROR_UNREGISTERED);
-//			}
+
+			// if (stmtSubscription.getUpdateCount() == 0)
+			// {
+			// throw new AppException(Constants.ERROR_UNREGISTERED);
+			// }
 		}
 		catch (Exception e)
 		{
@@ -2324,8 +2155,7 @@ public class SubscriberProductImpl
 		}
 	}
 
-	public static void registerFlexi(String isdn, long productId,
-			long subProductId) throws Exception
+	public static void registerFlexi(String isdn, long productId, long subProductId) throws Exception
 	{
 		Connection connection = null;
 
@@ -2348,9 +2178,7 @@ public class SubscriberProductImpl
 		}
 	}
 
-	public static boolean registerFlexi(Connection connection, String isdn,
-			long productId, int bypasstime, long id, int sms_flg)
-			throws Exception
+	public static boolean registerFlexi(Connection connection, String isdn, long productId, int bypasstime, long id, int sms_flg) throws Exception
 	{
 		boolean success = false;
 
@@ -2363,9 +2191,7 @@ public class SubscriberProductImpl
 			stmtFlexi.setString(1, isdn);
 			rs = stmtFlexi.executeQuery();
 
-			String strSQL = "INSERT INTO FLEXI_ALERT "
-					+ "(Id, isdn, supplierstatus, productid, bypasstime, sms_flg) "
-					+ "VALUES ( ?, ?,1, ?, 0, 0)";
+			String strSQL = "INSERT INTO FLEXI_ALERT " + "(Id, isdn, supplierstatus, productid, bypasstime, sms_flg) " + "VALUES ( ?, ?,1, ?, 0, 0)";
 
 			boolean existed = false;
 			long flexiId = 0;
@@ -2411,8 +2237,7 @@ public class SubscriberProductImpl
 		return success;
 	}
 
-	public static void updateScheduleFlexi(long subProductId, 
-			double remainBalance, Calendar scandTime) throws Exception
+	public static void updateScheduleFlexi(long subProductId, double remainBalance, Calendar scandTime) throws Exception
 	{
 		Connection connection = null;
 
@@ -2435,18 +2260,17 @@ public class SubscriberProductImpl
 		}
 	}
 
-	public static boolean updateScheduleFlexi(Connection connection, long id, 
-			double remainBalance, Calendar scanTime) throws Exception
+	public static boolean updateScheduleFlexi(Connection connection, long id, double remainBalance, Calendar scanTime) throws Exception
 	{
 		boolean success = false;
 		PreparedStatement stmtFlexi = null;
 		try
 		{
 			String strSQL = "UPDATE SubscriberProduct SET  scheduletime = ? WHERE subproductid = ? ";
-			stmtFlexi = connection.prepareStatement(strSQL);			
-			stmtFlexi.setTimestamp(1, (scanTime != null? DateUtil.getTimestampSQL(scanTime.getTime()) : null));
+			stmtFlexi = connection.prepareStatement(strSQL);
+			stmtFlexi.setTimestamp(1, (scanTime != null ? DateUtil.getTimestampSQL(scanTime.getTime()) : null));
 			stmtFlexi.setLong(2, id);
-			
+
 			stmtFlexi.execute();
 			if (stmtFlexi.getUpdateCount() > 0)
 			{
@@ -2464,9 +2288,8 @@ public class SubscriberProductImpl
 
 		return success;
 	}
-	
-	public static void updateFlexi(long subProductId, 
-			double remainBalance, Calendar scandTime, int status) throws Exception
+
+	public static void updateFlexi(long subProductId, double remainBalance, Calendar scandTime, int status) throws Exception
 	{
 		Connection connection = null;
 
@@ -2489,19 +2312,18 @@ public class SubscriberProductImpl
 		}
 	}
 
-	public static boolean updateFlexi(Connection connection, long id, 
-			double remainBalance, Calendar scanTime, int status) throws Exception
+	public static boolean updateFlexi(Connection connection, long id, double remainBalance, Calendar scanTime, int status) throws Exception
 	{
 		boolean success = false;
 		PreparedStatement stmtFlexi = null;
 		try
 		{
 			String strSQL = "UPDATE SubscriberProduct SET  scheduletime = ?, status = ? WHERE subproductid = ? ";
-			stmtFlexi = connection.prepareStatement(strSQL);			
-			stmtFlexi.setTimestamp(1, (scanTime != null? DateUtil.getTimestampSQL(scanTime.getTime()) : null));
+			stmtFlexi = connection.prepareStatement(strSQL);
+			stmtFlexi.setTimestamp(1, (scanTime != null ? DateUtil.getTimestampSQL(scanTime.getTime()) : null));
 			stmtFlexi.setInt(2, status);
 			stmtFlexi.setLong(3, id);
-			
+
 			stmtFlexi.execute();
 			if (stmtFlexi.getUpdateCount() > 0)
 			{
@@ -2519,9 +2341,7 @@ public class SubscriberProductImpl
 
 		return success;
 	}
-	
 
-	
 	public static void updateSubscription(int status, long subProductId) throws Exception
 	{
 		Connection connection = null;
@@ -2541,10 +2361,8 @@ public class SubscriberProductImpl
 			Database.closeObject(connection);
 		}
 	}
-	
-	public static void updateSubscription(
-			Connection connection, int status, long subProductId)
-			throws Exception
+
+	public static void updateSubscription(Connection connection, int status, long subProductId) throws Exception
 	{
 		PreparedStatement stmtSubscription = null;
 
@@ -2558,7 +2376,7 @@ public class SubscriberProductImpl
 			stmtSubscription.setLong(2, subProductId);
 
 			stmtSubscription.execute();
-			
+
 			if (stmtSubscription.getUpdateCount() == 0)
 			{
 				throw new AppException(Constants.ERROR_UNREGISTERED);
@@ -2573,7 +2391,7 @@ public class SubscriberProductImpl
 			Database.closeObject(stmtSubscription);
 		}
 	}
-	
+
 	public static void insertSendSMS(String sourceAddress, String targetAddress, String content) throws Exception
 	{
 		Connection connection = null;
@@ -2593,10 +2411,8 @@ public class SubscriberProductImpl
 			Database.closeObject(connection);
 		}
 	}
-	
-	public static void insertSendSMS(
-			Connection connection, String sourceAddress, String targetAddress, String content)
-			throws Exception
+
+	public static void insertSendSMS(Connection connection, String sourceAddress, String targetAddress, String content) throws Exception
 	{
 		PreparedStatement stmtOrder = null;
 
@@ -2621,9 +2437,9 @@ public class SubscriberProductImpl
 			Database.closeObject(stmtOrder);
 		}
 	}
-	
-	public static ArrayList<SubscriberProduct> checkRegisterService(String isdn, String fromDate, 
-			long productId, String activationDate) throws Exception
+
+	public static ArrayList<SubscriberProduct> checkRegisterService(String isdn, String fromDate, long productId, String activationDate)
+			throws Exception
 	{
 		Connection connection = null;
 
@@ -2631,7 +2447,7 @@ public class SubscriberProductImpl
 		{
 			connection = Database.getConnection();
 
-			 return checkRegisterService(connection, isdn, fromDate, productId, activationDate);
+			return checkRegisterService(connection, isdn, fromDate, productId, activationDate);
 		}
 		catch (Exception e)
 		{
@@ -2642,22 +2458,19 @@ public class SubscriberProductImpl
 			Database.closeObject(connection);
 		}
 	}
-	
-	public static ArrayList<SubscriberProduct> checkRegisterService(
-			Connection connection, String isdn, String fromDate, long productId, String activationDate)
-			throws Exception
+
+	public static ArrayList<SubscriberProduct> checkRegisterService(Connection connection, String isdn, String fromDate, long productId,
+			String activationDate) throws Exception
 	{
 		PreparedStatement stmtOrder = null;
 		ResultSet rsActive = null;
-		
+
 		ArrayList<SubscriberProduct> result = new ArrayList<SubscriberProduct>();
-		
+
 		try
 		{
-			String sql = "Select * from SubscriberProduct " +
-						 "where isdn = ? and productId = ? and " +
-						 "registerdate >= to_date(?,'YYYY-MM-DD HH24:MI:SS') and " + 
-						 "activationDate = to_date(?,'YYYY-MM-DD HH24:MI:SS')";
+			String sql = "Select * from SubscriberProduct " + "where isdn = ? and productId = ? and "
+					+ "registerdate >= to_date(?,'YYYY-MM-DD HH24:MI:SS') and " + "activationDate = to_date(?,'YYYY-MM-DD HH24:MI:SS')";
 
 			stmtOrder = connection.prepareStatement(sql);
 
@@ -2681,10 +2494,10 @@ public class SubscriberProductImpl
 		{
 			Database.closeObject(stmtOrder);
 		}
-		
+
 		return result;
 	}
-	
+
 	public static int checkUsage(String isdn, String alias) throws Exception
 	{
 		Connection connection = null;
@@ -2704,7 +2517,7 @@ public class SubscriberProductImpl
 
 		return result;
 	}
-	
+
 	public static int checkUsage(Connection connection, String isdn, String alias) throws Exception
 	{
 		isdn = CommandUtil.addCountryCode(isdn);

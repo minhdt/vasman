@@ -1,9 +1,9 @@
 <c3p0-config>
   <default-config>
   	<property name="driverClass">oracle.jdbc.driver.OracleDriver</property>
-    <property name="jdbcUrl">jdbc:oracle:thin:@192.168.88.44:1521:DB01</property>
+    <property name="jdbcUrl">jdbc:oracle:thin:@10.8.13.202:1521:DBTST2</property>
     <property name="user">owner_sdp2</property>
-    <property name="password">123456</property>
+    <property name="password">sdpnms123</property>
     <property name="maxPoolSize">5</property>
     <property name="minPoolSize">0</property>
     <property name="initialPoolSize">5</property>

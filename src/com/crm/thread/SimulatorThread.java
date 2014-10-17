@@ -51,7 +51,7 @@ public class SimulatorThread extends DispatcherThread
 		Vector vtReturn = new Vector();
 
 		vtReturn.addElement(ThreadUtil.createTextParameter("deliveryUser", 30, ""));
-		vtReturn.addElement(ThreadUtil.createComboParameter("channel", "SMS,web", ""));
+		vtReturn.addElement(ThreadUtil.createComboParameter("channel", "SMS,web,core", ""));
 		vtReturn.addElement(ThreadUtil.createTextParameter("serviceAddress", 30, ""));
 		vtReturn.addElement(ThreadUtil.createTextParameter("keyword", 30, ""));
 

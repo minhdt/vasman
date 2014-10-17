@@ -216,7 +216,7 @@ public class ProvisioningPool implements PoolableObjectFactory
 		connection.setParameters(parameters);
 
 		connection.setConnectionId(Calendar.getInstance().getTimeInMillis());
-		connection.setLastRun(new Date());
+		connection.setLastRun(System.currentTimeMillis());
 		
 		connection.openConnection();
 		debugMonitor("Created provisioning instance for " + provisioning.getIndexKey());

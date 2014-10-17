@@ -3,10 +3,6 @@
  */
 package com.crm.provisioning.cache;
 
-import java.util.Date;
-
-import com.crm.provisioning.cache.ProvisioningEntry;
-import com.crm.provisioning.cache.ProvisioningFactory;
 import com.crm.provisioning.thread.ProvisioningThread;
 import com.crm.util.AppProperties;
 
@@ -35,7 +31,7 @@ public class ProvisioningConnection
 	
 	public long					connectionId	= 0;
 	
-	public Date					lastRun			= new Date();
+	public long					lastRun			= 0;
 
 	public ProvisioningConnection()
 	{
@@ -239,12 +235,12 @@ public class ProvisioningConnection
 		this.connectionId = connectionId;
 	}
 	
-	public Date getLastRun()
+	public long getLastRun()
 	{
 		return lastRun;
 	}
 
-	public void setLastRun(Date lastRun)
+	public void setLastRun(long lastRun)
 	{
 		this.lastRun = lastRun;
 	}

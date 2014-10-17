@@ -45,7 +45,7 @@ public class SupportKeywordRoutingImpl extends VNMOrderRoutingImpl {
 				result.setCause(result.getActionType() + ".success");
 			}
 			else if (keyword.length > 1) {
-				result.setCause(keyword[1].trim() + ".success");
+				result.setCause(keyword[1].trim().toUpperCase() + ".success");
 			} else {
 				result.setCause(result.getActionType() + Constants.ERROR_KEYWORD);
 			}

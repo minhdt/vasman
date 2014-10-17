@@ -1,6 +1,7 @@
 package com.crm.provisioning.impl;
 
 import java.sql.Connection;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
 import com.crm.kernel.message.Constants;
@@ -19,43 +20,42 @@ import com.crm.subscriber.impl.SubscriberProductImpl;
 
 public class SupportKeywordCommandImpl extends CommandImpl
 {
-	public VNMMessage checkServiceStatus(CommandInstance instance,
-			ProvisioningCommand provisioningCommand, CommandMessage request)
-			throws Exception
+	public VNMMessage checkServiceStatus(CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request) throws Exception
 	{
 		VNMMessage result = CommandUtil.createVNMMessage(request);
-		
+
 		try
 		{
 			ProductEntry product = ProductFactory.getCache().getProduct(request.getProductId());
 			String listProductId = product.getParameters().getString("ListProductId", "");
-	
+
 			ArrayList<SubscriberProduct> arrProduct = SubscriberProductImpl.getActive(result.getIsdn(), listProductId);
-	
+
 			if (arrProduct.isEmpty())
 			{
 				result.setCause(Constants.ERROR_SERVICE_LIST_NOT_FOUND);
 				return result;
 			}
-	
+
 			ProductMessage productMessage = null;
-	
+
 			ProductEntry productCache = null;
-	
+			SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+
 			for (SubscriberProduct subProduct : arrProduct)
 			{
 				productCache = ProductFactory.getCache().getProduct(subProduct.getProductId());
-	
+
 				productMessage = product.getProductMessage(result.getActionType(), result.getCampaignId(), result.getLanguageId(),
 						result.getChannel(), productCache.getAlias() + ".active");
 
 				if (productMessage != null)
 				{
 					String content = productMessage.getContent();
-					
-					result.setResponseValue(ResponseUtil.SERVICE_START_DATE, subProduct.getRegisterDate());
-					result.setResponseValue(ResponseUtil.SERVICE_PRICE, productCache.getPrice());
-					result.setResponseValue(ResponseUtil.SERVICE_AMOUNT, productCache.getParameters().getLong(product.getAlias() + ".amount", 0));
+
+					content = content.replaceAll("~SERVICE_START_DATE~", sdf.format(subProduct.getRegisterDate()));
+					content = content.replaceAll("~SERVICE_PRICE~", "" + productCache.getPrice());
+					content = content.replaceAll("~SERVICE_AMOUNT~", "" + productCache.getParameters().getLong(product.getAlias() + ".amount", 0));
 
 					CommandUtil.sendSMS(instance, result, content);
 					Thread.sleep(1000);
@@ -66,44 +66,46 @@ public class SupportKeywordCommandImpl extends CommandImpl
 		{
 			processError(instance, provisioningCommand, request, e);
 		}
-		
+
 		return result;
 	}
-	
-	public VNMMessage checkDataStatus(CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request) throws Exception{
+
+	public VNMMessage checkDataStatus(CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request) throws Exception
+	{
 
 		VNMMessage result = CommandUtil.createVNMMessage(request);
 		try
 		{
 			ProductEntry product = ProductFactory.getCache().getProduct(request.getProductId());
 			String listDataPackageId = product.getParameters().getString("ListDataPackageId", "");
-	
+
 			ArrayList<SubscriberProduct> arrProduct = SubscriberProductImpl.getActive(result.getIsdn(), listDataPackageId);
-	
+
 			if (arrProduct.isEmpty())
 			{
 				result.setCause(Constants.ERROR_PACKAGE_LIST_NOT_FOUND);
 				return result;
 			}
-	
+
 			ProductMessage productMessage = null;
-	
 			ProductEntry productCache = null;
-	
+
+			SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+
 			for (SubscriberProduct subProduct : arrProduct)
 			{
 				productCache = ProductFactory.getCache().getProduct(subProduct.getProductId());
-	
+
 				productMessage = product.getProductMessage(result.getActionType(), result.getCampaignId(), result.getLanguageId(),
 						result.getChannel(), productCache.getAlias() + ".active");
 
 				if (productMessage != null)
 				{
 					String content = productMessage.getContent();
-					
-					result.setResponseValue(ResponseUtil.SERVICE_START_DATE, subProduct.getRegisterDate());
+
+					result.setResponseValue(ResponseUtil.SERVICE_START_DATE, sdf.format(subProduct.getRegisterDate()));
 					result.setResponseValue(ResponseUtil.SERVICE_PRICE, productCache.getPrice());
-					result.setResponseValue(ResponseUtil.SERVICE_AMOUNT, productCache.getParameters().getLong(product.getAlias() + ".amount", 0));
+					result.setResponseValue(ResponseUtil.SERVICE_AMOUNT, product.getParameters().getLong(productCache.getAlias() + ".amount", 0));
 
 					CommandUtil.sendSMS(instance, result, content);
 					Thread.sleep(1000);
@@ -114,60 +116,75 @@ public class SupportKeywordCommandImpl extends CommandImpl
 		{
 			processError(instance, provisioningCommand, request, e);
 		}
-		
+
 		return result;
 	}
-	
-	@SuppressWarnings("null")
-	public VNMMessage cancelMultiDataPackage (CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request) throws Exception{
+
+	public VNMMessage cancelMultiDataPackage(CommandInstance instance, ProvisioningCommand provisioningCommand, CommandMessage request)
+			throws Exception
+	{
 		VNMMessage result = CommandUtil.createVNMMessage(request);
-
-		ProductEntry product = ProductFactory.getCache().getProduct(request.getProductId());
-		String listDataPackageId = product.getParameters().getString("ListDataPackageId", "");
 		Connection connection = null;
-		
-		ArrayList<SubscriberProduct> arrProduct = SubscriberProductImpl.getActive(result.getIsdn(), listDataPackageId);
+		ArrayList<SubscriberProduct> arrProduct = null;
 
-		if (arrProduct.isEmpty()) {
-			result.setCause(Constants.ERROR_PACKAGE_LIST_NOT_FOUND);
-			return result;
+		try
+		{
+			ProductEntry product = ProductFactory.getCache().getProduct(request.getProductId());
+			String listDataPackageId = product.getParameters().getString("ListDataPackageId", "");
+
+			arrProduct = SubscriberProductImpl.getActive(result.getIsdn(), listDataPackageId);
+
+			if (arrProduct == null || arrProduct.isEmpty())
+			{
+				result.setCause(Constants.ERROR_PACKAGE_LIST_NOT_FOUND);
+				return result;
+			}
+
+			connection = Database.getConnection();
+			String listActivePackage = getStrProductId(arrProduct);
+
+			SubscriberProductImpl.unregisterMulti(connection, result.getIsdn(), listActivePackage);
 		}
-		String listActivePackage = arrListToString(arrProduct);
-		connection = Database.getConnection();
-
-		SubscriberProductImpl.unregisterMulti(connection, result.getIsdn(), listActivePackage);
-
-		// Check Success UnregisterMulti DATA
-		ArrayList<SubscriberProduct> arrProductErrorCancel = SubscriberProductImpl.getActive(result.getIsdn(), listDataPackageId);
-		
-		if(arrProductErrorCancel.isEmpty()){
-			result.setCause("cancel.all." + Constants.SUCCESS);
-			return result;
+		catch (Exception e)
+		{
+			processError(instance, provisioningCommand, request, e);
 		}
-		ProductMessage productMessage = null;
-		ArrayList<SubscriberProduct> arrSuccessCancel = null;
-		
-		for(SubscriberProduct subArrProductErrorCancel : arrProductErrorCancel){
-			for(SubscriberProduct subArrProduct : arrProduct){
-				if(!subArrProduct.equals(subArrProductErrorCancel)){
-					//arrSuccessCancel.add(arrProduct);
-				}
-			}	
+		finally
+		{
+			Database.closeObject(connection);
 		}
-		productMessage = product.getProductMessage(result.getActionType(), result.getCampaignId(), result.getLanguageId(), result.getChannel(), "some.active");
-		
-		result.setResponseValue(ResponseUtil.SUCCESS_PRODUCT, arrSuccessCancel.toString());
-		result.setResponseValue(ResponseUtil.FAILED_PRODUCT, arrProductErrorCancel.toString());
-
-		CommandUtil.sendSMS(instance, result, productMessage.getContent());
-		
 		return result;
 	}
-	
-	public static String arrListToString(ArrayList<SubscriberProduct> arrList){
-		
-		return arrList.toString().replaceAll("\\[|\\]", "");
-		
+
+	public String getStrProductId(ArrayList<SubscriberProduct> arrList)
+	{
+		String str = "";
+		for (int i = 0; i < arrList.size(); i++)
+		{
+			if (i <= arrList.size() - 2)
+			{
+				str += (arrList.get(i).getProductId() + ", ");
+			}
+			else
+				str += (arrList.get(i).getProductId());
+		}
+		return str;
 	}
-	
+
+	public String getStrProductAlias(ArrayList<ProductEntry> arrList)
+	{
+		String str = "";
+		for (int i = 0; i < arrList.size(); i++)
+		{
+			if (i <= arrList.size() - 2)
+			{
+				str += (arrList.get(i).getAlias().toString() + ", ");
+			}
+			else
+				str += (arrList.get(i).getAlias().toString());
+		}
+		return str;
+		// return arrList.toString().replaceAll("\\[|\\]", "");
+	}
+
 }

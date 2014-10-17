@@ -1,7 +1,5 @@
 package com.crm.provisioning.impl.ema;
 
-import java.util.Date;
-
 import com.crm.kernel.message.Constants;
 import com.crm.provisioning.cache.ProvisioningConnection;
 import com.crm.provisioning.thread.EMACommandThread;
@@ -17,8 +15,6 @@ public class EMAConnection extends ProvisioningConnection
 	public boolean			isOpen					= false;
 	public boolean			isLogin					= false;
 	public boolean			isSending				= false;
-	
-	private Object			obSyn					= new Object();
 
 	public EMAConnection()
 	{
@@ -124,8 +120,8 @@ public class EMAConnection extends ProvisioningConnection
 		boolean check = false;
 		try
 		{
-			Date now = new Date();
-			if (now.getTime() - getLastRun().getTime() < ((EMACommandThread)getDispatcher()).enquireInterval)
+			long now = System.currentTimeMillis();
+			if ((now - getLastRun()) < ((EMACommandThread)getDispatcher()).enquireInterval)
 			{
 				return true;
 			}
@@ -140,10 +136,7 @@ public class EMAConnection extends ProvisioningConnection
 			logMonitor(getConnectionId() + ": RECEIVE-KEEP-CONNECTION: " + receive.replaceAll("\nEnter command: ", ""));
 			check = true;
 
-			synchronized (obSyn)
-			{
-				setLastRun(new Date());
-			}
+			setLastRun(System.currentTimeMillis());
 		}
 		catch (Exception e)
 		{
@@ -170,10 +163,7 @@ public class EMAConnection extends ProvisioningConnection
 		// Remove prompt & correct response
 		str = str.substring(0, str.length() - mstrPrompt.length());
 
-		synchronized (obSyn)
-		{
-			setLastRun(new Date());
-		}
+		setLastRun(System.currentTimeMillis());
 		
 		return str;
 	}
